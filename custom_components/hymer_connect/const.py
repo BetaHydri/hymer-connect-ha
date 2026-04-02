@@ -3,7 +3,12 @@
 DOMAIN = "hymer_connect"
 MANUFACTURER = "Erwin Hymer Group"
 
-API_BASE_URL = "https://scc-api.smartrv.erwinhymergroup.com"
+API_BASE_URL = "https://smartrv.erwinhymergroup.com"
+API_BASE_URL_SCC = "https://scc-api.smartrv.erwinhymergroup.com"
+API_BASE_URL_RVTWIN = "https://scc-rvtwin.smartrv.erwinhymergroup.com"
+
+# Auth endpoint
+ENDPOINT_AUTH = "/api/ehg/v1/accounts/standard"
 
 # API endpoints
 ENDPOINT_MOBILE_CONFIG = "/api/mobile-config"

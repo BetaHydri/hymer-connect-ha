@@ -12,6 +12,7 @@ from .const import (
     AUTH_GRANT_TYPE_PASSWORD,
     AUTH_GRANT_TYPE_REFRESH,
     ENDPOINT_ACCOUNTS_ME,
+    ENDPOINT_AUTH,
     ENDPOINT_MOBILE_CONFIG,
     ENDPOINT_RV_TWIN_SYNC,
     ENDPOINT_SERVICE_CATALOGUE,
@@ -122,28 +123,19 @@ class HymerConnectApi:
             "username": username,
             "password": password,
         }
-        # Try multiple possible auth endpoints
-        for endpoint in [
-            "/api/ehg/v1/accounts/auth",
-            "/api/ehg/v1/token",
-            "/api/auth/token",
-        ]:
-            try:
-                result = await self._request(
-                    "POST",
-                    endpoint,
-                    data=data,
-                    headers={"Content-Type": "application/x-www-form-urlencoded;charset=UTF-8"},
-                )
-                if isinstance(result, dict) and "access_token" in result:
-                    self._access_token = result["access_token"]
-                    self._refresh_token = result.get("refresh_token")
-                    return {
-                        "access_token": self._access_token,
-                        "refresh_token": self._refresh_token or "",
-                    }
-            except HymerConnectApiError:
-                continue
+        result = await self._request(
+            "POST",
+            ENDPOINT_AUTH,
+            data=data,
+            headers={"Content-Type": "application/x-www-form-urlencoded;charset=UTF-8"},
+        )
+        if isinstance(result, dict) and "access_token" in result:
+            self._access_token = result["access_token"]
+            self._refresh_token = result.get("refresh_token")
+            return {
+                "access_token": self._access_token,
+                "refresh_token": self._refresh_token or "",
+            }
         raise HymerConnectAuthError(
             "Could not authenticate. Check credentials and try again."
         )
@@ -156,24 +148,16 @@ class HymerConnectApi:
             "grant_type": AUTH_GRANT_TYPE_REFRESH,
             "refresh_token": self._refresh_token,
         }
-        for endpoint in [
-            "/api/ehg/v1/accounts/auth",
-            "/api/ehg/v1/token",
-            "/api/auth/token",
-        ]:
-            try:
-                result = await self._request(
-                    "POST",
-                    endpoint,
-                    data=data,
-                    headers={"Content-Type": "application/x-www-form-urlencoded;charset=UTF-8"},
-                )
-                if isinstance(result, dict) and "access_token" in result:
-                    self._access_token = result["access_token"]
-                    self._refresh_token = result.get("refresh_token", self._refresh_token)
-                    return
-            except HymerConnectApiError:
-                continue
+        result = await self._request(
+            "POST",
+            ENDPOINT_AUTH,
+            data=data,
+            headers={"Content-Type": "application/x-www-form-urlencoded;charset=UTF-8"},
+        )
+        if isinstance(result, dict) and "access_token" in result:
+            self._access_token = result["access_token"]
+            self._refresh_token = result.get("refresh_token", self._refresh_token)
+            return
         raise HymerConnectAuthError("Token refresh failed")
 
     async def get_mobile_config(self) -> dict[str, Any]:
