@@ -1,0 +1,31 @@
+# Reverse engineering artifacts
+source/
+tools/
+analyze_*.js
+
+# Duplicate root-level component files (canonical copies live in custom_components/)
+/__init__.py
+/api.py
+/binary_sensor.py
+/config_flow.py
+/const.py
+/coordinator.py
+/sensor.py
+/manifest.json
+/strings.json
+
+# Dashboard / translation duplicates at root (canonical in custom_components/)
+/dashboards/
+/translations/
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Memory bank (local only)
+.memory-bank/
