@@ -118,27 +118,47 @@ class HymerConnectApi:
 
     async def authenticate(self, username: str, password: str) -> dict[str, str]:
         """Authenticate using username and password (OAuth2 ROPC)."""
-        data = {
-            "grant_type": AUTH_GRANT_TYPE_PASSWORD,
-            "username": username,
-            "password": password,
+        url = f"{self._base_url}{ENDPOINT_AUTH}"
+        headers = {
+            "Accept": "application/json",
+            "User-Agent": "HymerConnect-HA/0.1.0",
+            "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8",
+            HEADER_LOCALE: self._locale,
         }
-        result = await self._request(
-            "POST",
-            ENDPOINT_AUTH,
-            data=data,
-            headers={"Content-Type": "application/x-www-form-urlencoded;charset=UTF-8"},
+        data = (
+            f"grant_type={AUTH_GRANT_TYPE_PASSWORD}"
+            f"&username={username}"
+            f"&password={password}"
+            f"&email={username}"
         )
-        if isinstance(result, dict) and "access_token" in result:
-            self._access_token = result["access_token"]
-            self._refresh_token = result.get("refresh_token")
-            return {
-                "access_token": self._access_token,
-                "refresh_token": self._refresh_token or "",
-            }
-        raise HymerConnectAuthError(
-            "Could not authenticate. Check credentials and try again."
-        )
+        try:
+            async with self._session.request(
+                "POST", url, headers=headers, data=data
+            ) as resp:
+                _LOGGER.debug("Auth response status: %s", resp.status)
+                if resp.status == 401:
+                    raise HymerConnectAuthError(
+                        "Invalid email or password"
+                    )
+                if resp.status >= 400:
+                    text = await resp.text()
+                    _LOGGER.error("Auth error %s: %s", resp.status, text[:200])
+                    raise HymerConnectApiError(
+                        f"Auth error {resp.status}: {text[:200]}"
+                    )
+                result = await resp.json()
+                if "access_token" in result:
+                    self._access_token = result["access_token"]
+                    self._refresh_token = result.get("refresh_token")
+                    return {
+                        "access_token": self._access_token,
+                        "refresh_token": self._refresh_token or "",
+                    }
+                raise HymerConnectAuthError(
+                    "No access_token in auth response"
+                )
+        except aiohttp.ClientError as err:
+            raise HymerConnectApiError(f"Connection error: {err}") from err
 
     async def _refresh_access_token(self) -> None:
         """Refresh the access token."""
