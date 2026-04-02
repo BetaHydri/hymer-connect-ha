@@ -1,0 +1,56 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "HYMER Connect Login",
+        "description": "Enter your HYMER Connect account credentials. Use the same email and password as in the HYMER Connect app.",
+        "data": {
+          "brand": "Brand",
+          "username": "Email",
+          "password": "Password"
+        }
+      },
+      "reauth_confirm": {
+        "title": "[%key:common::config_flow::title::reauth%]",
+        "description": "The HYMER Connect integration needs to re-authenticate your account.",
+        "data": {
+          "username": "Email",
+          "password": "Password"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Failed to connect to HYMER Connect API",
+      "invalid_auth": "Invalid email or password",
+      "unknown": "Unexpected error occurred"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+    }
+  },
+  "entity": {
+    "sensor": {
+      "battery_level": { "name": "Battery level" },
+      "battery_voltage": { "name": "Battery voltage" },
+      "chassis_battery_voltage": { "name": "Chassis battery voltage" },
+      "fresh_water_level": { "name": "Fresh water level" },
+      "grey_water_level": { "name": "Grey water level" },
+      "indoor_temperature": { "name": "Indoor temperature" },
+      "outdoor_temperature": { "name": "Outdoor temperature" },
+      "tire_pressure_front_left": { "name": "Tire pressure front left" },
+      "tire_pressure_front_right": { "name": "Tire pressure front right" },
+      "tire_pressure_back_left": { "name": "Tire pressure back left" },
+      "tire_pressure_back_right": { "name": "Tire pressure back right" }
+    },
+    "binary_sensor": {
+      "siu_online": { "name": "SIU online" },
+      "mains_power": { "name": "Mains power" },
+      "door_open": { "name": "Door" },
+      "window_open": { "name": "Window" },
+      "alarm_active": { "name": "Alarm" },
+      "heater_running": { "name": "Heater" },
+      "fridge_running": { "name": "Fridge" }
+    }
+  }
+}
