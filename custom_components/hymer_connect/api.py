@@ -23,6 +23,8 @@ from .const import (
     HEADER_LOCALE,
     HEADER_REMOTE_TOKEN,
     HEADER_SCU_URN,
+    OAUTH2_CLIENT_ID,
+    OAUTH2_CLIENT_SECRET,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -117,19 +119,22 @@ class HymerConnectApi:
             raise HymerConnectApiError(f"Connection error: {err}") from err
 
     async def authenticate(self, username: str, password: str) -> dict[str, str]:
-        """Authenticate using username and password (OAuth2 ROPC)."""
+        """Authenticate using OAuth2 ROPC with HTTP Basic client auth."""
+        import base64
+
         url = f"{self._base_url}{ENDPOINT_AUTH}"
+        client_creds = base64.b64encode(
+            f"{OAUTH2_CLIENT_ID}:{OAUTH2_CLIENT_SECRET}".encode()
+        ).decode()
         headers = {
             "Accept": "application/json",
-            "User-Agent": "HymerConnect-HA/0.1.0",
-            "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8",
-            HEADER_LOCALE: self._locale,
+            "Content-Type": "application/x-www-form-urlencoded",
+            "Authorization": f"Basic {client_creds}",
         }
         data = (
             f"grant_type={AUTH_GRANT_TYPE_PASSWORD}"
             f"&username={username}"
             f"&password={password}"
-            f"&email={username}"
         )
         try:
             async with self._session.request(
@@ -161,23 +166,39 @@ class HymerConnectApi:
             raise HymerConnectApiError(f"Connection error: {err}") from err
 
     async def _refresh_access_token(self) -> None:
-        """Refresh the access token."""
+        """Refresh the access token using OAuth2 refresh_token grant."""
+        import base64
+
         if not self._refresh_token:
             raise HymerConnectAuthError("No refresh token available")
-        data = {
-            "grant_type": AUTH_GRANT_TYPE_REFRESH,
-            "refresh_token": self._refresh_token,
+        url = f"{self._base_url}{ENDPOINT_AUTH}"
+        client_creds = base64.b64encode(
+            f"{OAUTH2_CLIENT_ID}:{OAUTH2_CLIENT_SECRET}".encode()
+        ).decode()
+        headers = {
+            "Accept": "application/json",
+            "Content-Type": "application/x-www-form-urlencoded",
+            "Authorization": f"Basic {client_creds}",
         }
-        result = await self._request(
-            "POST",
-            ENDPOINT_AUTH,
-            data=data,
-            headers={"Content-Type": "application/x-www-form-urlencoded;charset=UTF-8"},
+        data = (
+            f"grant_type={AUTH_GRANT_TYPE_REFRESH}"
+            f"&refresh_token={self._refresh_token}"
         )
-        if isinstance(result, dict) and "access_token" in result:
-            self._access_token = result["access_token"]
-            self._refresh_token = result.get("refresh_token", self._refresh_token)
-            return
+        try:
+            async with self._session.request(
+                "POST", url, headers=headers, data=data
+            ) as resp:
+                if resp.status >= 400:
+                    raise HymerConnectAuthError("Token refresh failed")
+                result = await resp.json()
+                if "access_token" in result:
+                    self._access_token = result["access_token"]
+                    self._refresh_token = result.get(
+                        "refresh_token", self._refresh_token
+                    )
+                    return
+        except aiohttp.ClientError as err:
+            raise HymerConnectApiError(f"Connection error: {err}") from err
         raise HymerConnectAuthError("Token refresh failed")
 
     async def get_mobile_config(self) -> dict[str, Any]:

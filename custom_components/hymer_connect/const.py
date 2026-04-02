@@ -8,7 +8,9 @@ API_BASE_URL_SCC = "https://scc-api.smartrv.erwinhymergroup.com"
 API_BASE_URL_RVTWIN = "https://scc-rvtwin.smartrv.erwinhymergroup.com"
 
 # Auth endpoint
-ENDPOINT_AUTH = "/api/ehg/v1/accounts/standard"
+ENDPOINT_AUTH = "/api/v2/oauth/token"
+OAUTH2_CLIENT_ID = "OAUTH2_CLIENT"
+OAUTH2_CLIENT_SECRET = "OAUTH2_CLIENT"
 
 # API endpoints
 ENDPOINT_MOBILE_CONFIG = "/api/mobile-config"
