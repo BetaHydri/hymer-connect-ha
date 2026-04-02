@@ -65,26 +65,50 @@ A ready-to-use Lovelace dashboard is included in `dashboards/hymer_connect.yaml`
 
 ## API
 
-This integration communicates with the HYMER Connect cloud API at `scc-api.smartrv.erwinhymergroup.com` (Azure API Management). It uses the same API as the official HYMER Connect mobile app.
+This integration communicates with the HYMER Connect cloud API at `smartrv.erwinhymergroup.com`. It uses the same OAuth2 ROPC authentication as the official HYMER Connect web and mobile apps.
+
+### Authentication
+
+| Parameter | Value |
+|-----------|-------|
+| **Endpoint** | `POST https://smartrv.erwinhymergroup.com/api/v2/oauth/token` |
+| **Grant type** | `password` (OAuth2 ROPC) |
+| **Client auth** | HTTP Basic `OAUTH2_CLIENT:OAUTH2_CLIENT` |
+| **Content-Type** | `application/x-www-form-urlencoded` |
+| **Body** | `grant_type=password&username=<email>&password=<password>` |
+
+The API returns `access_token`, `refresh_token`, and `id_token` (JWT). Token refresh uses the same endpoint with `grant_type=refresh_token`.
+
+### API Domains
+
+| Domain | Purpose |
+|--------|---------|
+| `smartrv.erwinhymergroup.com` | Authentication, SignalR negotiate |
+| `scc-api.smartrv.erwinhymergroup.com` | REST API data endpoints |
+| `scc-rvtwin.smartrv.erwinhymergroup.com` | Vehicle twin data |
+| `scc-appcomm.smartrv.erwinhymergroup.com` | SignalR hub |
 
 ### Architecture
 ```
-Home Assistant → HTTPS REST API → Azure APIM → EHG Backend → SIU (vehicle)
+Home Assistant → OAuth2 Auth → REST API → EHG Backend → SIU (vehicle)
+                                     ↓
+                              SignalR DataHub → Real-time updates
 ```
-
-Real-time updates via Azure SignalR Service are planned for a future release.
 
 ## Development Status
 
-- [x] API base URL discovered (`scc-api.smartrv.erwinhymergroup.com`)
+- [x] API base URL discovered
+- [x] Auth endpoint discovered (`/api/v2/oauth/token` with HTTP Basic Auth)
+- [x] Authentication tested successfully (returns access_token + refresh_token)
 - [x] Integration skeleton (config flow, coordinator, sensors, binary sensors)
 - [x] Reauth flow support
 - [x] Dashboard YAML
-- [ ] Auth flow validation with real credentials
 - [ ] Actual API response mapping to entities
 - [ ] Climate control entities (heater target temperature)
 - [ ] Switch entities (lights, USB, water pump)
+- [ ] Cover entities (awning, roof, dome)
 - [ ] SignalR real-time push updates
+- [ ] Device tracker (GPS location)
 
 ## License
 
