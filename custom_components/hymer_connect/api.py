@@ -121,6 +121,7 @@ class HymerConnectApi:
     async def authenticate(self, username: str, password: str) -> dict[str, str]:
         """Authenticate using OAuth2 ROPC with HTTP Basic client auth."""
         import base64
+        from urllib.parse import quote
 
         url = f"{self._base_url}{ENDPOINT_AUTH}"
         client_creds = base64.b64encode(
@@ -133,8 +134,8 @@ class HymerConnectApi:
         }
         data = (
             f"grant_type={AUTH_GRANT_TYPE_PASSWORD}"
-            f"&username={username}"
-            f"&password={password}"
+            f"&username={quote(username, safe='')}"
+            f"&password={quote(password, safe='')}"
         )
         try:
             async with self._session.request(
@@ -168,6 +169,7 @@ class HymerConnectApi:
     async def _refresh_access_token(self) -> None:
         """Refresh the access token using OAuth2 refresh_token grant."""
         import base64
+        from urllib.parse import quote
 
         if not self._refresh_token:
             raise HymerConnectAuthError("No refresh token available")
@@ -182,7 +184,7 @@ class HymerConnectApi:
         }
         data = (
             f"grant_type={AUTH_GRANT_TYPE_REFRESH}"
-            f"&refresh_token={self._refresh_token}"
+            f"&refresh_token={quote(self._refresh_token, safe='')}"
         )
         try:
             async with self._session.request(
