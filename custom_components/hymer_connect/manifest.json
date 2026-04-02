@@ -1,13 +1,13 @@
 {
   "domain": "hymer_connect",
   "name": "HYMER Connect",
-  "codeowners": ["@jantiede"],
+  "codeowners": ["@BetaHydri"],
   "config_flow": true,
   "dependencies": [],
-  "documentation": "https://github.com/jantiede/hymer-connect-ha",
+  "documentation": "https://github.com/BetaHydri/hymer-connect-ha",
   "integration_type": "hub",
   "iot_class": "cloud_polling",
-  "issue_tracker": "https://github.com/jantiede/hymer-connect-ha/issues",
+  "issue_tracker": "https://github.com/BetaHydri/hymer-connect-ha/issues",
   "loggers": ["hymer_connect"],
   "requirements": [],
   "version": "0.1.0"
