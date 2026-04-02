@@ -65,26 +65,244 @@ A ready-to-use Lovelace dashboard is included in `dashboards/hymer_connect.yaml`
 
 ## API
 
-This integration communicates with the HYMER Connect cloud API at `scc-api.smartrv.erwinhymergroup.com` (Azure API Management). It uses the same API as the official HYMER Connect mobile app.
+This integration communicates with the HYMER Connect cloud API at `smartrv.erwinhymergroup.com`. It uses the same OAuth2 ROPC authentication as the official HYMER Connect web and mobile apps.
+
+### Authentication
+
+| Parameter | Value |
+|-----------|-------|
+| **Endpoint** | `POST https://smartrv.erwinhymergroup.com/api/v2/oauth/token` |
+| **Grant type** | `password` (OAuth2 ROPC) |
+| **Client auth** | HTTP Basic `OAUTH2_CLIENT:OAUTH2_CLIENT` |
+| **Content-Type** | `application/x-www-form-urlencoded` |
+| **Body** | `grant_type=password&username=<email>&password=<password>` |
+
+The API returns `access_token`, `refresh_token`, and `id_token` (JWT, RS256). Token refresh uses the same endpoint with `grant_type=refresh_token`.
+
+The `access_token` JWT contains these claims:
+- `account_number` — UUID of the user account
+- `user_name` — email address
+- `scope` — `["default"]`
+- `tenant` — `"ehg"` (Erwin Hymer Group)
+- `client_id` — `"OAUTH2_CLIENT"`
+- `exp` — expiry timestamp (tokens expire after ~15 minutes)
+
+### API Domains
+
+| Domain | IP | Purpose |
+|--------|----|---------|
+| `smartrv.erwinhymergroup.com` | 20.4.141.205 | Authentication, SignalR negotiate, web app |
+| `scc-api.smartrv.erwinhymergroup.com` | 20.103.22.48 | REST API data endpoints (Azure API Management) |
+| `scc-rvtwin.smartrv.erwinhymergroup.com` | 13.107.226.45 | Vehicle twin data (RV digital twin) |
+| `scc-appcomm.smartrv.erwinhymergroup.com` | 20.4.141.205 | SignalR hub (alias of smartrv) |
+| `ehg-prod-signalr.service.signalr.net` | varies | Azure SignalR Service WebSocket |
+
+### REST API Endpoints
+
+All endpoints require the `SCC-CsNgAccessToken` header with the `access_token` from authentication.
+
+| Method | Endpoint | Purpose |
+|--------|----------|---------|
+| GET | `/api/ehg/v1/accounts/me` | Current user account info |
+| GET | `/api/ehg/v1/accounts/available` | Check email availability |
+| GET | `/api/ehg/v1/vehicles` | List of registered vehicles |
+| GET | `/api/ehg/v1/sius` | List of Smart Interface Units |
+| GET | `/api/ehg/v1/sensors` | Sensor data |
+| GET | `/api/ehg/v1/legal-docs/latest` | Latest legal documents |
+| GET | `/api/ehg/v1/firmwares/sius` | Firmware info for SIUs |
+| POST | `/api/ehg/v1/updates` | Update management |
+| POST | `/api/ehg/v1/accounts/standard/resetPassword` | Password reset |
+| GET | `/api/rv-twin/sensors/sync` | RV twin sensor sync |
+| GET | `/api/rv-twin/rv-model/documents` | RV model documents |
+| GET | `/api/rv-twin/rv-model/filters-hierarchy` | RV model filter hierarchy |
+| GET | `/api/service-catalogue/services` | Service catalogue |
+| GET | `/api/push-notifications/subscriptions/scu` | Push notification subscriptions |
+| GET | `/datahub/negotiate` | SignalR negotiate (no auth required) |
+
+### HTTP Headers
+
+| Header | Description |
+|--------|-------------|
+| `SCC-CsNgAccessToken` | OAuth2 access token |
+| `SCC-CsNgRemoteToken` | OAuth2 refresh token |
+| `SCC-Locale` | Language code (e.g. `de`, `en`) |
+| `SCC-PinCode` | PIN code for certain operations |
+| `SCC-ScuUrn` | SIU URN for device-specific requests |
 
 ### Architecture
+
 ```
-Home Assistant → HTTPS REST API → Azure APIM → EHG Backend → SIU (vehicle)
+                    ┌──────────────────────────────────┐
+                    │  smartrv.erwinhymergroup.com      │
+                    │  POST /api/v2/oauth/token         │
+                    │  (OAuth2 ROPC + HTTP Basic Auth)  │
+                    └──────────┬───────────────────────┘
+                               │ access_token
+                    ┌──────────▼───────────────────────┐
+                    │  scc-api.smartrv.erwinhymergroup  │
+                    │  REST API data endpoints          │
+                    │  (SCC-CsNgAccessToken header)     │
+                    └──────────┬───────────────────────┘
+                               │
+              ┌────────────────┼────────────────┐
+              │                │                │
+    ┌─────────▼──────┐ ┌──────▼──────┐ ┌───────▼───────┐
+    │ Vehicle Data   │ │  RV Twin    │ │  SignalR Hub  │
+    │ /api/ehg/v1/   │ │ scc-rvtwin  │ │ scc-appcomm   │
+    │ vehicles,sius  │ │ sensors/sync│ │ /datahub      │
+    │ sensors        │ │             │ │ (real-time)   │
+    └────────────────┘ └─────────────┘ └───────────────┘
+                               │
+                    ┌──────────▼───────────────────────┐
+                    │  SIU (Smart Interface Unit)       │
+                    │  Vehicle gateway (cellular/BLE)   │
+                    └──────────┬───────────────────────┘
+                               │ Vehicle Bus
+              ┌────────────────┼────────────────┐
+              │                │                │
+    ┌─────────▼──────┐ ┌──────▼──────┐ ┌───────▼───────┐
+    │ Truma Heater   │ │ Dometic     │ │ Sensors       │
+    │ Alde Boiler    │ │ Fridge      │ │ Battery, Temp │
+    │ Hegotec Lights │ │ Victron     │ │ Water, TPMS   │
+    └────────────────┘ └─────────────┘ └───────────────┘
 ```
 
-Real-time updates via Azure SignalR Service are planned for a future release.
+### SignalR DataHub (Real-Time Communication)
+
+The SIU communicates with the cloud via an Azure SignalR Service hub. The app uses the `@microsoft/signalr` library.
+
+| Property | Value |
+|----------|-------|
+| **Negotiate URL** | `GET https://smartrv.erwinhymergroup.com/datahub/negotiate?negotiateVersion=1` |
+| **WebSocket URL** | `wss://ehg-prod-signalr.service.signalr.net/client/?hub=datahub` |
+| **Hub method (send)** | `sendClientDataToHub` |
+| **Protocol** | JSON |
+| **Auth** | JWT token from negotiate response (auto-generated, no user auth needed for negotiate) |
+
+Connection states: `connecting` → `established` → `disconnected` (with auto-reconnect policy).
+
+### Communication Paths
+
+**Cloud Path** (used by this integration):
+```
+Home Assistant → HTTPS REST API → EHG Backend → SignalR DataHub → SIU (via cellular)
+```
+
+**BLE Path** (local, not used by this integration):
+```
+Mobile App → BLE UART → SIU → Vehicle Bus → Connected Components
+```
+
+The SIU connects to the cloud via the vehicle's cellular modem. When BLE and cloud are both available, the app prefers the cloud path.
+
+### Protobuf Message Types
+
+The vehicle communication uses Protocol Buffers for structured messages. Key message types discovered in the app bundle:
+
+#### Vehicle Data
+| Message | Purpose |
+|---------|---------|
+| `ConnectedComponent` | Single device on vehicle bus |
+| `ConnectedComponents` | Collection of all components |
+| `ConnectedComponentControls` | Control commands for a component |
+| `ConnectedComponentSettings` | Configuration for a component |
+| `ConnectedComponentValue` / `Values` | Sensor and state values |
+| `NonCommunicatingComponents` | Offline/unreachable components |
+
+#### Device Management
+| Message | Purpose |
+|---------|---------|
+| `DeviceTwin` | Azure IoT-style device twin |
+| `DeviceInfo` / `DeviceInfoPatch` | Mobile device registration |
+| `MobileDevices` | List of registered mobile devices |
+
+#### Telemetry & Diagnostics
+| Message | Purpose |
+|---------|---------|
+| `Telemetry` / `Telemetries` | Live telemetry data |
+| `DiagnosticsData` / `DiagnosticsDataItem` | Diagnostic information |
+| `SystemEvent` / `SystemEvents` | System event log |
+| `Statistic` / `Statistics` | Usage statistics |
+
+#### Automation & Notifications
+| Message | Purpose |
+|---------|---------|
+| `Scenario` / `Scenarios` | Automation scenarios (scenes) |
+| `ScenarioResult` / `ScenarioType` | Scenario execution results |
+| `Notification` / `NotificationSubscriptions` | Push notification management |
+| `AlarmType` | Alarm definitions |
+
+### App Login Flow (Observed via PCAPdroid)
+
+The complete network flow during a fresh login, in order:
+
+| Step | Domain | Bytes Sent | Bytes Received | Purpose |
+|------|--------|-----------|---------------|---------|
+| 1 | `firebaseinstallations.googleapis.com` | 1.7 KB | 5.2 KB | Firebase SDK init |
+| 2 | `firebase-settings.crashlytics.com` | 1.5 KB | 6.1 KB | Crashlytics config |
+| 3 | `api2.branch.io` | — | — | Branch.io analytics |
+| 4 | `config.mapbox.com` | 3.7 KB | 6.0 KB | Mapbox maps config |
+| 5 | `distributions.crowdin.net` | 5.1 KB | 443.8 KB | Translation strings download |
+| 6 | **`smartrv.erwinhymergroup.com`** | **4.5 KB** | **14.8 KB** | **Auth + config** |
+| 7 | **`scc-api.smartrv.erwinhymergroup.com`** | **11.2 KB** | **14.4 KB** | **REST API calls** |
+| 8 | **`scc-rvtwin.smartrv.erwinhymergroup.com`** | **2.7 KB** | **429.0 KB** | **Vehicle twin data** |
+| 9 | `firebaselogging-pa.googleapis.com` | 2.5 KB | 5.9 KB | Firebase event logging |
+
+### Firebase (NOT Used for Authentication)
+
+The app includes Firebase SDKs but does **not** use Firebase for primary authentication:
+
+| Property | Value |
+|----------|-------|
+| Firebase project | `smart-caravan-ddde6` |
+| Firebase API key | `AIzaSyA1raPCBXULGkXVIBHjkDTI1IWJuDX9D9k` |
+| Firebase DB URL | `https://smart-caravan-ddde6.firebaseio.com` |
+| Password login | **DISABLED** at project level |
+
+Firebase is used only for: Crashlytics (crash reporting), Analytics, Remote Config, and Installations.
+
+### Key Terminology
+
+| Term | Description |
+|------|-------------|
+| **SIU** | Smart Interface Unit — central vehicle gateway module |
+| **SCU** | Smart Control Unit (older term for SIU) |
+| **CSNG** | Internal platform codename (SiuFactoryCsngHttpApi, SccHttpApi) |
+| **EHG** | Erwin Hymer Group |
+| **Connected Component** | Any device on the vehicle bus (heaters, fridges, lights, etc.) |
+| **DataHub** | SignalR hub for real-time cloud communication |
+| **RV Twin** | Digital twin representation of the vehicle |
+| **PIA** | Platform Integration API (internal) |
+| **FOTA** | Firmware Over The Air |
+| **BOS Battery** | Battery management system brand |
+| **WWL** | Wireless Water Level sensor |
+
+### Source App Analysis
+
+This integration was reverse-engineered from:
+- **HYMER Connect** Android app v2.10.14 (`com.ehg.hymerconnect`)
+- React Native app with Hermes bytecode engine (compiled JS, ~13 MB)
+- Nordic Semiconductor BLE stack for local SIU communication
+- Microsoft SignalR (`@microsoft/signalr`) for real-time cloud communication
+- Protocol Buffers for structured vehicle messages
+- OkHttp for HTTP networking
+- Web app SPA at `smartrv.erwinhymergroup.com` (React + Vite, provided the auth endpoint discovery)
+- Azure infrastructure: API Management, SignalR Service, Spring Boot backend (nginx/1.25.1)
 
 ## Development Status
 
-- [x] API base URL discovered (`scc-api.smartrv.erwinhymergroup.com`)
+- [x] API base URL discovered
+- [x] Auth endpoint discovered (`/api/v2/oauth/token` with HTTP Basic Auth)
+- [x] Authentication tested successfully (returns access_token + refresh_token)
 - [x] Integration skeleton (config flow, coordinator, sensors, binary sensors)
 - [x] Reauth flow support
 - [x] Dashboard YAML
-- [ ] Auth flow validation with real credentials
 - [ ] Actual API response mapping to entities
 - [ ] Climate control entities (heater target temperature)
 - [ ] Switch entities (lights, USB, water pump)
+- [ ] Cover entities (awning, roof, dome)
 - [ ] SignalR real-time push updates
+- [ ] Device tracker (GPS location)
 
 ## License
 
