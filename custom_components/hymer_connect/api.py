@@ -213,51 +213,61 @@ class HymerConnectApi:
 
     async def get_account(self) -> dict[str, Any]:
         """Get current account info."""
-        return await self._request("GET", ENDPOINT_ACCOUNTS_ME)
+        return await self._request("GET", "/api/v2/accounts/me")
 
     async def get_vehicles(self) -> list[Any]:
-        """Get list of vehicles."""
-        result = await self._request("GET", ENDPOINT_VEHICLES)
+        """Get list of vehicles (assets)."""
+        result = await self._request("GET", "/api/v2/assets?page=0&size=100")
+        if isinstance(result, dict) and "content" in result:
+            return result["content"]
         if isinstance(result, list):
             return result
-        return result.get("vehicles", result.get("items", [result]))
+        return [result]
 
-    async def get_sius(self) -> list[Any]:
-        """Get list of SIUs (Smart Interface Units)."""
-        result = await self._request("GET", ENDPOINT_SIUS)
-        if isinstance(result, list):
-            return result
-        return result.get("sius", result.get("items", [result]))
+    async def get_vehicle(self, asset_id: int) -> dict[str, Any]:
+        """Get single vehicle asset details."""
+        return await self._request("GET", f"/api/v2/assets/{asset_id}")
 
-    async def get_sensors(self, siu_urn: str | None = None) -> dict[str, Any]:
-        """Get sensor data."""
-        endpoint = ENDPOINT_SENSORS
-        headers = {}
-        if siu_urn:
-            headers[HEADER_SCU_URN] = siu_urn
-        return await self._request("GET", endpoint, headers=headers)
+    async def get_vehicle_shadow(self, asset_id: int) -> dict[str, Any]:
+        """Get vehicle shadow (current state/properties)."""
+        return await self._request("GET", f"/api/v2/assets/{asset_id}/shadow")
 
-    async def get_vehicle_data(self, siu_urn: str | None = None) -> dict[str, Any]:
-        """Get full vehicle data via rv-twin sync."""
-        headers = {}
-        if siu_urn:
-            headers[HEADER_SCU_URN] = siu_urn
-        return await self._request("GET", ENDPOINT_RV_TWIN_SYNC, headers=headers)
+    async def get_service_catalogue(self) -> dict[str, Any]:
+        """Get service catalogue."""
+        return await self._request(
+            "GET", "/api/service-catalogue/services"
+        )
 
     async def get_vehicle_status(self) -> dict[str, Any]:
         """Get aggregated vehicle status.
 
-        Attempts multiple endpoints and returns the best available data.
+        Fetches vehicles and their properties from the v2 API.
         """
         data: dict[str, Any] = {}
-        for fetcher_name, fetcher in [
-            ("sensors", self.get_sensors),
-            ("vehicles", self.get_vehicles),
-            ("sius", self.get_sius),
-        ]:
-            try:
-                result = await fetcher()
-                data[fetcher_name] = result
-            except HymerConnectApiError as err:
-                _LOGGER.debug("Could not fetch %s: %s", fetcher_name, err)
+        try:
+            vehicles = await self.get_vehicles()
+            if vehicles:
+                data["vehicles"] = vehicles
+                vehicle = vehicles[0]
+                data["vehicle"] = vehicle
+                data["properties"] = vehicle.get("properties", {})
+
+                asset_id = vehicle.get("id")
+                if asset_id:
+                    try:
+                        shadow = await self.get_vehicle_shadow(asset_id)
+                        data["shadow"] = shadow
+                        if isinstance(shadow, dict) and "properties" in shadow:
+                            data["properties"].update(shadow["properties"])
+                    except HymerConnectApiError:
+                        _LOGGER.debug("Could not fetch vehicle shadow")
+        except HymerConnectApiError as err:
+            _LOGGER.debug("Could not fetch vehicles: %s", err)
+
+        try:
+            account = await self.get_account()
+            data["account"] = account
+        except HymerConnectApiError:
+            _LOGGER.debug("Could not fetch account info")
+
         return data
