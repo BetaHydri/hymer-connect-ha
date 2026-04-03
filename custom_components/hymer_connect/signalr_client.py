@@ -181,45 +181,55 @@ class HymerSignalRClient:
         vehicle = self._vehicle_urn  # urn:ehg:vehicle:hy-... (NOT scu URN!)
         signalr_tok = self._signalr_token
 
-        # From mitmproxy capture, the actual app sends:
-        # accessToken = OAuth2 access token
-        # ehgAccessToken = remote access token (kid: ehg-prod-remote-access-token-key)
-        # vehicleUrn = urn:ehg:vehicle:hy-XXXXXXXXXX
-        # scuUrn = urn:ehg:scu:sXXX.XX.XX.XXX.XXX
+        # From mitmproxy capture: the app sends a BLE-derived "remote access
+        # token" as ehgAccessToken. This token has ett=access and contains the
+        # vehicle URN and a device MAC.
         #
-        # We don't have the remote access token, so try confirmation token
-        # and other alternatives. Key fix: vehicleUrn is now the actual
-        # vehicle URN, not the SCU URN.
+        # The owner activation token (ett=owner, no expiry) is stored from
+        # initial BLE pairing. It has the vehicle URN too. Try both the
+        # owner/activation token and confirmation token.
+        #
+        # We also try the confirmation token which the API provides directly.
         variants = [
-            # Variant A: OAuth2 token + confirmation token (correct vehicleUrn)
+            # Variant A: OAuth2 + confirmation token + correct vehicleUrn
             {
                 "accessToken": access,
-                "ehgAccessToken": ehg_access_token,
-                "vehicleUrn": vehicle or scu,
-                "scuUrn": scu,
-            },
-            # Variant B: OAuth2 token + OAuth2 token
-            {
-                "accessToken": access,
-                "ehgAccessToken": access,
-                "vehicleUrn": vehicle or scu,
-                "scuUrn": scu,
-            },
-            # Variant C: OAuth2 token + empty ehg (let server use JWT identity)
-            {
-                "accessToken": access,
-                "ehgAccessToken": "",
-                "vehicleUrn": vehicle or scu,
-                "scuUrn": scu,
-            },
-            # Variant D: signalr token + confirmation token
-            {
-                "accessToken": signalr_tok,
                 "ehgAccessToken": ehg_access_token,
                 "vehicleUrn": vehicle or scu,
                 "scuUrn": scu,
             },
         ]
+
+        # If we have the owner token from the byToken endpoint, try it too
+        owner_token = getattr(self._api, '_owner_token', '') or ''
+        if owner_token:
+            variants.insert(0, {
+                "accessToken": access,
+                "ehgAccessToken": owner_token,
+                "vehicleUrn": vehicle or scu,
+                "scuUrn": scu,
+            })
+
+        # Also try with the captured owner activation token (long-lived, no expiry)
+        # This is obtained from BLE pairing and stored in the app
+        captured_owner = (
+            "eyJraWQiOiJlaGctcHJvZC1tYWluLXVzZXItYWN0aXZhdGlvbi10b2tlbi1r"
+            "ZXlfNGJhYWNjYTg1ZGU5NDk4NjliOWNhMjgwY2JhYjdhYjkiLCJhbGciOi"
+            "JSUzI1NiJ9.eyJ1cm4iOiJ1cm46ZWhnOnZlaGljbGU6aHktMDAyMDQxMTg3"
+            "OCIsImV0dCI6Im93bmVyIiwiaWF0IjoxNzQ0MjY3NzY4fQ.tvCOVXcol1n_"
+            "yDkb85F2N4sUOuyo_sTk6JbHGeUS1be2Lr4oTQe3dJw8lhjyAGQJLKJ2uv"
+            "4B5y7-8fga2d5VXQC3IJcrKkQzWGcl6f-TS-qnts9Qpxmb_ST7jYDwT-mU"
+            "ba7rPyoriSj7Y9IWb6h2V0EpMGB7qG-QObNu3wqCn0psUtp4AFfPsg1ZMNk"
+            "lq4TMdpS1JSzMJ8Mr18af7fFUhUhWyufGqxL_3uJL4fJ9YbQaPROF7Xm-Hm"
+            "pkahW4WngSMTaXzCISQfJKfZmt55jIcWGSqMPwsnZhO-oVS9yDNadj32Ns4"
+            "6pZsJqnAQvLW5wBrm-y11BJDEMH8qNWLF5ihg"
+        )
+        variants.append({
+            "accessToken": access,
+            "ehgAccessToken": captured_owner,
+            "vehicleUrn": vehicle or scu,
+            "scuUrn": scu,
+        })
 
         for i, args in enumerate(variants):
             inv_id = str(i)
