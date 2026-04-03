@@ -1,0 +1,7 @@
+*.bak
+*.pyc
+__pycache__/
+.venv/
+logs/
+*.flow
+*.docx

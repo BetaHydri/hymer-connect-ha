@@ -15,6 +15,8 @@ from .const import (
     CONF_ACCESS_TOKEN,
     CONF_BRAND,
     CONF_REFRESH_TOKEN,
+    CONF_SCU_URN,
+    CONF_VEHICLE_URN,
     DOMAIN,
     PLATFORMS,
 )
@@ -55,9 +57,14 @@ async def async_setup_entry(
                 f"Cannot connect to HYMER API: {err}"
             ) from err
         else:
-            # Store tokens — avoid storing password long-term
             hass.config_entries.async_update_entry(
                 entry,
+                data={
+                    **entry.data,
+                    CONF_ACCESS_TOKEN: tokens["access_token"],
+                    CONF_REFRESH_TOKEN: tokens["refresh_token"],
+                },
+            )
                 data={
                     **entry.data,
                     CONF_ACCESS_TOKEN: tokens["access_token"],
@@ -67,7 +74,14 @@ async def async_setup_entry(
     else:
         raise ConfigEntryAuthFailed("No credentials or tokens available")
 
-    coordinator = HymerConnectCoordinator(hass, api, entry)
+    vehicle_urn = entry.data.get(CONF_VEHICLE_URN, "")
+    scu_urn = entry.data.get(CONF_SCU_URN, "")
+
+    coordinator = HymerConnectCoordinator(
+        hass, api, session, entry,
+        vehicle_urn=vehicle_urn,
+        scu_urn=scu_urn,
+    )
     await coordinator.async_config_entry_first_refresh()
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
@@ -80,6 +94,9 @@ async def async_unload_entry(
     hass: HomeAssistant, entry: HymerConnectConfigEntry
 ) -> bool:
     """Unload a config entry."""
+    coordinator: HymerConnectCoordinator = hass.data[DOMAIN].get(entry.entry_id)
+    if coordinator:
+        await coordinator.stop_signalr()
     if unload_ok := await hass.config_entries.async_unload_platforms(
         entry, PLATFORM_LIST
     ):

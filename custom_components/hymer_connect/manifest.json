@@ -6,9 +6,9 @@
   "dependencies": [],
   "documentation": "https://github.com/BetaHydri/hymer-connect-ha",
   "integration_type": "hub",
-  "iot_class": "cloud_polling",
+  "iot_class": "cloud_push",
   "issue_tracker": "https://github.com/BetaHydri/hymer-connect-ha/issues",
   "loggers": ["hymer_connect"],
   "requirements": [],
-  "version": "0.1.0"
+  "version": "0.2.0"
 }

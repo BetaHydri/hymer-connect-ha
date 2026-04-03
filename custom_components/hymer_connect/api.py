@@ -2,29 +2,34 @@
 
 from __future__ import annotations
 
+import base64
 import logging
 from typing import Any
+from urllib.parse import quote
 
 import aiohttp
 
 from .const import (
     API_BASE_URL,
+    API_BASE_URL_APPCOMM,
+    API_BASE_URL_SCC,
+    APP_VERSION,
     AUTH_GRANT_TYPE_PASSWORD,
     AUTH_GRANT_TYPE_REFRESH,
     ENDPOINT_ACCOUNTS_ME,
     ENDPOINT_AUTH,
-    ENDPOINT_MOBILE_CONFIG,
-    ENDPOINT_RV_TWIN_SYNC,
+    ENDPOINT_CONFIRMATION_TOKEN,
+    ENDPOINT_CONFIG_BRANDS,
+    ENDPOINT_RV_TWIN_VEHICLES,
     ENDPOINT_SERVICE_CATALOGUE,
-    ENDPOINT_SENSORS,
-    ENDPOINT_SIUS,
-    ENDPOINT_VEHICLES,
     HEADER_ACCESS_TOKEN,
+    HEADER_BRAND,
+    HEADER_EHG_BRAND,
     HEADER_LOCALE,
-    HEADER_REMOTE_TOKEN,
-    HEADER_SCU_URN,
     OAUTH2_CLIENT_ID,
     OAUTH2_CLIENT_SECRET,
+    SIGNALR_NEGOTIATE_PATH,
+    USER_AGENT,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -45,7 +50,7 @@ class HymerConnectApi:
         self,
         session: aiohttp.ClientSession,
         brand: str = "hymer",
-        locale: str = "en",
+        locale: str = "de-DE",
     ) -> None:
         """Initialize the API client."""
         self._session = session
@@ -53,7 +58,11 @@ class HymerConnectApi:
         self._locale = locale
         self._access_token: str | None = None
         self._refresh_token: str | None = None
-        self._base_url = API_BASE_URL
+
+    @property
+    def access_token(self) -> str | None:
+        """Return the current access token."""
+        return self._access_token
 
     @property
     def authenticated(self) -> bool:
@@ -65,44 +74,61 @@ class HymerConnectApi:
         self._access_token = access_token
         self._refresh_token = refresh_token
 
-    def _auth_headers(self) -> dict[str, str]:
-        """Build headers with authentication."""
+    def _basic_auth_header(self) -> str:
+        """Build Base64-encoded Basic auth header for OAuth2."""
+        creds = base64.b64encode(
+            f"{OAUTH2_CLIENT_ID}:{OAUTH2_CLIENT_SECRET}".encode()
+        ).decode()
+        return f"Basic {creds}"
+
+    def _main_api_headers(self) -> dict[str, str]:
+        """Build headers for the main API (smartrv.erwinhymergroup.com)."""
         headers: dict[str, str] = {
-            "Accept": "application/json",
-            "User-Agent": "HymerConnect-HA/0.1.0",
-            HEADER_LOCALE: self._locale,
+            "Accept": "application/json, text/plain, */*",
+            "User-Agent": USER_AGENT,
+            "Accept-Encoding": "gzip",
+            HEADER_EHG_BRAND: f"{self._brand.capitalize()}/{APP_VERSION}",
         }
         if self._access_token:
             headers["Authorization"] = f"Bearer {self._access_token}"
+        return headers
+
+    def _scc_api_headers(self) -> dict[str, str]:
+        """Build headers for the SCC API (scc-api.smartrv.erwinhymergroup.com)."""
+        headers: dict[str, str] = {
+            "Accept": "application/json, text/plain, */*",
+            "User-Agent": USER_AGENT,
+            "Accept-Encoding": "gzip",
+            HEADER_BRAND: self._brand,
+            HEADER_LOCALE: self._locale,
+        }
+        if self._access_token:
             headers[HEADER_ACCESS_TOKEN] = self._access_token
-        if self._refresh_token:
-            headers[HEADER_REMOTE_TOKEN] = self._refresh_token
         return headers
 
     async def _request(
         self,
         method: str,
-        endpoint: str,
+        url: str,
         *,
-        data: dict[str, Any] | None = None,
+        data: str | None = None,
         json_data: dict[str, Any] | None = None,
         headers: dict[str, str] | None = None,
     ) -> dict[str, Any] | list[Any]:
         """Make an API request."""
-        url = f"{self._base_url}{endpoint}"
-        req_headers = self._auth_headers()
-        if headers:
-            req_headers.update(headers)
-
         try:
             async with self._session.request(
-                method, url, headers=req_headers, data=data, json=json_data
+                method, url, headers=headers, data=data, json=json_data
             ) as resp:
                 if resp.status == 401:
                     if self._refresh_token:
                         await self._refresh_access_token()
+                        if headers and HEADER_ACCESS_TOKEN in headers:
+                            headers[HEADER_ACCESS_TOKEN] = self._access_token
+                        elif headers and "Authorization" in headers:
+                            headers["Authorization"] = f"Bearer {self._access_token}"
                         return await self._request(
-                            method, endpoint, data=data, json_data=json_data, headers=headers
+                            method, url, data=data, json_data=json_data, headers=headers
                         )
                     raise HymerConnectAuthError("Authentication failed")
                 if resp.status == 403:
@@ -118,19 +144,17 @@ class HymerConnectApi:
         except aiohttp.ClientError as err:
             raise HymerConnectApiError(f"Connection error: {err}") from err
 
+    # --- Authentication ---
+
     async def authenticate(self, username: str, password: str) -> dict[str, str]:
         """Authenticate using OAuth2 ROPC with HTTP Basic client auth."""
-        import base64
-        from urllib.parse import quote
-
-        url = f"{self._base_url}{ENDPOINT_AUTH}"
-        client_creds = base64.b64encode(
-            f"{OAUTH2_CLIENT_ID}:{OAUTH2_CLIENT_SECRET}".encode()
-        ).decode()
+        url = f"{API_BASE_URL}{ENDPOINT_AUTH}"
         headers = {
-            "Accept": "application/json",
+            "Accept": "application/json, text/plain, */*",
             "Content-Type": "application/x-www-form-urlencoded",
-            "Authorization": f"Basic {client_creds}",
+            "Authorization": self._basic_auth_header(),
+            "User-Agent": USER_AGENT,
+            HEADER_EHG_BRAND: f"{self._brand.capitalize()}/{APP_VERSION}",
         }
         data = (
             f"grant_type={AUTH_GRANT_TYPE_PASSWORD}"
@@ -143,9 +167,7 @@ class HymerConnectApi:
             ) as resp:
                 _LOGGER.debug("Auth response status: %s", resp.status)
                 if resp.status == 401:
-                    raise HymerConnectAuthError(
-                        "Invalid email or password"
-                    )
+                    raise HymerConnectAuthError("Invalid email or password")
                 if resp.status >= 400:
                     text = await resp.text()
                     _LOGGER.error("Auth error %s: %s", resp.status, text[:200])
@@ -160,27 +182,20 @@ class HymerConnectApi:
                         "access_token": self._access_token,
                         "refresh_token": self._refresh_token or "",
                     }
-                raise HymerConnectAuthError(
-                    "No access_token in auth response"
-                )
+                raise HymerConnectAuthError("No access_token in auth response")
         except aiohttp.ClientError as err:
             raise HymerConnectApiError(f"Connection error: {err}") from err
 
     async def _refresh_access_token(self) -> None:
         """Refresh the access token using OAuth2 refresh_token grant."""
-        import base64
-        from urllib.parse import quote
-
         if not self._refresh_token:
             raise HymerConnectAuthError("No refresh token available")
-        url = f"{self._base_url}{ENDPOINT_AUTH}"
-        client_creds = base64.b64encode(
-            f"{OAUTH2_CLIENT_ID}:{OAUTH2_CLIENT_SECRET}".encode()
-        ).decode()
+        url = f"{API_BASE_URL}{ENDPOINT_AUTH}"
         headers = {
-            "Accept": "application/json",
+            "Accept": "application/json, text/plain, */*",
             "Content-Type": "application/x-www-form-urlencoded",
-            "Authorization": f"Basic {client_creds}",
+            "Authorization": self._basic_auth_header(),
+            "User-Agent": USER_AGENT,
         }
         data = (
             f"grant_type={AUTH_GRANT_TYPE_REFRESH}"
@@ -203,64 +218,96 @@ class HymerConnectApi:
             raise HymerConnectApiError(f"Connection error: {err}") from err
         raise HymerConnectAuthError("Token refresh failed")
 
-    async def get_mobile_config(self) -> dict[str, Any]:
-        """Get mobile app configuration."""
-        return await self._request("GET", ENDPOINT_MOBILE_CONFIG, headers={"Brand": self._brand})
-
-    async def get_service_catalogue(self) -> dict[str, Any]:
-        """Get service catalogue."""
-        return await self._request("GET", ENDPOINT_SERVICE_CATALOGUE)
+    # --- Main API ---
 
     async def get_account(self) -> dict[str, Any]:
         """Get current account info."""
-        return await self._request("GET", "/api/v2/accounts/me")
+        url = f"{API_BASE_URL}{ENDPOINT_ACCOUNTS_ME}"
+        return await self._request("GET", url, headers=self._main_api_headers())
+
+    async def get_confirmation_token(self) -> dict[str, Any]:
+        """Get a confirmation token for remote access."""
+        url = f"{API_BASE_URL}{ENDPOINT_CONFIRMATION_TOKEN}"
+        return await self._request("POST", url, headers=self._main_api_headers())
+
+    async def get_vehicle_by_token(self, ehg_token: str) -> dict[str, Any]:
+        """Get vehicle info using an activation/owner token."""
+        url = f"{API_BASE_URL}/api/ehg/v1/vehicles/byToken"
+        headers = self._main_api_headers()
+        headers["ehg-token"] = ehg_token
+        return await self._request("GET", url, headers=headers)
+
+    # --- SCC API ---
 
     async def get_vehicles(self) -> list[Any]:
-        """Get list of vehicles (assets)."""
-        result = await self._request("GET", "/api/v2/assets?page=0&size=100")
-        if isinstance(result, dict) and "content" in result:
-            return result["content"]
+        """Get list of vehicles from the RV-Twin API."""
+        url = f"{API_BASE_URL_SCC}{ENDPOINT_RV_TWIN_VEHICLES}"
+        result = await self._request("GET", url, headers=self._scc_api_headers())
         if isinstance(result, list):
             return result
         return [result]
 
-    async def get_vehicle(self, asset_id: int) -> dict[str, Any]:
-        """Get single vehicle asset details."""
-        return await self._request("GET", f"/api/v2/assets/{asset_id}")
+    async def get_vehicle(self, vehicle_id: int) -> dict[str, Any]:
+        """Get single vehicle details including tanks."""
+        url = f"{API_BASE_URL_SCC}{ENDPOINT_RV_TWIN_VEHICLES}/{vehicle_id}"
+        return await self._request("GET", url, headers=self._scc_api_headers())
 
-    async def get_vehicle_shadow(self, asset_id: int) -> dict[str, Any]:
-        """Get vehicle shadow (current state/properties)."""
-        return await self._request("GET", f"/api/v2/assets/{asset_id}/shadow")
+    async def get_brand_details(self) -> dict[str, Any]:
+        """Get brand configuration details."""
+        url = f"{API_BASE_URL_SCC}{ENDPOINT_CONFIG_BRANDS}"
+        return await self._request("GET", url, headers=self._scc_api_headers())
 
     async def get_service_catalogue(self) -> dict[str, Any]:
-        """Get service catalogue."""
-        return await self._request(
-            "GET", "/api/service-catalogue/services"
-        )
+        """Get available services."""
+        url = f"{API_BASE_URL_SCC}{ENDPOINT_SERVICE_CATALOGUE}"
+        return await self._request("GET", url, headers=self._scc_api_headers())
+
+    # --- SignalR Negotiate ---
+
+    async def signalr_negotiate(self) -> dict[str, Any]:
+        """Negotiate a SignalR connection to the datahub."""
+        url = f"{API_BASE_URL_APPCOMM}{SIGNALR_NEGOTIATE_PATH}?negotiateVersion=1"
+        headers = {
+            "Content-Type": "text/plain;charset=UTF-8",
+            "X-Requested-With": "XMLHttpRequest",
+            "X-SignalR-User-Agent": (
+                "Microsoft SignalR/6.0 "
+                "(6.0.25; Unknown OS; Browser; Unknown Runtime Version)"
+            ),
+            "User-Agent": USER_AGENT,
+            "Accept-Encoding": "gzip",
+        }
+        return await self._request("POST", url, headers=headers, data="")
+
+    # --- Aggregated Data ---
 
     async def get_vehicle_status(self) -> dict[str, Any]:
-        """Get aggregated vehicle status.
-
-        Fetches vehicles and their properties from the v2 API.
-        """
+        """Get aggregated vehicle status from the SCC REST API."""
         data: dict[str, Any] = {}
+
         try:
             vehicles = await self.get_vehicles()
             if vehicles:
                 data["vehicles"] = vehicles
                 vehicle = vehicles[0]
                 data["vehicle"] = vehicle
-                data["properties"] = vehicle.get("properties", {})
+                data["vehicle_id"] = vehicle.get("id")
+                data["vin"] = vehicle.get("vin")
+                data["name"] = vehicle.get("name")
+                data["model"] = vehicle.get("model")
+                data["model_group"] = vehicle.get("modelGroup")
+                data["model_year"] = vehicle.get("modelYear")
+                data["scu_urn"] = vehicle.get("smartUnitUrn")
+                data["type_id"] = vehicle.get("typeId")
 
-                asset_id = vehicle.get("id")
-                if asset_id:
+                vehicle_id = vehicle.get("id")
+                if vehicle_id:
                     try:
-                        shadow = await self.get_vehicle_shadow(asset_id)
-                        data["shadow"] = shadow
-                        if isinstance(shadow, dict) and "properties" in shadow:
-                            data["properties"].update(shadow["properties"])
+                        details = await self.get_vehicle(vehicle_id)
+                        data["vehicle_details"] = details
+                        data["tanks"] = details.get("tanks", [])
                     except HymerConnectApiError:
-                        _LOGGER.debug("Could not fetch vehicle shadow")
+                        _LOGGER.debug("Could not fetch vehicle details")
         except HymerConnectApiError as err:
             _LOGGER.debug("Could not fetch vehicles: %s", err)
 

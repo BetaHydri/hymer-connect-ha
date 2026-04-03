@@ -3,41 +3,48 @@
 DOMAIN = "hymer_connect"
 MANUFACTURER = "Erwin Hymer Group"
 
+# --- Base URLs ---
 API_BASE_URL = "https://smartrv.erwinhymergroup.com"
 API_BASE_URL_SCC = "https://scc-api.smartrv.erwinhymergroup.com"
 API_BASE_URL_RVTWIN = "https://scc-rvtwin.smartrv.erwinhymergroup.com"
+API_BASE_URL_APPCOMM = "https://scc-appcomm.smartrv.erwinhymergroup.com"
 
-# Auth endpoint
+# --- OAuth2 Authentication ---
 ENDPOINT_AUTH = "/api/v2/oauth/token"
-OAUTH2_CLIENT_ID = "OAUTH2_CLIENT"
-OAUTH2_CLIENT_SECRET = "OAUTH2_CLIENT"
-
-# API endpoints
-ENDPOINT_MOBILE_CONFIG = "/api/mobile-config"
-ENDPOINT_SERVICE_CATALOGUE = "/api/service-catalogue/services"
-ENDPOINT_ACCOUNTS = "/api/ehg/v1/accounts"
-ENDPOINT_ACCOUNTS_ME = "/api/ehg/v1/accounts/me"
-ENDPOINT_VEHICLES = "/api/ehg/v1/vehicles"
-ENDPOINT_SIUS = "/api/ehg/v1/sius"
-ENDPOINT_SENSORS = "/api/ehg/v1/sensors"
-ENDPOINT_RV_TWIN_SYNC = "/api/rv-twin/sensors/sync"
-ENDPOINT_PUSH_NOTIFICATIONS = "/api/push-notifications/subscriptions/scu"
-ENDPOINT_LEGAL_DOCS = "/api/ehg/v1/legal-docs"
-ENDPOINT_FIRMWARES = "/api/ehg/v1/firmwares/sius"
-ENDPOINT_REGISTRATIONS = "/api/ehg/v1/registrations"
-
-# Auth
+OAUTH2_CLIENT_ID = "ehg-prod-mobile-app-technical-user"
+OAUTH2_CLIENT_SECRET = "Z{?z:+7mQa5v@oee5]%dE^U*qx8}Yr(al5xSTh-9,D]bn<;8Vo8u<g%s\u00dc-(N3%y"
 AUTH_GRANT_TYPE_PASSWORD = "password"
 AUTH_GRANT_TYPE_REFRESH = "refresh_token"
 
-# Headers
-HEADER_ACCESS_TOKEN = "SCC-CsNgAccessToken"
-HEADER_REMOTE_TOKEN = "SCC-CsNgRemoteToken"
-HEADER_LOCALE = "SCC-Locale"
-HEADER_PIN_CODE = "SCC-PinCode"
-HEADER_SCU_URN = "SCC-ScuUrn"
+# --- Main API Endpoints ---
+ENDPOINT_ACCOUNTS_ME = "/api/ehg/v1/accounts/me"
+ENDPOINT_VEHICLES_BY_TOKEN = "/api/ehg/v1/vehicles/byToken"
+ENDPOINT_CONFIRMATION_TOKEN = "/api/ehg/v1/accounts/confirmationToken"
 
-# Brands
+# --- SCC API Endpoints ---
+ENDPOINT_RV_TWIN_VEHICLES = "/api/rv-twin/vehicles"
+ENDPOINT_CONFIG_MENU = "/api/config/menu"
+ENDPOINT_CONFIG_BRANDS = "/api/config/brands/details"
+ENDPOINT_SERVICE_CATALOGUE = "/api/service-catalogue/services"
+ENDPOINT_PUSH_NOTIFICATIONS = "/api/push-notifications/subscriptions/scu"
+ENDPOINT_PUSH_DEVICE_REG = "/api/push-notifications/devices"
+
+# --- SignalR ---
+SIGNALR_NEGOTIATE_PATH = "/datahub/negotiate"
+SIGNALR_HUB_NAME = "datahub"
+
+# --- Headers ---
+HEADER_ACCESS_TOKEN = "scc-csngaccesstoken"
+HEADER_BRAND = "scc-brand"
+HEADER_LOCALE = "scc-locale"
+HEADER_APP_VERSION = "scc-appversion"
+HEADER_EHG_BRAND = "ehg-smart-caravan-brand"
+
+# --- App Version ---
+APP_VERSION = "2.10.14"
+USER_AGENT = "okhttp/4.10.0"
+
+# --- Brands ---
 BRANDS = {
     "hymer": "HYMER",
     "buerstner": "Bürstner",
@@ -59,7 +66,8 @@ CONF_BRAND = "brand"
 CONF_ACCESS_TOKEN = "access_token"
 CONF_REFRESH_TOKEN = "refresh_token"
 CONF_VEHICLE_URN = "vehicle_urn"
-CONF_SIU_URN = "siu_urn"
+CONF_SCU_URN = "scu_urn"
+CONF_VEHICLE_ID = "vehicle_id"
 
 # Platforms
 PLATFORMS = ["sensor", "binary_sensor"]
