@@ -133,40 +133,34 @@ All endpoints require the `SCC-CsNgAccessToken` header with the `access_token` f
 
 ### Architecture
 
-```
-                    ┌──────────────────────────────────┐
-                    │  smartrv.erwinhymergroup.com      │
-                    │  POST /api/v2/oauth/token         │
-                    │  (OAuth2 ROPC + HTTP Basic Auth)  │
-                    └──────────┬───────────────────────┘
-                               │ access_token
-                    ┌──────────▼───────────────────────┐
-                    │  scc-api.smartrv.erwinhymergroup  │
-                    │  REST API data endpoints          │
-                    │  (SCC-CsNgAccessToken header)     │
-                    └──────────┬───────────────────────┘
-                               │
-              ┌────────────────┼────────────────┐
-              │                │                │
-    ┌─────────▼──────┐ ┌──────▼──────┐ ┌───────▼───────┐
-    │ Vehicle Data   │ │  RV Twin    │ │  SignalR Hub  │
-    │ /api/ehg/v1/   │ │ scc-rvtwin  │ │ scc-appcomm   │
-    │ vehicles,sius  │ │ sensors/sync│ │ /datahub      │
-    │ sensors        │ │             │ │ (real-time)   │
-    └────────────────┘ └─────────────┘ └───────────────┘
-                               │
-                    ┌──────────▼───────────────────────┐
-                    │  SIU (Smart Interface Unit)       │
-                    │  Vehicle gateway (cellular/BLE)   │
-                    └──────────┬───────────────────────┘
-                               │ Vehicle Bus
-              ┌────────────────┼────────────────┐
-              │                │                │
-    ┌─────────▼──────┐ ┌──────▼──────┐ ┌───────▼───────┐
-    │ Truma Heater   │ │ Dometic     │ │ Sensors       │
-    │ Alde Boiler    │ │ Fridge      │ │ Battery, Temp │
-    │ Hegotec Lights │ │ Victron     │ │ Water, TPMS   │
-    └────────────────┘ └─────────────┘ └───────────────┘
+```mermaid
+graph TD
+    AUTH["smartrv.erwinhymergroup.com<br/>POST /api/v2/oauth/token<br/>(OAuth2 ROPC + HTTP Basic Auth)"]
+    API["scc-api.smartrv.erwinhymergroup<br/>REST API data endpoints<br/>(SCC-CsNgAccessToken header)"]
+
+    AUTH -->|access_token| API
+
+    VD["Vehicle Data<br/>/api/ehg/v1/<br/>vehicles, sius, sensors"]
+    RT["RV Twin<br/>scc-rvtwin<br/>sensors/sync"]
+    SR["SignalR Hub<br/>scc-appcomm<br/>/datahub (real-time)"]
+
+    API --> VD
+    API --> RT
+    API --> SR
+
+    SIU["SIU (Smart Interface Unit)<br/>Vehicle gateway (cellular/BLE)"]
+
+    VD --> SIU
+    RT --> SIU
+    SR --> SIU
+
+    TH["Truma Heater<br/>Alde Boiler<br/>Hegotec Lights"]
+    DO["Dometic<br/>Fridge<br/>Victron"]
+    SE["Sensors<br/>Battery, Temp<br/>Water, TPMS"]
+
+    SIU -->|Vehicle Bus| TH
+    SIU -->|Vehicle Bus| DO
+    SIU -->|Vehicle Bus| SE
 ```
 
 ### SignalR DataHub (Real-Time Communication)
