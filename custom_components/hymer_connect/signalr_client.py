@@ -178,38 +178,45 @@ class HymerSignalRClient:
 
         access = self._api.access_token
         scu = self._scu_urn
+        vehicle = self._vehicle_urn  # urn:ehg:vehicle:hy-... (NOT scu URN!)
         signalr_tok = self._signalr_token
 
-        # Try multiple argument variants to find which one the server accepts.
-        # Variant A got ACCESS_DENIED (not INVALID_INPUT) — format is correct
-        # with signalr_tok as accessToken. Need to find the right ehgAccessToken.
+        # From mitmproxy capture, the actual app sends:
+        # accessToken = OAuth2 access token
+        # ehgAccessToken = remote access token (kid: ehg-prod-remote-access-token-key)
+        # vehicleUrn = urn:ehg:vehicle:hy-XXXXXXXXXX
+        # scuUrn = urn:ehg:scu:sXXX.XX.XX.XXX.XXX
+        #
+        # We don't have the remote access token, so try confirmation token
+        # and other alternatives. Key fix: vehicleUrn is now the actual
+        # vehicle URN, not the SCU URN.
         variants = [
-            # Variant A: signalr token + oauth token as ehg
+            # Variant A: OAuth2 token + confirmation token (correct vehicleUrn)
             {
-                "accessToken": signalr_tok,
-                "ehgAccessToken": access,
-                "vehicleUrn": scu,
+                "accessToken": access,
+                "ehgAccessToken": ehg_access_token,
+                "vehicleUrn": vehicle or scu,
                 "scuUrn": scu,
             },
-            # Variant B: signalr token + confirmation token
+            # Variant B: OAuth2 token + OAuth2 token
+            {
+                "accessToken": access,
+                "ehgAccessToken": access,
+                "vehicleUrn": vehicle or scu,
+                "scuUrn": scu,
+            },
+            # Variant C: OAuth2 token + empty ehg (let server use JWT identity)
+            {
+                "accessToken": access,
+                "ehgAccessToken": "",
+                "vehicleUrn": vehicle or scu,
+                "scuUrn": scu,
+            },
+            # Variant D: signalr token + confirmation token
             {
                 "accessToken": signalr_tok,
                 "ehgAccessToken": ehg_access_token,
-                "vehicleUrn": scu,
-                "scuUrn": scu,
-            },
-            # Variant C: signalr token + empty ehg
-            {
-                "accessToken": signalr_tok,
-                "ehgAccessToken": "",
-                "vehicleUrn": scu,
-                "scuUrn": scu,
-            },
-            # Variant D: signalr token + signalr token as ehg
-            {
-                "accessToken": signalr_tok,
-                "ehgAccessToken": signalr_tok,
-                "vehicleUrn": scu,
+                "vehicleUrn": vehicle or scu,
                 "scuUrn": scu,
             },
         ]

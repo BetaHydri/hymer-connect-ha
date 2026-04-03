@@ -231,6 +231,14 @@ class HymerConnectApi:
         url = f"{API_BASE_URL}{ENDPOINT_CONFIRMATION_TOKEN}"
         return await self._request("POST", url, headers=self._main_api_headers())
 
+    async def get_ehg_vehicles(self) -> list[Any]:
+        """Get vehicles from the main EHG API (returns vehicle URN)."""
+        url = f"{API_BASE_URL}/api/ehg/v1/vehicles"
+        result = await self._request("GET", url, headers=self._main_api_headers())
+        if isinstance(result, list):
+            return result
+        return [result]
+
     async def get_vehicle_by_token(self, ehg_token: str) -> dict[str, Any]:
         """Get vehicle info using an activation/owner token."""
         url = f"{API_BASE_URL}/api/ehg/v1/vehicles/byToken"
@@ -323,6 +331,20 @@ class HymerConnectApi:
             data["account"] = account
         except HymerConnectApiError:
             _LOGGER.debug("Could not fetch account info")
+
+        # Get vehicle URN from main EHG API (needed for SignalR UpdateTokens)
+        try:
+            ehg_vehicles = await self.get_ehg_vehicles()
+            if ehg_vehicles:
+                ehg_v = ehg_vehicles[0] if isinstance(ehg_vehicles, list) else ehg_vehicles
+                data["vehicle_urn"] = ehg_v.get("urn", "")
+                _LOGGER.debug(
+                    "EHG vehicle URN=%s, keys=%s",
+                    data["vehicle_urn"],
+                    list(ehg_v.keys()) if isinstance(ehg_v, dict) else "not-dict",
+                )
+        except HymerConnectApiError:
+            _LOGGER.debug("Could not fetch EHG vehicles")
 
         _LOGGER.debug(
             "Vehicle status keys: %s, model=%s, vin=%s",

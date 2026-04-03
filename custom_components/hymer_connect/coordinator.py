@@ -41,8 +41,8 @@ class HymerConnectCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         """Initialize the coordinator."""
         self.api = api
         self._session = session
-        self._vehicle_urn = vehicle_urn
-        self._scu_urn = scu_urn
+        self._vehicle_urn = vehicle_urn  # urn:ehg:vehicle:hy-XXXXXXXXXX
+        self._scu_urn = scu_urn  # urn:ehg:scu:sXXX.XX.XX.XXX.XXX
         self._signalr: HymerSignalRClient | None = None
         self._signalr_data: dict[str, Any] = {}
         super().__init__(
@@ -107,20 +107,29 @@ class HymerConnectCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             ) from err
 
         # Store URNs from REST data if not set yet
-        if not self._vehicle_urn and rest_data.get("vehicle"):
+        if not self._scu_urn and rest_data.get("vehicle"):
             vehicle = rest_data["vehicle"]
-            self._vehicle_urn = vehicle.get("smartUnitUrn", "")
+            self._scu_urn = vehicle.get("smartUnitUrn", "")
             vin = vehicle.get("vin", "")
-            _LOGGER.debug("Discovered vehicle VIN=%s SCU=%s", vin, self._vehicle_urn)
+            _LOGGER.debug("Discovered vehicle VIN=%s SCU=%s", vin, self._scu_urn)
+
+        # Get vehicle URN (urn:ehg:vehicle:hy-...) from EHG API
+        if not self._vehicle_urn and rest_data.get("vehicle_urn"):
+            self._vehicle_urn = rest_data["vehicle_urn"]
+            _LOGGER.warning(
+                "Discovered vehicle_urn=%s, scu_urn=%s",
+                self._vehicle_urn,
+                self._scu_urn,
+            )
 
             # Persist URNs in config entry for next restart
-            if self._vehicle_urn:
+            if self._vehicle_urn and self._scu_urn:
                 self.hass.config_entries.async_update_entry(
                     self.config_entry,
                     data={
                         **self.config_entry.data,
                         "vehicle_urn": self._vehicle_urn,
-                        "scu_urn": self._vehicle_urn,
+                        "scu_urn": self._scu_urn,
                     },
                 )
 
