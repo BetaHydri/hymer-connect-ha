@@ -166,22 +166,28 @@ class HymerSignalRClient:
                 "Could not get confirmation token for UpdateTokens: %s", err
             )
 
-        # The server expects 3 positional string arguments, not a dict
+        # Server expects a single object argument.
+        # Previous attempt with dict returned INVALID_INPUT;
+        # positional args caused server crash.
+        # Try the dict format with the SCC header name convention.
         msg = {
             "arguments": [
-                self._api.access_token,
-                ehg_access_token,
-                self._scu_urn,
+                {
+                    "accessToken": self._api.access_token,
+                    "ehgAccessToken": ehg_access_token,
+                    "scuUrn": self._scu_urn,
+                }
             ],
             "invocationId": "0",
             "target": "UpdateTokens",
             "type": MSG_TYPE_INVOCATION,
         }
         _LOGGER.warning(
-            "Sending UpdateTokens: scu=%s, access_len=%d, ehg_len=%d",
+            "Sending UpdateTokens: scu=%s, access_len=%d, ehg_len=%d, keys=%s",
             self._scu_urn,
             len(self._api.access_token or ""),
             len(ehg_access_token),
+            list(msg["arguments"][0].keys()),
         )
         await self._ws.send_str(
             json.dumps(msg) + SIGNALR_RECORD_SEPARATOR
