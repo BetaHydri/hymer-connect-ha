@@ -232,9 +232,14 @@ class HymerConnectApi:
         return await self._request("POST", url, headers=self._main_api_headers())
 
     async def get_ehg_vehicles(self) -> list[Any]:
-        """Get vehicles from the main EHG API (returns vehicle URN)."""
+        """Get vehicles from the main EHG API (returns vehicle URN).
+
+        Response is paginated: {content: [...], totalElements: N, ...}
+        """
         url = f"{API_BASE_URL}/api/ehg/v1/vehicles"
         result = await self._request("GET", url, headers=self._main_api_headers())
+        if isinstance(result, dict) and "content" in result:
+            return result["content"]
         if isinstance(result, list):
             return result
         return [result]
