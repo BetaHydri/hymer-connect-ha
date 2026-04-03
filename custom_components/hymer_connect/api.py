@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import base64
 import logging
 from typing import Any
 from urllib.parse import quote
@@ -26,8 +25,7 @@ from .const import (
     HEADER_BRAND,
     HEADER_EHG_BRAND,
     HEADER_LOCALE,
-    OAUTH2_CLIENT_ID,
-    OAUTH2_CLIENT_SECRET,
+    OAUTH2_BASIC_AUTH,
     SIGNALR_NEGOTIATE_PATH,
     USER_AGENT,
 )
@@ -74,12 +72,10 @@ class HymerConnectApi:
         self._access_token = access_token
         self._refresh_token = refresh_token
 
-    def _basic_auth_header(self) -> str:
-        """Build Base64-encoded Basic auth header for OAuth2."""
-        creds = base64.b64encode(
-            f"{OAUTH2_CLIENT_ID}:{OAUTH2_CLIENT_SECRET}".encode()
-        ).decode()
-        return f"Basic {creds}"
+    @staticmethod
+    def _basic_auth_header() -> str:
+        """Return the pre-computed Basic auth header for OAuth2."""
+        return OAUTH2_BASIC_AUTH
 
     def _main_api_headers(self) -> dict[str, str]:
         """Build headers for the main API (smartrv.erwinhymergroup.com)."""

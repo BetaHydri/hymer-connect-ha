@@ -12,7 +12,9 @@ API_BASE_URL_APPCOMM = "https://scc-appcomm.smartrv.erwinhymergroup.com"
 # --- OAuth2 Authentication ---
 ENDPOINT_AUTH = "/api/v2/oauth/token"
 OAUTH2_CLIENT_ID = "ehg-prod-mobile-app-technical-user"
-OAUTH2_CLIENT_SECRET = "Z{?z:+7mQa5v@oee5]%dE^U*qx8}Yr(al5xSTh-9,D]bn<;8Vo8u<g%s\u00dc-(N3%y"
+# Pre-computed Basic auth value from the official app (avoids encoding issues
+# with special characters in the client secret).
+OAUTH2_BASIC_AUTH = "Basic ZWhnLXByb2QtbW9iaWxlLWFwcC10ZWNobmljYWwtdXNlcjpaez96Ois3bVFhNXZAb2VlNV0lZEVeUSpxeDh9WXIoYWw1eFNUaC05LERdYm48OzhWbzh1PGclc8OcLShOMyV5"
 AUTH_GRANT_TYPE_PASSWORD = "password"
 AUTH_GRANT_TYPE_REFRESH = "refresh_token"
 
