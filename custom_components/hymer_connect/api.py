@@ -337,13 +337,15 @@ class HymerConnectApi:
             if ehg_vehicles:
                 ehg_v = ehg_vehicles[0] if isinstance(ehg_vehicles, list) else ehg_vehicles
                 data["vehicle_urn"] = ehg_v.get("urn", "")
-                _LOGGER.debug(
+                _LOGGER.warning(
                     "EHG vehicle URN=%s, keys=%s",
                     data["vehicle_urn"],
                     list(ehg_v.keys()) if isinstance(ehg_v, dict) else "not-dict",
                 )
-        except HymerConnectApiError:
-            _LOGGER.debug("Could not fetch EHG vehicles")
+            else:
+                _LOGGER.warning("EHG vehicles returned empty")
+        except HymerConnectApiError as err:
+            _LOGGER.warning("Could not fetch EHG vehicles: %s", err)
 
         _LOGGER.debug(
             "Vehicle status keys: %s, model=%s, vin=%s",

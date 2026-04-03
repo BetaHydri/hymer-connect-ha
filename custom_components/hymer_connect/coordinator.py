@@ -64,12 +64,8 @@ class HymerConnectCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
     async def start_signalr(self) -> None:
         """Start the SignalR WebSocket connection."""
-        if not self._vehicle_urn or not self._scu_urn:
-            _LOGGER.warning(
-                "No vehicle/SCU URN — skipping SignalR (vehicle=%s, scu=%s)",
-                self._vehicle_urn,
-                self._scu_urn,
-            )
+        if not self._scu_urn:
+            _LOGGER.warning("No SCU URN — skipping SignalR")
             return
 
         if self._signalr and self._signalr.connected:
