@@ -180,33 +180,35 @@ class HymerSignalRClient:
         scu = self._scu_urn
         signalr_tok = self._signalr_token
 
-        # Try multiple argument variants to find which one the server accepts
+        # Try multiple argument variants to find which one the server accepts.
+        # Variant A got ACCESS_DENIED (not INVALID_INPUT) — format is correct
+        # with signalr_tok as accessToken. Need to find the right ehgAccessToken.
         variants = [
-            # Variant A: signalr negotiate token as accessToken
-            {
-                "accessToken": signalr_tok,
-                "ehgAccessToken": ehg_access_token,
-                "vehicleUrn": scu,
-                "scuUrn": scu,
-            },
-            # Variant B: signalr token + oauth token as ehg
+            # Variant A: signalr token + oauth token as ehg
             {
                 "accessToken": signalr_tok,
                 "ehgAccessToken": access,
                 "vehicleUrn": scu,
                 "scuUrn": scu,
             },
-            # Variant C: oauth as access, confirmation as ehg (original)
+            # Variant B: signalr token + confirmation token
             {
-                "accessToken": access,
+                "accessToken": signalr_tok,
                 "ehgAccessToken": ehg_access_token,
                 "vehicleUrn": scu,
                 "scuUrn": scu,
             },
-            # Variant D: oauth as both
+            # Variant C: signalr token + empty ehg
             {
-                "accessToken": access,
-                "ehgAccessToken": access,
+                "accessToken": signalr_tok,
+                "ehgAccessToken": "",
+                "vehicleUrn": scu,
+                "scuUrn": scu,
+            },
+            # Variant D: signalr token + signalr token as ehg
+            {
+                "accessToken": signalr_tok,
+                "ehgAccessToken": signalr_tok,
                 "vehicleUrn": scu,
                 "scuUrn": scu,
             },
@@ -262,7 +264,7 @@ class HymerSignalRClient:
                                     status,
                                     json.dumps(parsed, default=str)[:500],
                                 )
-                                if status not in ("INVALID_INPUT", "UNKNOWN"):
+                                if status in ("OK", "SUCCESS", "ACCEPTED"):
                                     _LOGGER.warning(
                                         "UpdateTokens SUCCESS with variant %s!",
                                         chr(65 + i),
