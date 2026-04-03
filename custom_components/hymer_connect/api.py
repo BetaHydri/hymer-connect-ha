@@ -278,6 +278,9 @@ class HymerConnectApi:
             "User-Agent": USER_AGENT,
             "Accept-Encoding": "gzip",
         }
+        if self._access_token:
+            headers["Authorization"] = f"Bearer {self._access_token}"
+            headers[HEADER_ACCESS_TOKEN] = self._access_token
         return await self._request("POST", url, headers=headers, data="")
 
     # --- Aggregated Data ---

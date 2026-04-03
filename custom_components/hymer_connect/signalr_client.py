@@ -71,6 +71,13 @@ class HymerSignalRClient:
         azure_url = negotiate1.get("url")
         signalr_token = negotiate1.get("accessToken")
 
+        _LOGGER.debug(
+            "SignalR negotiate (step 1): url=%s, hasToken=%s, keys=%s",
+            bool(azure_url),
+            bool(signalr_token),
+            list(negotiate1.keys()) if isinstance(negotiate1, dict) else "not-dict",
+        )
+
         if not azure_url or not signalr_token:
             raise HymerConnectApiError(
                 "SignalR negotiate did not return url/accessToken"
@@ -206,6 +213,13 @@ class HymerSignalRClient:
         target = msg.get("target", "")
         args = msg.get("arguments", [])
 
+        _LOGGER.debug(
+            "SignalR message: type=%s target=%s args_count=%d",
+            msg_type,
+            target,
+            len(args),
+        )
+
         if target == "PiaResponse" and args:
             b64_payload = args[0] if isinstance(args[0], str) else ""
             if b64_payload:
@@ -223,6 +237,8 @@ class HymerSignalRClient:
             return
 
         self._running = True
+        _LOGGER.debug("SignalR listen loop started for %s", self._vehicle_urn)
+        msg_count = 0
         try:
             async for msg in self._ws:
                 if not self._running:
@@ -243,14 +259,20 @@ class HymerSignalRClient:
                                 + SIGNALR_RECORD_SEPARATOR
                             )
                         else:
+                            msg_count += 1
                             self._handle_message(parsed)
                 elif msg.type in (
                     aiohttp.WSMsgType.CLOSED,
                     aiohttp.WSMsgType.ERROR,
                 ):
-                    _LOGGER.warning("SignalR WebSocket closed/error")
+                    _LOGGER.warning(
+                        "SignalR WebSocket closed/error after %d messages", msg_count
+                    )
                     break
         finally:
+            _LOGGER.debug(
+                "SignalR listen loop ended, processed %d messages", msg_count
+            )
             self._connected = False
             self._running = False
 

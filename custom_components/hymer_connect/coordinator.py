@@ -113,16 +113,37 @@ class HymerConnectCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             vin = vehicle.get("vin", "")
             _LOGGER.debug("Discovered vehicle VIN=%s SCU=%s", vin, self._vehicle_urn)
 
+            # Persist URNs in config entry for next restart
+            if self._vehicle_urn:
+                self.hass.config_entries.async_update_entry(
+                    self.config_entry,
+                    data={
+                        **self.config_entry.data,
+                        "vehicle_urn": self._vehicle_urn,
+                        "scu_urn": self._vehicle_urn,
+                    },
+                )
+
         if not self._scu_urn and self._vehicle_urn:
             self._scu_urn = self._vehicle_urn
 
         # Try to start SignalR if not connected
         if not self._signalr or not self._signalr.connected:
+            _LOGGER.debug(
+                "SignalR not connected (urn=%s, scu=%s), attempting start",
+                self._vehicle_urn,
+                self._scu_urn,
+            )
             try:
                 await self.start_signalr()
             except Exception:
                 _LOGGER.debug("SignalR connect attempt failed", exc_info=True)
 
         # Merge REST + SignalR data
+        _LOGGER.debug(
+            "Data update: rest_keys=%s, signalr_sensors=%d",
+            list(rest_data.keys()),
+            len(self._signalr_data),
+        )
         rest_data["signalr_sensors"] = self._signalr_data
         return rest_data
