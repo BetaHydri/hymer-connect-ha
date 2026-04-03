@@ -62,7 +62,7 @@ A ready-to-use Lovelace dashboard is included in `dashboards/hymer_connect.yaml`
 
 1. Go to **Settings → Dashboards → + Add Dashboard**
 2. Open the new dashboard → Edit → three dots → **Raw configuration editor**
-3. Paste the contents of [`dashboards/hymer_connect.yaml`](dashboards/hymer_connect.yaml)
+3. Paste the contents of [`dashboards/hymer_connect.yaml`](https://github.com/BetaHydri/hymer-connect-ha/blob/master/dashboards/hymer_connect.yaml)
 4. Save
 
 ## API

@@ -15,8 +15,7 @@ analyze_*.js
 /manifest.json
 /strings.json
 
-# Dashboard / translation duplicates at root (canonical in custom_components/)
-/dashboards/
+# Translation duplicates at root
 /translations/
 
 # Python
