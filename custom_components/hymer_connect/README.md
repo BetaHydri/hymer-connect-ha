@@ -135,15 +135,15 @@ All endpoints require the `SCC-CsNgAccessToken` header with the `access_token` f
 
 ```
                     ┌──────────────────────────────────┐
-                    │  smartrv.erwinhymergroup.com      │
-                    │  POST /api/v2/oauth/token         │
-                    │  (OAuth2 ROPC + HTTP Basic Auth)  │
+                    │  smartrv.erwinhymergroup.com     │
+                    │  POST /api/v2/oauth/token        │
+                    │  (OAuth2 ROPC + HTTP Basic Auth) │
                     └──────────┬───────────────────────┘
                                │ access_token
                     ┌──────────▼───────────────────────┐
-                    │  scc-api.smartrv.erwinhymergroup  │
-                    │  REST API data endpoints          │
-                    │  (SCC-CsNgAccessToken header)     │
+                    │  scc-api.smartrv.erwinhymergroup │
+                    │  REST API data endpoints         │
+                    │  (SCC-CsNgAccessToken header)    │
                     └──────────┬───────────────────────┘
                                │
               ┌────────────────┼────────────────┐
@@ -156,8 +156,8 @@ All endpoints require the `SCC-CsNgAccessToken` header with the `access_token` f
     └────────────────┘ └─────────────┘ └───────────────┘
                                │
                     ┌──────────▼───────────────────────┐
-                    │  SIU (Smart Interface Unit)       │
-                    │  Vehicle gateway (cellular/BLE)   │
+                    │  SIU (Smart Interface Unit)      │
+                    │  Vehicle gateway (cellular/BLE)  │
                     └──────────┬───────────────────────┘
                                │ Vehicle Bus
               ┌────────────────┼────────────────┐
