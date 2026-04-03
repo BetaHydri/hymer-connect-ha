@@ -65,7 +65,11 @@ class HymerConnectCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     async def start_signalr(self) -> None:
         """Start the SignalR WebSocket connection."""
         if not self._vehicle_urn or not self._scu_urn:
-            _LOGGER.debug("No vehicle/SCU URN — skipping SignalR")
+            _LOGGER.warning(
+                "No vehicle/SCU URN — skipping SignalR (vehicle=%s, scu=%s)",
+                self._vehicle_urn,
+                self._scu_urn,
+            )
             return
 
         if self._signalr and self._signalr.connected:
@@ -111,7 +115,7 @@ class HymerConnectCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             vehicle = rest_data["vehicle"]
             self._scu_urn = vehicle.get("smartUnitUrn", "")
             vin = vehicle.get("vin", "")
-            _LOGGER.debug("Discovered vehicle VIN=%s SCU=%s", vin, self._scu_urn)
+            _LOGGER.warning("Discovered VIN=%s SCU=%s", vin, self._scu_urn)
 
         # Get vehicle URN (urn:ehg:vehicle:hy-...) from EHG API
         if not self._vehicle_urn and rest_data.get("vehicle_urn"):
@@ -138,15 +142,15 @@ class HymerConnectCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
         # Try to start SignalR if not connected
         if not self._signalr or not self._signalr.connected:
-            _LOGGER.debug(
-                "SignalR not connected (urn=%s, scu=%s), attempting start",
+            _LOGGER.warning(
+                "SignalR not connected, attempting start (vehicle=%s, scu=%s)",
                 self._vehicle_urn,
                 self._scu_urn,
             )
             try:
                 await self.start_signalr()
             except Exception:
-                _LOGGER.debug("SignalR connect attempt failed", exc_info=True)
+                _LOGGER.warning("SignalR connect attempt failed", exc_info=True)
 
         # Merge REST + SignalR data
         _LOGGER.warning(
