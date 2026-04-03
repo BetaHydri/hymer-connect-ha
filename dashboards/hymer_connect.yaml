@@ -1,139 +1,233 @@
 # HYMER Connect Dashboard for Home Assistant
-# Copy this to your dashboards configuration or import via UI
+# Swipe-page layout organized by sensor categories
 #
-# File: hymer_connect_dashboard.yaml
+# Usage:
+#   1. Go to Settings > Dashboards > + Add Dashboard
+#   2. Open the dashboard > Edit > three dots > Raw configuration editor
+#   3. Paste this content and save
+#
+# Note: Entity IDs use the pattern created by the integration.
+#       Replace "hymer_hymer_connect_hymer" with your actual device prefix
+#       if different (check Settings > Devices for the exact entity IDs).
 
 title: HYMER Connect
 views:
-  - title: Vehicle Overview
-    path: hymer-overview
+
+  # ── Page 1: Vehicle Overview ──
+  - title: Vehicle
+    path: vehicle
     icon: mdi:rv-truck
-    type: sections
-    sections:
-      # Power & Battery
-      - type: grid
-        title: Power & Battery
-        cards:
-          - type: gauge
-            entity: sensor.hymer_connect_battery_level
-            name: Living Battery
-            min: 0
-            max: 100
-            severity:
-              green: 50
-              yellow: 20
-              red: 10
-            needle: true
-
-          - type: entity
-            entity: sensor.hymer_connect_battery_voltage
-            name: Battery Voltage
-            icon: mdi:flash
-
-          - type: entity
-            entity: sensor.hymer_connect_chassis_battery_voltage
-            name: Chassis Battery
-            icon: mdi:car-battery
-
-          - type: entity
-            entity: binary_sensor.hymer_connect_mains_power
-            name: Mains Power
-            icon: mdi:power-plug
-
-      # Water Tanks
-      - type: grid
-        title: Water Tanks
-        cards:
-          - type: gauge
-            entity: sensor.hymer_connect_fresh_water_level
-            name: Fresh Water
-            min: 0
-            max: 100
-            severity:
-              green: 50
-              yellow: 25
-              red: 10
-            needle: true
-
-          - type: gauge
-            entity: sensor.hymer_connect_grey_water_level
-            name: Grey Water
-            min: 0
-            max: 100
-            severity:
-              green: 0
-              yellow: 60
-              red: 80
-            needle: true
-
-      # Temperature
-      - type: grid
-        title: Climate
-        cards:
-          - type: entity
-            entity: sensor.hymer_connect_indoor_temperature
-            name: Indoor
-            icon: mdi:home-thermometer
-
-          - type: entity
-            entity: sensor.hymer_connect_outdoor_temperature
-            name: Outdoor
+    cards:
+      - type: markdown
+        content: "# 🚐 Vehicle Info"
+      - type: entities
+        title: Vehicle Information
+        entities:
+          - entity: sensor.hymer_hymer_connect_hymer_vehicle_model
+            name: Model
+            icon: mdi:rv-truck
+          - entity: sensor.hymer_hymer_connect_hymer_vehicle_model_year
+            name: Model Year
+            icon: mdi:calendar
+          - entity: sensor.hymer_hymer_connect_hymer_vehicle_vin
+            name: VIN
+            icon: mdi:identifier
+      - type: entities
+        title: Driving
+        entities:
+          - entity: sensor.hymer_hymer_connect_hymer_odometer
+            name: Odometer
+            icon: mdi:counter
+          - entity: sensor.hymer_hymer_connect_hymer_speed
+            name: Speed
+            icon: mdi:speedometer
+          - entity: sensor.hymer_hymer_connect_hymer_fuel_level
+            name: Fuel Level
+            icon: mdi:gas-station
+          - entity: sensor.hymer_hymer_connect_hymer_coolant_temp
+            name: Coolant Temperature
+            icon: mdi:coolant-temperature
+          - entity: sensor.hymer_hymer_connect_hymer_current_gear
+            name: Current Gear
+            icon: mdi:car-shift-pattern
+          - entity: sensor.hymer_hymer_connect_hymer_ambient_temp
+            name: Ambient Temperature
             icon: mdi:thermometer
-
-          - type: entity
-            entity: binary_sensor.hymer_connect_heater_running
-            name: Heater
-            icon: mdi:radiator
-
-          - type: entity
-            entity: binary_sensor.hymer_connect_fridge_running
-            name: Fridge
-            icon: mdi:fridge
-
-      # Security & Status
-      - type: grid
-        title: Security & Status
-        cards:
-          - type: entity
-            entity: binary_sensor.hymer_connect_siu_online
-            name: Vehicle Online
-            icon: mdi:access-point
-
-          - type: entity
-            entity: binary_sensor.hymer_connect_door_open
-            name: Door
-            icon: mdi:door
-
-          - type: entity
-            entity: binary_sensor.hymer_connect_window_open
-            name: Window
-            icon: mdi:window-open
-
-          - type: entity
-            entity: binary_sensor.hymer_connect_alarm_active
+      - type: entities
+        title: Security
+        entities:
+          - entity: sensor.hymer_hymer_connect_hymer_lock_status
+            name: Lock Status
+            icon: mdi:lock
+          - entity: sensor.hymer_hymer_connect_hymer_ignition_state
+            name: Ignition
+            icon: mdi:key
+          - entity: binary_sensor.hymer_hymer_connect_hymer_engine_running
+            name: Engine Running
+            icon: mdi:engine
+          - entity: binary_sensor.hymer_hymer_connect_hymer_handbrake
+            name: Handbrake
+            icon: mdi:car-brake-parking
+          - entity: binary_sensor.hymer_hymer_connect_hymer_alarm_armed
             name: Alarm
             icon: mdi:alarm-light
 
-      # Tire Pressure
-      - type: grid
-        title: Tire Pressure
-        cards:
-          - type: entity
-            entity: sensor.hymer_connect_tire_pressure_front_left
-            name: Front Left
-            icon: mdi:tire
+  # ── Page 2: Power & Battery ──
+  - title: Power
+    path: power
+    icon: mdi:battery-charging
+    cards:
+      - type: markdown
+        content: "# 🔋 Power & Battery"
+      - type: gauge
+        entity: sensor.hymer_hymer_connect_hymer_battery_voltage
+        name: Battery Voltage
+        min: 10
+        max: 15
+        severity:
+          green: 12.4
+          yellow: 11.8
+          red: 11.0
+        needle: true
+      - type: entities
+        title: Battery
+        entities:
+          - entity: sensor.hymer_hymer_connect_hymer_battery_voltage
+            name: Battery Voltage
+            icon: mdi:battery
+          - entity: sensor.hymer_hymer_connect_hymer_battery_current
+            name: Battery Current
+            icon: mdi:current-dc
+          - entity: sensor.hymer_hymer_connect_hymer_battery_type
+            name: Battery Type
+            icon: mdi:battery-check
+          - entity: sensor.hymer_hymer_connect_hymer_charge_phase
+            name: Charge Phase
+            icon: mdi:battery-charging
+          - entity: binary_sensor.hymer_hymer_connect_hymer_charger_active
+            name: Charger Active
+            icon: mdi:battery-charging
+      - type: entities
+        title: Solar & Mains
+        entities:
+          - entity: sensor.hymer_hymer_connect_hymer_solar_voltage
+            name: Solar Voltage
+            icon: mdi:solar-power
+          - entity: sensor.hymer_hymer_connect_hymer_power_source
+            name: Power Source
+            icon: mdi:power-plug
+          - entity: sensor.hymer_hymer_connect_hymer_main_switch
+            name: Main Switch
+            icon: mdi:power
+          - entity: binary_sensor.hymer_hymer_connect_hymer_mains_connected
+            name: Mains Connected
+            icon: mdi:power-plug
 
-          - type: entity
-            entity: sensor.hymer_connect_tire_pressure_front_right
-            name: Front Right
-            icon: mdi:tire
+  # ── Page 3: Water ──
+  - title: Water
+    path: water
+    icon: mdi:water
+    cards:
+      - type: markdown
+        content: "# 💧 Water Tanks"
+      - type: gauge
+        entity: sensor.hymer_hymer_connect_hymer_fresh_water_level
+        name: Fresh Water
+        min: 0
+        max: 100
+        severity:
+          green: 50
+          yellow: 25
+          red: 10
+        needle: true
+      - type: gauge
+        entity: sensor.hymer_hymer_connect_hymer_gray_water_level
+        name: Gray Water
+        min: 0
+        max: 100
+        severity:
+          green: 0
+          yellow: 60
+          red: 80
+        needle: true
 
-          - type: entity
-            entity: sensor.hymer_connect_tire_pressure_back_left
-            name: Back Left
-            icon: mdi:tire
+  # ── Page 4: Climate ──
+  - title: Climate
+    path: climate
+    icon: mdi:thermometer
+    cards:
+      - type: markdown
+        content: "# 🌡️ Climate"
+      - type: entities
+        title: Temperatures
+        entities:
+          - entity: sensor.hymer_hymer_connect_hymer_indoor_temp
+            name: Indoor
+            icon: mdi:home-thermometer
+          - entity: sensor.hymer_hymer_connect_hymer_outdoor_temp
+            name: Outdoor
+            icon: mdi:thermometer
+          - entity: sensor.hymer_hymer_connect_hymer_ambient_temp
+            name: Ambient
+            icon: mdi:thermometer
+      - type: entities
+        title: Heater (Truma)
+        entities:
+          - entity: sensor.hymer_hymer_connect_hymer_heater_mode
+            name: Heater Mode
+            icon: mdi:radiator
+          - entity: sensor.hymer_hymer_connect_hymer_heater_setpoint
+            name: Setpoint
+            icon: mdi:thermostat
+          - entity: sensor.hymer_hymer_connect_hymer_heater_fuel_type
+            name: Fuel Type
+            icon: mdi:gas-burner
 
-          - type: entity
-            entity: sensor.hymer_connect_tire_pressure_back_right
-            name: Back Right
-            icon: mdi:tire
+  # ── Page 5: Doors & Access ──
+  - title: Doors
+    path: doors
+    icon: mdi:car-door
+    cards:
+      - type: markdown
+        content: "# 🚪 Doors & Access"
+      - type: entities
+        title: Door States
+        entities:
+          - entity: sensor.hymer_hymer_connect_hymer_door_driver
+            name: Driver Door
+            icon: mdi:car-door
+          - entity: sensor.hymer_hymer_connect_hymer_door_passenger
+            name: Passenger Door
+            icon: mdi:car-door
+          - entity: sensor.hymer_hymer_connect_hymer_door_sliding
+            name: Sliding Door
+            icon: mdi:door-sliding
+          - entity: sensor.hymer_hymer_connect_hymer_lock_status
+            name: Lock Status
+            icon: mdi:lock
+
+  # ── Page 6: GPS ──
+  - title: GPS
+    path: gps
+    icon: mdi:map-marker
+    cards:
+      - type: markdown
+        content: "# 📍 GPS Location"
+      - type: entities
+        title: Position
+        entities:
+          - entity: sensor.hymer_hymer_connect_hymer_gps_coordinates
+            name: Coordinates
+            icon: mdi:map-marker
+          - entity: sensor.hymer_hymer_connect_hymer_gps_altitude
+            name: Altitude
+            icon: mdi:altimeter
+          - entity: sensor.hymer_hymer_connect_hymer_gps_signal_quality
+            name: Signal Quality
+            icon: mdi:signal
+          - entity: binary_sensor.hymer_hymer_connect_hymer_gps_fix
+            name: GPS Fix
+            icon: mdi:crosshairs-gps
+          - entity: binary_sensor.hymer_hymer_connect_hymer_scu_connected
+            name: SCU Connected
+            icon: mdi:access-point
