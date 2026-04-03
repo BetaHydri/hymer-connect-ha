@@ -2,6 +2,7 @@
 source/
 tools/
 analyze_*.js
+*.docx
 
 # Duplicate root-level component files (canonical copies live in custom_components/)
 /__init__.py
