@@ -6,7 +6,7 @@ Custom integration to connect your HYMER / Erwin Hymer Group motorhome or carava
 
 > **Status:** Early development — authentication flow and sensor mapping are being validated against the live API.
 
-![HYMER Connect Integration in Home Assistant](images/ha-screenshot.png)
+![HYMER Connect Integration in Home Assistant](./images/ha-screenshot.png)
 
 ## Supported Brands
 
