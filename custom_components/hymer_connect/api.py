@@ -283,6 +283,7 @@ class HymerConnectApi:
 
         try:
             vehicles = await self.get_vehicles()
+            _LOGGER.debug("Fetched %d vehicles", len(vehicles) if vehicles else 0)
             if vehicles:
                 data["vehicles"] = vehicles
                 vehicle = vehicles[0]
@@ -305,7 +306,7 @@ class HymerConnectApi:
                     except HymerConnectApiError:
                         _LOGGER.debug("Could not fetch vehicle details")
         except HymerConnectApiError as err:
-            _LOGGER.debug("Could not fetch vehicles: %s", err)
+            _LOGGER.warning("Could not fetch vehicles: %s", err)
 
         try:
             account = await self.get_account()
@@ -313,4 +314,10 @@ class HymerConnectApi:
         except HymerConnectApiError:
             _LOGGER.debug("Could not fetch account info")
 
+        _LOGGER.debug(
+            "Vehicle status keys: %s, model=%s, vin=%s",
+            list(data.keys()),
+            data.get("model"),
+            data.get("vin"),
+        )
         return data
