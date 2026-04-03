@@ -29,3 +29,6 @@ Thumbs.db
 
 # Memory bank (local only)
 .memory-bank/
+
+# Personal secrets (QR codes, tokens)
+secrets/
