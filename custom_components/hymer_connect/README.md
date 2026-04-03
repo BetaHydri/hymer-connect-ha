@@ -6,7 +6,7 @@ Custom integration to connect your HYMER / Erwin Hymer Group motorhome or carava
 
 > **Status:** Early development — SignalR authentication for real-time sensor data is partially working. REST API sensors (model, VIN, year) work. See [Help Wanted](#-help-wanted--signalr-ehgaccesstoken) below.
 
-![HYMER Connect Integration in Home Assistant](../images/ha-screenshot.png)
+![HYMER Connect Integration in Home Assistant](https://raw.githubusercontent.com/BetaHydri/hymer-connect-ha/master/custom_components/images/ha-screenshot.png)
 
 ## Supported Brands
 
