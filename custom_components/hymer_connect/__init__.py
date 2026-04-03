@@ -65,12 +65,6 @@ async def async_setup_entry(
                     CONF_REFRESH_TOKEN: tokens["refresh_token"],
                 },
             )
-                data={
-                    **entry.data,
-                    CONF_ACCESS_TOKEN: tokens["access_token"],
-                    CONF_REFRESH_TOKEN: tokens["refresh_token"],
-                },
-            )
     else:
         raise ConfigEntryAuthFailed("No credentials or tokens available")
 
