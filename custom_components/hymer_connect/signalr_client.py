@@ -147,7 +147,10 @@ class HymerSignalRClient:
         _LOGGER.warning("SignalR connected to datahub for %s", self._vehicle_urn)
 
     async def _send_update_tokens(self) -> None:
-        """Send UpdateTokens invocation to authenticate the SignalR connection."""
+        """Send UpdateTokens invocation to authenticate the SignalR connection.
+
+        Try multiple argument formats to find the one the server accepts.
+        """
         if not self._ws:
             return
 
@@ -166,67 +169,112 @@ class HymerSignalRClient:
                 "Could not get confirmation token for UpdateTokens: %s", err
             )
 
-        # Server expects a single object argument.
-        # Previous attempt with dict returned INVALID_INPUT;
-        # positional args caused server crash.
-        # Try the dict format with the SCC header name convention.
-        msg = {
-            "arguments": [
-                {
-                    "accessToken": self._api.access_token,
-                    "ehgAccessToken": ehg_access_token,
-                    "scuUrn": self._scu_urn,
-                }
-            ],
-            "invocationId": "0",
-            "target": "UpdateTokens",
-            "type": MSG_TYPE_INVOCATION,
-        }
-        _LOGGER.warning(
-            "Sending UpdateTokens: scu=%s, access_len=%d, ehg_len=%d, keys=%s",
-            self._scu_urn,
-            len(self._api.access_token or ""),
-            len(ehg_access_token),
-            list(msg["arguments"][0].keys()),
-        )
-        await self._ws.send_str(
-            json.dumps(msg) + SIGNALR_RECORD_SEPARATOR
-        )
+        access = self._api.access_token
+        scu = self._scu_urn
 
-        # Wait for completion response
-        async for raw_msg in self._ws:
-            if raw_msg.type == aiohttp.WSMsgType.TEXT:
-                for part in raw_msg.data.split(SIGNALR_RECORD_SEPARATOR):
-                    part = part.strip()
-                    if not part:
-                        continue
-                    try:
-                        parsed = json.loads(part)
-                    except json.JSONDecodeError:
-                        continue
-                    if parsed.get("type") == MSG_TYPE_COMPLETION:
-                        result = parsed.get("result", {})
-                        response = result.get("response", {}) if isinstance(result, dict) else {}
-                        status = response.get("status", "UNKNOWN")
-                        _LOGGER.warning(
-                            "UpdateTokens result: status=%s, full=%s",
-                            status,
-                            json.dumps(parsed, default=str)[:500],
-                        )
-                        return
-                    if parsed.get("type") == MSG_TYPE_INVOCATION:
-                        # Got a PiaResponse before completion — process it
-                        _LOGGER.warning(
-                            "Got PiaResponse during UpdateTokens: target=%s",
-                            parsed.get("target"),
-                        )
-                        self._handle_message(parsed)
-                        return
-            elif raw_msg.type in (
-                aiohttp.WSMsgType.CLOSED,
-                aiohttp.WSMsgType.ERROR,
-            ):
-                raise HymerConnectApiError("WebSocket closed during UpdateTokens")
+        # Try multiple argument variants to find which one the server accepts
+        variants = [
+            # Variant A: 4-key dict with accessToken as ehg token too
+            {
+                "accessToken": access,
+                "ehgAccessToken": access,
+                "vehicleUrn": scu,
+                "scuUrn": scu,
+            },
+            # Variant B: 3-key dict, ehg = confirmation token
+            {
+                "accessToken": access,
+                "ehgAccessToken": ehg_access_token,
+                "scuUrn": scu,
+            },
+            # Variant C: 2-key dict, just tokens
+            {
+                "accessToken": access,
+                "ehgAccessToken": ehg_access_token,
+            },
+            # Variant D: 4-key dict with confirmation token
+            {
+                "accessToken": access,
+                "ehgAccessToken": ehg_access_token,
+                "vehicleUrn": scu,
+                "scuUrn": scu,
+            },
+        ]
+
+        for i, args in enumerate(variants):
+            inv_id = str(i)
+            msg = {
+                "arguments": [args],
+                "invocationId": inv_id,
+                "target": "UpdateTokens",
+                "type": MSG_TYPE_INVOCATION,
+            }
+            _LOGGER.warning(
+                "Sending UpdateTokens variant %s: keys=%s",
+                chr(65 + i),
+                list(args.keys()),
+            )
+            await self._ws.send_str(
+                json.dumps(msg) + SIGNALR_RECORD_SEPARATOR
+            )
+
+            # Wait for completion response
+            async for raw_msg in self._ws:
+                if raw_msg.type == aiohttp.WSMsgType.TEXT:
+                    for part in raw_msg.data.split(SIGNALR_RECORD_SEPARATOR):
+                        part = part.strip()
+                        if not part:
+                            continue
+                        try:
+                            parsed = json.loads(part)
+                        except json.JSONDecodeError:
+                            continue
+                        if parsed.get("type") == MSG_TYPE_COMPLETION:
+                            result_data = parsed.get("result", {})
+                            error = parsed.get("error")
+                            if error:
+                                _LOGGER.warning(
+                                    "UpdateTokens variant %s: ERROR=%s",
+                                    chr(65 + i),
+                                    error,
+                                )
+                            else:
+                                response = (
+                                    result_data.get("response", {})
+                                    if isinstance(result_data, dict)
+                                    else {}
+                                )
+                                status = response.get("status", "UNKNOWN")
+                                _LOGGER.warning(
+                                    "UpdateTokens variant %s: status=%s, full=%s",
+                                    chr(65 + i),
+                                    status,
+                                    json.dumps(parsed, default=str)[:500],
+                                )
+                                if status not in ("INVALID_INPUT", "UNKNOWN"):
+                                    _LOGGER.warning(
+                                        "UpdateTokens SUCCESS with variant %s!",
+                                        chr(65 + i),
+                                    )
+                                    return
+                            break  # Move to next variant
+                        if parsed.get("type") == MSG_TYPE_INVOCATION:
+                            _LOGGER.warning(
+                                "Got invocation during UpdateTokens variant %s: target=%s",
+                                chr(65 + i),
+                                parsed.get("target"),
+                            )
+                            self._handle_message(parsed)
+                            return
+                elif raw_msg.type in (
+                    aiohttp.WSMsgType.CLOSED,
+                    aiohttp.WSMsgType.ERROR,
+                ):
+                    _LOGGER.warning("WebSocket closed during UpdateTokens")
+                    return
+                break  # Only wait for one response per variant
+
+        _LOGGER.warning("All UpdateTokens variants failed")
 
     def _handle_message(self, msg: dict[str, Any]) -> None:
         """Handle an incoming SignalR message."""
