@@ -173,13 +173,34 @@ The SIU communicates with the cloud via an Azure SignalR Service hub. The app us
 
 | Property | Value |
 |----------|-------|
-| **Negotiate URL** | `GET https://smartrv.erwinhymergroup.com/datahub/negotiate?negotiateVersion=1` |
+| **Negotiate URL** | `POST https://scc-appcomm.smartrv.erwinhymergroup.com/datahub/negotiate?negotiateVersion=1` |
 | **WebSocket URL** | `wss://ehg-prod-signalr.service.signalr.net/client/?hub=datahub` |
-| **Hub method (send)** | `sendClientDataToHub` |
-| **Protocol** | JSON |
-| **Auth** | JWT token from negotiate response (auto-generated, no user auth needed for negotiate) |
+| **Protocol** | JSON (SignalR JSON protocol with `\x1e` delimiter) |
+| **Auth for negotiate** | `Authorization: Bearer <access_token>` + `SCC-CsNgAccessToken: <access_token>` |
+| **Auth for WebSocket** | JWT from negotiate response passed as `access_token` query parameter |
 
 Connection states: `connecting` → `established` → `disconnected` (with auto-reconnect policy).
+
+> **⚠️ HELP WANTED — SignalR Hub Method Names**
+>
+> Sensor data (battery, water levels, temperatures, tire pressure) and vehicle controls (lights, heater, fridge, water pump) flow **exclusively through SignalR WebSocket** — there is NO REST API for live sensor data.
+>
+> The mobile app sends ~10.5 KB through the WebSocket and receives ~21 KB of sensor data back. However, the exact **SignalR hub method name** that the app invokes is unknown.
+>
+> **What we know:**
+> - Hub endpoint: `datahub` on Azure SignalR Service
+> - The app calls `hub.invoke("???", args)` with an unknown method name
+> - The server responds with `type=1` messages containing sensor data
+> - 40+ method names were tested — ALL return `HubException: Method does not exist`
+> - The method names found in the Hermes bytecode bundle (`sendClientDataToHub`, `sendMessageToHub`, `subscribeToHubEvents`, `syncSensors`) are **JavaScript function names** in the app code, NOT the actual SignalR hub method names
+> - The real hub method name is compiled into Hermes bytecode v96 operations and cannot be extracted as a plain string
+>
+> **How to help:**
+> 1. **Decompile the Hermes bytecode** — The bundle is at `assets/index.android.bundle` in the APK (Hermes v96, ~13 MB). Tools like [`hermes-dec`](https://nicolo-ribaudo.github.io/hermes-dec/) may be able to decompile it
+> 2. **Intercept WebSocket frames** — Use a rooted Android device with Frida to hook `HubConnection.invoke()` and log the method name + arguments
+> 3. **Check the iOS app** — The iOS version may have a more readable JavaScript bundle (not compiled to Hermes bytecode)
+>
+> If you can decode the SignalR hub method name, please open an issue or PR!
 
 ### Communication Paths
 
@@ -295,14 +316,40 @@ This integration was reverse-engineered from:
 - [x] Auth endpoint discovered (`/api/v2/oauth/token` with HTTP Basic Auth)
 - [x] Authentication tested successfully (returns access_token + refresh_token)
 - [x] Integration skeleton (config flow, coordinator, sensors, binary sensors)
+- [x] HA integration login works — device created with entities
+- [x] Vehicle info via REST API (`/api/v2/assets`)
+- [x] Account info via REST API (`/api/v2/accounts/me`)
 - [x] Reauth flow support
 - [x] Dashboard YAML
-- [ ] Actual API response mapping to entities
+- [x] SignalR WebSocket connection + authentication working
+- [ ] **🔴 SignalR hub method name for sensor data** ← CURRENT BLOCKER
+- [ ] Actual sensor data mapping to entities
 - [ ] Climate control entities (heater target temperature)
 - [ ] Switch entities (lights, USB, water pump)
 - [ ] Cover entities (awning, roof, dome)
 - [ ] SignalR real-time push updates
 - [ ] Device tracker (GPS location)
+
+## Contributing
+
+This project needs help with **reverse engineering the SignalR protocol**. See the [SignalR DataHub section](#signalr-datahub-real-time-communication) above for details.
+
+**What's working:**
+- OAuth2 authentication ✅
+- REST API for vehicle/account info ✅
+- SignalR WebSocket connection ✅
+
+**What's blocked:**
+- The exact SignalR hub method name the app uses to request sensor data from the SIU
+- The method name is compiled into Hermes bytecode v96 and cannot be extracted as a plain string
+- 40+ method names have been tested — all return "Method does not exist"
+
+**Tools needed:**
+- Hermes bytecode v96 decompiler (hbctool only supports up to v90)
+- Or: Frida on a rooted Android device to hook `HubConnection.invoke()`
+- Or: iOS app analysis (may have readable JavaScript)
+
+If you have an EHG vehicle and can help, please open an issue!
 
 ## License
 
