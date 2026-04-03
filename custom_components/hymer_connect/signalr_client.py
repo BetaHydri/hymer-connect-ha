@@ -156,22 +156,33 @@ class HymerSignalRClient:
         try:
             result = await self._api.get_confirmation_token()
             ehg_access_token = result.get("token", "")
-        except HymerConnectApiError:
-            _LOGGER.warning("Could not get confirmation token for UpdateTokens")
+            _LOGGER.warning(
+                "Confirmation token: keys=%s, token_len=%d",
+                list(result.keys()),
+                len(ehg_access_token),
+            )
+        except HymerConnectApiError as err:
+            _LOGGER.warning(
+                "Could not get confirmation token for UpdateTokens: %s", err
+            )
 
+        # The server expects 3 positional string arguments, not a dict
         msg = {
             "arguments": [
-                {
-                    "accessToken": self._api.access_token,
-                    "ehgAccessToken": ehg_access_token,
-                    "vehicleUrn": self._vehicle_urn,
-                    "scuUrn": self._scu_urn,
-                }
+                self._api.access_token,
+                ehg_access_token,
+                self._scu_urn,
             ],
             "invocationId": "0",
             "target": "UpdateTokens",
             "type": MSG_TYPE_INVOCATION,
         }
+        _LOGGER.warning(
+            "Sending UpdateTokens: scu=%s, access_len=%d, ehg_len=%d",
+            self._scu_urn,
+            len(self._api.access_token or ""),
+            len(ehg_access_token),
+        )
         await self._ws.send_str(
             json.dumps(msg) + SIGNALR_RECORD_SEPARATOR
         )

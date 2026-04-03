@@ -33,3 +33,4 @@ Thumbs.db
 
 # Personal secrets (QR codes, tokens)
 secrets/
+test_signalr.py
