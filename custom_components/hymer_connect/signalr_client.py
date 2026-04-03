@@ -141,8 +141,12 @@ class HymerSignalRClient:
 
         _LOGGER.info("SignalR handshake accepted")
 
-        # Step 5: Send UpdateTokens
-        await self._send_update_tokens()
+        # Step 5: Send UpdateTokens (may fail — connection is already
+        # authenticated via JWT in WebSocket URL, so we continue regardless)
+        try:
+            await self._send_update_tokens()
+        except Exception:
+            _LOGGER.warning("UpdateTokens failed, continuing without it")
         self._connected = True
         _LOGGER.warning("SignalR connected to datahub for %s", self._vehicle_urn)
 
@@ -286,11 +290,12 @@ class HymerSignalRClient:
         target = msg.get("target", "")
         args = msg.get("arguments", [])
 
-        _LOGGER.info(
-            "SignalR message: type=%s target=%s args_count=%d",
+        _LOGGER.warning(
+            "SignalR message: type=%s target=%s args_count=%d raw=%s",
             msg_type,
             target,
             len(args),
+            json.dumps(msg, default=str)[:300],
         )
 
         if target == "PiaResponse" and args:
