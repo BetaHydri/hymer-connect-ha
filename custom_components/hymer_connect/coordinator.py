@@ -140,10 +140,11 @@ class HymerConnectCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 _LOGGER.debug("SignalR connect attempt failed", exc_info=True)
 
         # Merge REST + SignalR data
-        _LOGGER.debug(
-            "Data update: rest_keys=%s, signalr_sensors=%d",
+        _LOGGER.warning(
+            "Data update: rest_keys=%s, signalr_sensors=%d, signalr_connected=%s",
             list(rest_data.keys()),
             len(self._signalr_data),
+            self._signalr.connected if self._signalr else False,
         )
         rest_data["signalr_sensors"] = self._signalr_data
         return rest_data

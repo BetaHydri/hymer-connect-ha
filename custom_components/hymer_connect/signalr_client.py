@@ -71,7 +71,7 @@ class HymerSignalRClient:
         azure_url = negotiate1.get("url")
         signalr_token = negotiate1.get("accessToken")
 
-        _LOGGER.debug(
+        _LOGGER.info(
             "SignalR negotiate (step 1): url=%s, hasToken=%s, keys=%s",
             bool(azure_url),
             bool(signalr_token),
@@ -139,12 +139,12 @@ class HymerSignalRClient:
         if msg.type != aiohttp.WSMsgType.TEXT:
             raise HymerConnectApiError(f"Unexpected handshake response: {msg.type}")
 
-        _LOGGER.debug("SignalR handshake accepted")
+        _LOGGER.info("SignalR handshake accepted")
 
         # Step 5: Send UpdateTokens
         await self._send_update_tokens()
         self._connected = True
-        _LOGGER.info("SignalR connected to datahub for %s", self._vehicle_urn)
+        _LOGGER.warning("SignalR connected to datahub for %s", self._vehicle_urn)
 
     async def _send_update_tokens(self) -> None:
         """Send UpdateTokens invocation to authenticate the SignalR connection."""
@@ -191,10 +191,18 @@ class HymerSignalRClient:
                         result = parsed.get("result", {})
                         response = result.get("response", {}) if isinstance(result, dict) else {}
                         status = response.get("status", "UNKNOWN")
-                        _LOGGER.debug("UpdateTokens result: %s", status)
+                        _LOGGER.warning(
+                            "UpdateTokens result: status=%s, full=%s",
+                            status,
+                            json.dumps(parsed, default=str)[:500],
+                        )
                         return
                     if parsed.get("type") == MSG_TYPE_INVOCATION:
                         # Got a PiaResponse before completion — process it
+                        _LOGGER.warning(
+                            "Got PiaResponse during UpdateTokens: target=%s",
+                            parsed.get("target"),
+                        )
                         self._handle_message(parsed)
                         return
             elif raw_msg.type in (
@@ -213,7 +221,7 @@ class HymerSignalRClient:
         target = msg.get("target", "")
         args = msg.get("arguments", [])
 
-        _LOGGER.debug(
+        _LOGGER.info(
             "SignalR message: type=%s target=%s args_count=%d",
             msg_type,
             target,
@@ -225,8 +233,10 @@ class HymerSignalRClient:
             if b64_payload:
                 sensor_data = decode_pia_payload(b64_payload)
                 self._sensor_data.update(sensor_data)
-                _LOGGER.debug(
-                    "PiaResponse: %d fields updated", len(sensor_data)
+                _LOGGER.warning(
+                    "PiaResponse: %d fields updated, keys=%s",
+                    len(sensor_data),
+                    list(sensor_data.keys())[:20],
                 )
                 if self._on_sensor_update:
                     self._on_sensor_update(self._sensor_data)
@@ -237,7 +247,7 @@ class HymerSignalRClient:
             return
 
         self._running = True
-        _LOGGER.debug("SignalR listen loop started for %s", self._vehicle_urn)
+        _LOGGER.warning("SignalR listen loop started for %s", self._vehicle_urn)
         msg_count = 0
         try:
             async for msg in self._ws:
