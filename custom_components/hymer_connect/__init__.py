@@ -37,16 +37,20 @@ async def async_setup_entry(
     brand = entry.data.get(CONF_BRAND, "hymer")
     api = HymerConnectApi(session, brand=brand)
 
-    # Restore tokens if available
-    access_token = entry.data.get(CONF_ACCESS_TOKEN)
-    refresh_token = entry.data.get(CONF_REFRESH_TOKEN)
-
-    if access_token and refresh_token:
-        api.set_tokens(access_token, refresh_token)
-    elif CONF_USERNAME in entry.data:
+    # Always re-authenticate with stored credentials to get fresh tokens
+    if CONF_USERNAME in entry.data:
         try:
             tokens = await api.authenticate(
                 entry.data[CONF_USERNAME], entry.data[CONF_PASSWORD]
+            )
+            # Update stored tokens
+            hass.config_entries.async_update_entry(
+                entry,
+                data={
+                    **entry.data,
+                    CONF_ACCESS_TOKEN: tokens["access_token"],
+                    CONF_REFRESH_TOKEN: tokens["refresh_token"],
+                },
             )
         except HymerConnectAuthError as err:
             raise ConfigEntryAuthFailed(
@@ -56,17 +60,8 @@ async def async_setup_entry(
             raise ConfigEntryNotReady(
                 f"Cannot connect to HYMER API: {err}"
             ) from err
-        else:
-            hass.config_entries.async_update_entry(
-                entry,
-                data={
-                    **entry.data,
-                    CONF_ACCESS_TOKEN: tokens["access_token"],
-                    CONF_REFRESH_TOKEN: tokens["refresh_token"],
-                },
-            )
     else:
-        raise ConfigEntryAuthFailed("No credentials or tokens available")
+        raise ConfigEntryAuthFailed("No credentials available")
 
     vehicle_urn = entry.data.get(CONF_VEHICLE_URN, "")
     scu_urn = entry.data.get(CONF_SCU_URN, "")

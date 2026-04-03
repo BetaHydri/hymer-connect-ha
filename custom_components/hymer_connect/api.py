@@ -195,13 +195,18 @@ class HymerConnectApi:
         }
         data = (
             f"grant_type={AUTH_GRANT_TYPE_REFRESH}"
-            f"&refresh_token={quote(self._refresh_token, safe='')}"
+            f"&refresh_token={quote(self._refresh_token, safe='.-_~')}"
         )
         try:
             async with self._session.request(
                 "POST", url, headers=headers, data=data
             ) as resp:
+                _LOGGER.debug("Token refresh status: %s", resp.status)
                 if resp.status >= 400:
+                    text = await resp.text()
+                    _LOGGER.warning(
+                        "Token refresh failed %s: %s", resp.status, text[:200]
+                    )
                     raise HymerConnectAuthError("Token refresh failed")
                 result = await resp.json()
                 if "access_token" in result:
@@ -305,6 +310,8 @@ class HymerConnectApi:
                         data["tanks"] = details.get("tanks", [])
                     except HymerConnectApiError:
                         _LOGGER.debug("Could not fetch vehicle details")
+        except HymerConnectAuthError:
+            raise
         except HymerConnectApiError as err:
             _LOGGER.warning("Could not fetch vehicles: %s", err)
 
