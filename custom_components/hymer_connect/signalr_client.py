@@ -15,7 +15,7 @@ import aiohttp
 
 from .api import HymerConnectApi, HymerConnectApiError
 from .const import USER_AGENT
-from .pia_decoder import decode_pia_payload, extract_sensor_data
+from .pia_decoder import decode_pia_payload
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -209,8 +209,7 @@ class HymerSignalRClient:
         if target == "PiaResponse" and args:
             b64_payload = args[0] if isinstance(args[0], str) else ""
             if b64_payload:
-                raw_data = decode_pia_payload(b64_payload)
-                sensor_data = extract_sensor_data(raw_data)
+                sensor_data = decode_pia_payload(b64_payload)
                 self._sensor_data.update(sensor_data)
                 _LOGGER.debug(
                     "PiaResponse: %d fields updated", len(sensor_data)
