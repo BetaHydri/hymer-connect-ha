@@ -160,7 +160,7 @@ graph TD
 
     SIU -->|Vehicle Bus| TH
     SIU -->|Vehicle Bus| DO
-    SIU -->|Vehicle Bus| SE
+    SIU -->|Vehicle Bus| SE 
 ```
 
 ### SignalR DataHub (Real-Time Communication)
