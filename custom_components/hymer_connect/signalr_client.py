@@ -48,6 +48,7 @@ class HymerSignalRClient:
         self._task: asyncio.Task | None = None
         self._sensor_data: dict[str, Any] = {}
         self._connected = False
+        self._signalr_token: str = ""
 
     @property
     def connected(self) -> bool:
@@ -82,6 +83,8 @@ class HymerSignalRClient:
             raise HymerConnectApiError(
                 "SignalR negotiate did not return url/accessToken"
             )
+
+        self._signalr_token = signalr_token
 
         # Step 2: Negotiate with Azure SignalR to get connectionToken
         negotiate2_url = azure_url.replace("client/?", "client/negotiate?")
@@ -175,31 +178,35 @@ class HymerSignalRClient:
 
         access = self._api.access_token
         scu = self._scu_urn
+        signalr_tok = self._signalr_token
 
         # Try multiple argument variants to find which one the server accepts
         variants = [
-            # Variant A: 4-key dict with accessToken as ehg token too
+            # Variant A: signalr negotiate token as accessToken
             {
-                "accessToken": access,
+                "accessToken": signalr_tok,
+                "ehgAccessToken": ehg_access_token,
+                "vehicleUrn": scu,
+                "scuUrn": scu,
+            },
+            # Variant B: signalr token + oauth token as ehg
+            {
+                "accessToken": signalr_tok,
                 "ehgAccessToken": access,
                 "vehicleUrn": scu,
                 "scuUrn": scu,
             },
-            # Variant B: 3-key dict, ehg = confirmation token
+            # Variant C: oauth as access, confirmation as ehg (original)
             {
                 "accessToken": access,
                 "ehgAccessToken": ehg_access_token,
+                "vehicleUrn": scu,
                 "scuUrn": scu,
             },
-            # Variant C: 2-key dict, just tokens
+            # Variant D: oauth as both
             {
                 "accessToken": access,
-                "ehgAccessToken": ehg_access_token,
-            },
-            # Variant D: 4-key dict with confirmation token
-            {
-                "accessToken": access,
-                "ehgAccessToken": ehg_access_token,
+                "ehgAccessToken": access,
                 "vehicleUrn": scu,
                 "scuUrn": scu,
             },
