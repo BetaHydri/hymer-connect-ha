@@ -93,7 +93,7 @@ The `access_token` JWT contains these claims:
 
 | Domain | IP | Purpose |
 |--------|----|---------|
-| `smartrv.erwinhymergroup.com` | 20.4.141.205 | Authentication, SignalR negotiate, web app |
+| `smartrv.erwinhymergroup.com` | 20.4.141.205 | Authentication, SignalR negotiate |
 | `scc-api.smartrv.erwinhymergroup.com` | 20.103.22.48 | REST API data endpoints (Azure API Management) |
 | `scc-rvtwin.smartrv.erwinhymergroup.com` | 13.107.226.45 | Vehicle twin data (RV digital twin) |
 | `scc-appcomm.smartrv.erwinhymergroup.com` | 20.4.141.205 | SignalR hub (alias of smartrv) |
@@ -309,7 +309,6 @@ This integration was reverse-engineered from:
 - Microsoft SignalR (`@microsoft/signalr`) for real-time cloud communication
 - Protocol Buffers for structured vehicle messages
 - OkHttp for HTTP networking
-- Web app SPA at `smartrv.erwinhymergroup.com` (React + Vite, provided the auth endpoint discovery)
 - Azure infrastructure: API Management, SignalR Service, Spring Boot backend (nginx/1.25.1)
 
 ## Development Status
