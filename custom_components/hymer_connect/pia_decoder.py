@@ -1,11 +1,8 @@
-"""Lightweight Protobuf decoder for HYMER PIA (Platform Integration Adapter) messages.
+"""PIA Protobuf decoder for HYMER Connect sensor data.
 
-The SignalR datahub exchanges PiaRequest/PiaResponse messages whose payloads are
-Base64-encoded Protocol Buffer data.  This module provides a generic wire-format
-decoder plus higher-level helpers that map known field/bus combinations to
-human-readable sensor names.
-
-No .proto schema file is required — we decode at the wire level.
+Decodes Base64-encoded Protobuf payloads from SignalR PiaResponse messages.
+Nesting: top → field3 (wrapper) → field6 (container) → field1[] (sensor entries)
+Each sensor: f1=sensor_id, f2=bus_id, f3=uint, f4=string, f5=bool, f6=float, f7=int, f10=bus_name
 """
 
 from __future__ import annotations
@@ -17,15 +14,118 @@ from typing import Any
 
 _LOGGER = logging.getLogger(__name__)
 
-# Wire types
-WIRETYPE_VARINT = 0
-WIRETYPE_FIXED64 = 1
-WIRETYPE_LENGTH_DELIMITED = 2
-WIRETYPE_FIXED32 = 5
+# Sensor key map: (bus_id, sensor_id) → (name, unit, value_transform)
+# value_transform: None=raw, "div10"=divide by 10, "div100"=divide by 100
+SENSOR_MAP: dict[tuple[int, int], tuple[str, str | None, str | None]] = {
+    # can0 — Vehicle CAN bus
+    (1, 1): ("odometer", "km", "div10"),
+    (1, 2): ("speed", "km/h", None),
+    (1, 3): ("lock_status", None, None),
+    (1, 4): ("handbrake", None, None),
+    (1, 5): ("rpm", "rpm", "div100"),
+    (1, 6): ("fuel_level", "%", None),
+    (1, 7): ("engine_hours", "h", None),
+    (1, 8): ("vin_text", None, None),
+    (1, 9): ("coolant_temp", "\u00b0C", None),
+    (1, 10): ("engine_running", None, None),
+    (1, 11): ("door_driver", None, None),
+    (1, 12): ("door_passenger", None, None),
+    (1, 13): ("door_sliding", None, None),
+    (1, 14): ("door_rear", None, None),
+    (1, 15): ("ignition_state", None, None),
+    (1, 16): ("seatbelt_warning", None, None),
+    (1, 17): ("turn_signal", None, None),
+    (1, 18): ("headlamp", None, None),
+    (1, 19): ("parking_light", None, None),
+    (1, 20): ("fog_front", None, None),
+    (1, 21): ("fog_rear", None, None),
+    (1, 22): ("high_beam", None, None),
+    (1, 23): ("language", None, None),
+    # lin1 — Habitation electrics
+    (3, 1): ("main_switch", None, None),
+    (3, 2): ("power_source", None, None),
+    (3, 3): ("charger_active", None, None),
+    (3, 4): ("charge_phase", None, None),
+    (3, 5): ("battery_voltage", "V", None),
+    (3, 6): ("battery_current", "A", None),
+    (3, 7): ("solar_voltage", "V", None),
+    (3, 8): ("light_1_level", "%", None),
+    (3, 9): ("light_2_level", "%", None),
+    (3, 10): ("fresh_water_level", "%", None),
+    (3, 11): ("battery_type", None, None),
+    (3, 12): ("switch_12v_1", None, None),
+    (3, 13): ("switch_12v_2", None, None),
+    (3, 14): ("switch_12v_3", None, None),
+    (3, 15): ("switch_12v_4", None, None),
+    (3, 16): ("switch_12v_5", None, None),
+    (3, 17): ("switch_12v_6", None, None),
+    (3, 18): ("switch_12v_7", None, None),
+    (3, 19): ("ext_charger_voltage", "V", None),
+    (3, 20): ("mains_connected", None, None),
+    (3, 21): ("charger_status", None, None),
+    (3, 22): ("switch_22", None, None),
+    # lin2 — Climate / secondary
+    (8, 1): ("gray_water_sensor", None, None),
+    (8, 2): ("indoor_temp", "\u00b0C", None),
+    (8, 3): ("outdoor_temp", "\u00b0C", None),
+    (8, 4): ("vent_1", None, None),
+    (8, 5): ("vent_2", None, None),
+    (8, 6): ("vent_3", None, None),
+    (8, 7): ("tire_pressure", "bar", None),
+    # Alarm (11)
+    (11, 1): ("alarm_armed", None, None),
+    (11, 2): ("alarm_battery", "%", None),
+    # Step (12)
+    (12, 1): ("step_retracted", None, None),
+    (12, 2): ("gray_water_level", "%", None),
+    (12, 3): ("gray_water_mode", None, None),
+    # GPS (30)
+    (30, 1): ("gps_coordinates", None, None),
+    (30, 2): ("gps_utc_time", None, None),
+    (30, 3): ("gps_signal_quality", None, None),
+    (30, 4): ("gps_fix", None, None),
+    (30, 5): ("gps_altitude", "m", None),
+    (30, 6): ("gps_satellites", None, None),
+    (30, 7): ("gps_heading", "\u00b0", None),
+    # Heating control (34)
+    (34, 1): ("heat_switch_1", None, None),
+    (34, 2): ("heat_switch_2", None, None),
+    (34, 3): ("heat_mode", None, None),
+    (34, 7): ("heat_setpoint_raw", None, None),
+    # Fridge (37)
+    (37, 1): ("fridge_mode", None, None),
+    (37, 2): ("fridge_status", None, None),
+    # SCU (45)
+    (45, 8): ("scu_connected", None, None),
+    (45, 11): ("scu_firmware", None, None),
+    # Truma (49)
+    (49, 8): ("truma_connected", None, None),
+    (49, 10): ("truma_status", None, None),
+    (49, 11): ("truma_firmware", None, None),
+    # Truma heater (58)
+    (58, 4): ("heater_fuel_type", None, None),
+    (58, 5): ("heater_mode", None, None),
+    (58, 6): ("heater_fuel_type_2", None, None),
+    (58, 7): ("heater_state", None, None),
+    (58, 8): ("heater_setpoint", "\u00b0C", None),
+    (58, 9): ("heater_fan_speed", None, None),
+    (58, 11): ("heater_operating_mode", None, None),
+    # can2 — Extended chassis CAN
+    (99, 1): ("adblue_temp", "\u00b0C", None),
+    (99, 2): ("engine_torque", "%", None),
+    (99, 3): ("ambient_temp", "\u00b0C", None),
+    (99, 4): ("fuel_consumption", None, None),
+    (99, 5): ("fuel_range", "km", None),
+    (99, 6): ("current_gear", None, None),
+    (99, 7): ("total_fuel_used", None, None),
+    (99, 8): ("trip_distance", None, None),
+    (99, 9): ("cruise_control", None, None),
+    (99, 10): ("dpf_status", None, None),
+}
 
 
-def decode_varint(data: bytes, pos: int) -> tuple[int, int]:
-    """Decode a varint from *data* starting at *pos*. Return (value, new_pos)."""
+def _decode_varint(data: bytes, pos: int) -> tuple[int, int]:
+    """Decode a varint, return (value, new_pos)."""
     result = 0
     shift = 0
     while pos < len(data):
@@ -38,130 +138,157 @@ def decode_varint(data: bytes, pos: int) -> tuple[int, int]:
     return result, pos
 
 
-def decode_protobuf(data: bytes) -> list[tuple[int, int, Any]]:
-    """Decode raw protobuf bytes into a flat list of (field_number, wire_type, value).
-
-    For length-delimited fields the value is the raw bytes (which may itself be
-    a nested protobuf message or a UTF-8 string).
-    """
+def _decode_protobuf(data: bytes) -> list[tuple[int, int, Any]]:
+    """Decode raw protobuf into (field_number, wire_type, value) tuples."""
     fields: list[tuple[int, int, Any]] = []
     pos = 0
     while pos < len(data):
         try:
-            tag, pos = decode_varint(data, pos)
+            tag, pos = _decode_varint(data, pos)
         except (IndexError, ValueError):
             break
         field_number = tag >> 3
         wire_type = tag & 0x07
-        if wire_type == WIRETYPE_VARINT:
-            value, pos = decode_varint(data, pos)
-            fields.append((field_number, wire_type, value))
-        elif wire_type == WIRETYPE_FIXED64:
+        if wire_type == 0:  # varint
+            value, pos = _decode_varint(data, pos)
+            fields.append((field_number, 0, value))
+        elif wire_type == 1:  # fixed64
+            if pos + 8 > len(data):
+                break
             value = struct.unpack_from("<d", data, pos)[0]
             pos += 8
-            fields.append((field_number, wire_type, value))
-        elif wire_type == WIRETYPE_FIXED32:
+            fields.append((field_number, 1, value))
+        elif wire_type == 5:  # fixed32
+            if pos + 4 > len(data):
+                break
             value = struct.unpack_from("<f", data, pos)[0]
             pos += 4
-            fields.append((field_number, wire_type, value))
-        elif wire_type == WIRETYPE_LENGTH_DELIMITED:
-            length, pos = decode_varint(data, pos)
+            fields.append((field_number, 5, round(value, 2)))
+        elif wire_type == 2:  # length-delimited
+            length, pos = _decode_varint(data, pos)
+            if pos + length > len(data):
+                break
             value = data[pos : pos + length]
             pos += length
-            fields.append((field_number, wire_type, value))
+            fields.append((field_number, 2, value))
         else:
-            # Unknown wire type — stop parsing
             break
     return fields
 
 
-def try_decode_string(data: bytes) -> str | None:
-    """Try to decode bytes as a UTF-8 string, return None on failure."""
+def _try_string(data: bytes) -> str | None:
+    """Try decoding bytes as UTF-8 printable string."""
     try:
         text = data.decode("utf-8")
-        if all(c.isprintable() or c in "\r\n\t" for c in text):
+        if text and all(c.isprintable() or c in "\r\n\t" for c in text):
             return text
     except (UnicodeDecodeError, ValueError):
         pass
     return None
 
 
-def _extract_sensor_fields(
-    fields: list[tuple[int, int, Any]],
-    depth: int = 0,
-    prefix: str = "",
-) -> dict[str, Any]:
-    """Recursively extract sensor values from decoded protobuf fields.
+def _parse_sensor_entry(data: bytes) -> dict[str, Any] | None:
+    """Parse a single sensor entry from protobuf bytes."""
+    fields = _decode_protobuf(data)
+    sensor_id = 0
+    bus_id = 0
+    value: Any = None
+    bus_name = ""
 
-    Returns a flat dict with descriptive keys where possible.
-    """
-    result: dict[str, Any] = {}
-    for field_number, wire_type, value in fields:
-        key = f"{prefix}f{field_number}" if prefix else f"f{field_number}"
+    for fn, wt, v in fields:
+        if fn == 1 and wt == 0:
+            sensor_id = v
+        elif fn == 2 and wt == 0:
+            bus_id = v
+        elif fn == 3 and wt == 0:
+            value = v  # uint
+        elif fn == 4 and wt == 2:
+            s = _try_string(v)
+            if s is not None:
+                value = s
+        elif fn == 5 and wt == 0:
+            value = bool(v)  # bool stored as varint
+        elif fn == 6 and wt == 5:
+            value = v  # float32
+        elif fn == 7 and wt == 0:
+            value = v  # signed int (as varint)
+        elif fn == 10 and wt == 2:
+            s = _try_string(v)
+            if s:
+                bus_name = s
 
-        if wire_type == WIRETYPE_VARINT:
-            result[key] = value
-        elif wire_type in (WIRETYPE_FIXED32, WIRETYPE_FIXED64):
-            result[key] = round(value, 4) if isinstance(value, float) else value
-        elif wire_type == WIRETYPE_LENGTH_DELIMITED and isinstance(value, bytes):
-            text = try_decode_string(value)
-            if text is not None:
-                result[key] = text
-            elif depth < 4:
-                # Try recursive decode as nested protobuf
-                nested = decode_protobuf(value)
-                if nested:
-                    nested_vals = _extract_sensor_fields(
-                        nested, depth + 1, f"{key}."
-                    )
-                    result.update(nested_vals)
-                else:
-                    result[key] = value.hex()
-            else:
-                result[key] = value.hex()
-    return result
+    if not sensor_id and value is None:
+        return None
+
+    return {
+        "sensor_id": sensor_id,
+        "bus_id": bus_id,
+        "bus_name": bus_name,
+        "value": value,
+    }
 
 
 def decode_pia_payload(b64_payload: str) -> dict[str, Any]:
-    """Decode a Base64-encoded PIA protobuf payload into a flat dict of values."""
+    """Decode a PiaResponse Base64 payload into named sensor values.
+
+    Returns a dict keyed by sensor name (e.g. "battery_voltage": 12.8).
+    Unknown sensors are keyed as "bus{bus_id}_s{sensor_id}".
+    """
     try:
         raw = base64.b64decode(b64_payload)
     except Exception:
         _LOGGER.warning("Failed to base64-decode PIA payload")
         return {}
 
-    fields = decode_protobuf(raw)
-    return _extract_sensor_fields(fields)
-
-
-def extract_sensor_data(pia_data: dict[str, Any]) -> dict[str, Any]:
-    """Map raw PIA fields to human-readable sensor names.
-
-    This is based on observed field patterns from traffic captures.
-    The mapping will be refined as more data points are collected.
-    """
     sensors: dict[str, Any] = {}
+    top_fields = _decode_protobuf(raw)
 
-    for key, value in pia_data.items():
-        # Collect all values — the coordinator can filter later
-        sensors[key] = value
+    for fn, wt, v in top_fields:
+        if wt != 2 or not isinstance(v, bytes):
+            continue
 
-        # Known string mappings from captured traffic
-        if isinstance(value, str):
-            val_lower = value.lower()
-            if value in ("ON", "OFF", "CLS", "SNA"):
-                sensors[key] = value
-            elif "unlocked" in val_lower or "locked" in val_lower:
-                sensors.setdefault("lock_status", value)
-            elif "ign_lock" in val_lower:
-                sensors.setdefault("ignition_status", value)
-            elif "agm" in val_lower or "lithium" in val_lower:
-                sensors.setdefault("battery_type", value)
-            elif "diesel" in val_lower or "petrol" in val_lower:
-                sensors.setdefault("fuel_type", value)
-            elif "eco" in val_lower or "bulk" in val_lower:
-                sensors.setdefault("charge_mode", value)
-            elif "excellent" in val_lower or "good" in val_lower or "poor" in val_lower:
-                sensors.setdefault("signal_quality", value)
+        # Try to find sensor entries at multiple nesting levels
+        _extract_sensors_recursive(v, sensors, depth=0)
 
     return sensors
+
+
+def _extract_sensors_recursive(
+    data: bytes, sensors: dict[str, Any], depth: int
+) -> None:
+    """Recursively search for sensor entries in nested protobuf."""
+    if depth > 5:
+        return
+
+    fields = _decode_protobuf(data)
+
+    # Check if this looks like a sensor entry (has field 1 + field 2 as varints)
+    has_sid = any(fn == 1 and wt == 0 for fn, wt, _ in fields)
+    has_bus = any(fn == 2 and wt == 0 for fn, wt, _ in fields)
+    has_value = any(
+        (fn in (3, 4, 5, 6, 7) and wt in (0, 2, 5))
+        for fn, wt, _ in fields
+    )
+
+    if has_sid and has_bus and has_value:
+        entry = _parse_sensor_entry(data)
+        if entry and entry["value"] is not None:
+            key = (entry["bus_id"], entry["sensor_id"])
+            mapped = SENSOR_MAP.get(key)
+            if mapped:
+                name, unit, transform = mapped
+                val = entry["value"]
+                if transform == "div10" and isinstance(val, (int, float)):
+                    val = val / 10
+                elif transform == "div100" and isinstance(val, (int, float)):
+                    val = val / 100
+                sensors[name] = val
+            else:
+                fallback = f"bus{entry['bus_id']}_s{entry['sensor_id']}"
+                sensors[fallback] = entry["value"]
+        return
+
+    # Not a sensor entry — recurse into length-delimited sub-fields
+    for fn, wt, v in fields:
+        if wt == 2 and isinstance(v, bytes) and len(v) > 2:
+            _extract_sensors_recursive(v, sensors, depth + 1)

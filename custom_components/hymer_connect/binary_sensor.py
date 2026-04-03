@@ -25,61 +25,65 @@ class HymerBinarySensorEntityDescription(BinarySensorEntityDescription):
     """Describe a HYMER Connect binary sensor."""
 
     value_path: str
-    """Dot-separated path into the coordinator data dict."""
-
     on_value: Any = True
-    """Value that represents the 'on' state."""
 
 
 BINARY_SENSOR_DESCRIPTIONS: tuple[HymerBinarySensorEntityDescription, ...] = (
     HymerBinarySensorEntityDescription(
-        key="siu_online",
-        translation_key="siu_online",
-        device_class=BinarySensorDeviceClass.CONNECTIVITY,
-        value_path="sensors.siu.online",
-        icon="mdi:access-point",
+        key="engine_running",
+        translation_key="engine_running",
+        device_class=BinarySensorDeviceClass.RUNNING,
+        value_path="signalr_sensors.engine_running",
+        icon="mdi:engine",
     ),
     HymerBinarySensorEntityDescription(
-        key="mains_power",
-        translation_key="mains_power",
+        key="handbrake",
+        translation_key="handbrake",
+        value_path="signalr_sensors.handbrake",
+        on_value=1,
+        icon="mdi:car-brake-parking",
+    ),
+    HymerBinarySensorEntityDescription(
+        key="charger_active",
+        translation_key="charger_active",
+        device_class=BinarySensorDeviceClass.BATTERY_CHARGING,
+        value_path="signalr_sensors.charger_active",
+        icon="mdi:battery-charging",
+    ),
+    HymerBinarySensorEntityDescription(
+        key="mains_connected",
+        translation_key="mains_connected",
         device_class=BinarySensorDeviceClass.PLUG,
-        value_path="sensors.mainsPower.connected",
+        value_path="signalr_sensors.mains_connected",
+        on_value=1,
         icon="mdi:power-plug",
     ),
     HymerBinarySensorEntityDescription(
-        key="door_open",
-        translation_key="door_open",
-        device_class=BinarySensorDeviceClass.DOOR,
-        value_path="sensors.door.open",
-        icon="mdi:door",
+        key="gps_fix",
+        translation_key="gps_fix",
+        device_class=BinarySensorDeviceClass.CONNECTIVITY,
+        value_path="signalr_sensors.gps_fix",
+        icon="mdi:crosshairs-gps",
     ),
     HymerBinarySensorEntityDescription(
-        key="window_open",
-        translation_key="window_open",
-        device_class=BinarySensorDeviceClass.WINDOW,
-        value_path="sensors.window.open",
-        icon="mdi:window-open",
+        key="scu_connected",
+        translation_key="scu_connected",
+        device_class=BinarySensorDeviceClass.CONNECTIVITY,
+        value_path="signalr_sensors.scu_connected",
+        icon="mdi:access-point",
     ),
     HymerBinarySensorEntityDescription(
-        key="alarm_active",
-        translation_key="alarm_active",
+        key="cruise_control",
+        translation_key="cruise_control",
+        value_path="signalr_sensors.cruise_control",
+        icon="mdi:car-cruise-control",
+    ),
+    HymerBinarySensorEntityDescription(
+        key="alarm_armed",
+        translation_key="alarm_armed",
         device_class=BinarySensorDeviceClass.SAFETY,
-        value_path="sensors.alarm.active",
+        value_path="signalr_sensors.alarm_armed",
         icon="mdi:alarm-light",
-    ),
-    HymerBinarySensorEntityDescription(
-        key="heater_running",
-        translation_key="heater_running",
-        device_class=BinarySensorDeviceClass.RUNNING,
-        value_path="sensors.heater.running",
-        icon="mdi:radiator",
-    ),
-    HymerBinarySensorEntityDescription(
-        key="fridge_running",
-        translation_key="fridge_running",
-        device_class=BinarySensorDeviceClass.RUNNING,
-        value_path="sensors.fridge.running",
-        icon="mdi:fridge",
     ),
 )
 
@@ -91,11 +95,10 @@ async def async_setup_entry(
 ) -> None:
     """Set up HYMER Connect binary sensors from a config entry."""
     coordinator: HymerConnectCoordinator = hass.data[DOMAIN][entry.entry_id]
-    entities: list[HymerConnectBinarySensor] = [
-        HymerConnectBinarySensor(coordinator, description, entry)
-        for description in BINARY_SENSOR_DESCRIPTIONS
-    ]
-    async_add_entities(entities)
+    async_add_entities(
+        HymerConnectBinarySensor(coordinator, desc, entry)
+        for desc in BINARY_SENSOR_DESCRIPTIONS
+    )
 
 
 class HymerConnectBinarySensor(

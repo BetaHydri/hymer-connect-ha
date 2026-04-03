@@ -14,8 +14,11 @@ from homeassistant.components.sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     PERCENTAGE,
+    UnitOfElectricCurrent,
     UnitOfElectricPotential,
     UnitOfLength,
+    UnitOfPressure,
+    UnitOfSpeed,
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
@@ -31,11 +34,10 @@ class HymerSensorEntityDescription(SensorEntityDescription):
     """Describe a HYMER Connect sensor."""
 
     value_path: str
-    """Dot-separated path into the coordinator data dict."""
 
 
-# REST-based sensors (vehicle metadata from rv-twin API)
-REST_SENSOR_DESCRIPTIONS: tuple[HymerSensorEntityDescription, ...] = (
+# REST-based sensors (vehicle metadata)
+REST_SENSORS: tuple[HymerSensorEntityDescription, ...] = (
     HymerSensorEntityDescription(
         key="vehicle_model",
         translation_key="vehicle_model",
@@ -54,18 +56,46 @@ REST_SENSOR_DESCRIPTIONS: tuple[HymerSensorEntityDescription, ...] = (
         value_path="vin",
         icon="mdi:identifier",
     ),
-    HymerSensorEntityDescription(
-        key="vehicle_type",
-        translation_key="vehicle_type",
-        value_path="type_id",
-        icon="mdi:rv-truck",
-    ),
 )
 
-# SignalR-based sensors (real-time data from PIA Protobuf via datahub)
-# These use the signalr_sensors.* path which contains decoded PIA data.
-# Field keys will be refined as the Protobuf schema is mapped.
-SIGNALR_SENSOR_DESCRIPTIONS: tuple[HymerSensorEntityDescription, ...] = (
+# SignalR sensors (real-time from PIA Protobuf)
+SIGNALR_SENSORS: tuple[HymerSensorEntityDescription, ...] = (
+    # --- Vehicle CAN (can0) ---
+    HymerSensorEntityDescription(
+        key="odometer",
+        translation_key="odometer",
+        native_unit_of_measurement=UnitOfLength.KILOMETERS,
+        device_class=SensorDeviceClass.DISTANCE,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        value_path="signalr_sensors.odometer",
+        icon="mdi:counter",
+    ),
+    HymerSensorEntityDescription(
+        key="speed",
+        translation_key="speed",
+        native_unit_of_measurement=UnitOfSpeed.KILOMETERS_PER_HOUR,
+        device_class=SensorDeviceClass.SPEED,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_path="signalr_sensors.speed",
+        icon="mdi:speedometer",
+    ),
+    HymerSensorEntityDescription(
+        key="fuel_level",
+        translation_key="fuel_level",
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_path="signalr_sensors.fuel_level",
+        icon="mdi:gas-station",
+    ),
+    HymerSensorEntityDescription(
+        key="coolant_temp",
+        translation_key="coolant_temp",
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_path="signalr_sensors.coolant_temp",
+        icon="mdi:coolant-temperature",
+    ),
     HymerSensorEntityDescription(
         key="lock_status",
         translation_key="lock_status",
@@ -73,10 +103,64 @@ SIGNALR_SENSOR_DESCRIPTIONS: tuple[HymerSensorEntityDescription, ...] = (
         icon="mdi:lock",
     ),
     HymerSensorEntityDescription(
-        key="ignition_status",
-        translation_key="ignition_status",
-        value_path="signalr_sensors.ignition_status",
+        key="ignition_state",
+        translation_key="ignition_state",
+        value_path="signalr_sensors.ignition_state",
         icon="mdi:key",
+    ),
+    HymerSensorEntityDescription(
+        key="door_driver",
+        translation_key="door_driver",
+        value_path="signalr_sensors.door_driver",
+        icon="mdi:car-door",
+    ),
+    HymerSensorEntityDescription(
+        key="door_passenger",
+        translation_key="door_passenger",
+        value_path="signalr_sensors.door_passenger",
+        icon="mdi:car-door",
+    ),
+    HymerSensorEntityDescription(
+        key="door_sliding",
+        translation_key="door_sliding",
+        value_path="signalr_sensors.door_sliding",
+        icon="mdi:door-sliding",
+    ),
+    # --- Habitation (lin1) ---
+    HymerSensorEntityDescription(
+        key="battery_voltage",
+        translation_key="battery_voltage",
+        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
+        device_class=SensorDeviceClass.VOLTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_path="signalr_sensors.battery_voltage",
+        icon="mdi:battery",
+    ),
+    HymerSensorEntityDescription(
+        key="battery_current",
+        translation_key="battery_current",
+        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
+        device_class=SensorDeviceClass.CURRENT,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_path="signalr_sensors.battery_current",
+        icon="mdi:current-dc",
+    ),
+    HymerSensorEntityDescription(
+        key="solar_voltage",
+        translation_key="solar_voltage",
+        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
+        device_class=SensorDeviceClass.VOLTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_path="signalr_sensors.solar_voltage",
+        icon="mdi:solar-power",
+    ),
+    HymerSensorEntityDescription(
+        key="fresh_water_level",
+        translation_key="fresh_water_level",
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_path="signalr_sensors.fresh_water_level",
+        icon="mdi:water",
     ),
     HymerSensorEntityDescription(
         key="battery_type",
@@ -85,37 +169,120 @@ SIGNALR_SENSOR_DESCRIPTIONS: tuple[HymerSensorEntityDescription, ...] = (
         icon="mdi:battery-check",
     ),
     HymerSensorEntityDescription(
-        key="charge_mode",
-        translation_key="charge_mode",
-        value_path="signalr_sensors.charge_mode",
+        key="charge_phase",
+        translation_key="charge_phase",
+        value_path="signalr_sensors.charge_phase",
         icon="mdi:battery-charging",
     ),
     HymerSensorEntityDescription(
-        key="fuel_type",
-        translation_key="fuel_type",
-        value_path="signalr_sensors.fuel_type",
-        icon="mdi:gas-station",
+        key="power_source",
+        translation_key="power_source",
+        value_path="signalr_sensors.power_source",
+        icon="mdi:power-plug",
     ),
     HymerSensorEntityDescription(
-        key="signal_quality",
-        translation_key="signal_quality",
-        value_path="signalr_sensors.signal_quality",
+        key="main_switch",
+        translation_key="main_switch",
+        value_path="signalr_sensors.main_switch",
+        icon="mdi:power",
+    ),
+    # --- Climate (lin2) ---
+    HymerSensorEntityDescription(
+        key="indoor_temp",
+        translation_key="indoor_temp",
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_path="signalr_sensors.indoor_temp",
+        icon="mdi:thermometer",
+    ),
+    HymerSensorEntityDescription(
+        key="outdoor_temp",
+        translation_key="outdoor_temp",
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_path="signalr_sensors.outdoor_temp",
+        icon="mdi:thermometer",
+    ),
+    # --- Gray water (bus 12) ---
+    HymerSensorEntityDescription(
+        key="gray_water_level",
+        translation_key="gray_water_level",
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_path="signalr_sensors.gray_water_level",
+        icon="mdi:water-off",
+    ),
+    # --- GPS (bus 30) ---
+    HymerSensorEntityDescription(
+        key="gps_coordinates",
+        translation_key="gps_coordinates",
+        value_path="signalr_sensors.gps_coordinates",
+        icon="mdi:map-marker",
+    ),
+    HymerSensorEntityDescription(
+        key="gps_signal_quality",
+        translation_key="gps_signal_quality",
+        value_path="signalr_sensors.gps_signal_quality",
         icon="mdi:signal",
+    ),
+    HymerSensorEntityDescription(
+        key="gps_altitude",
+        translation_key="gps_altitude",
+        native_unit_of_measurement=UnitOfLength.METERS,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_path="signalr_sensors.gps_altitude",
+        icon="mdi:altimeter",
+    ),
+    # --- Truma heater (bus 58) ---
+    HymerSensorEntityDescription(
+        key="heater_mode",
+        translation_key="heater_mode",
+        value_path="signalr_sensors.heater_mode",
+        icon="mdi:radiator",
+    ),
+    HymerSensorEntityDescription(
+        key="heater_setpoint",
+        translation_key="heater_setpoint",
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        value_path="signalr_sensors.heater_setpoint",
+        icon="mdi:thermostat",
+    ),
+    HymerSensorEntityDescription(
+        key="heater_fuel_type",
+        translation_key="heater_fuel_type",
+        value_path="signalr_sensors.heater_fuel_type",
+        icon="mdi:gas-burner",
+    ),
+    # --- Extended CAN (can2) ---
+    HymerSensorEntityDescription(
+        key="ambient_temp",
+        translation_key="ambient_temp",
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_path="signalr_sensors.ambient_temp",
+        icon="mdi:thermometer",
+    ),
+    HymerSensorEntityDescription(
+        key="current_gear",
+        translation_key="current_gear",
+        value_path="signalr_sensors.current_gear",
+        icon="mdi:car-shift-pattern",
     ),
 )
 
-ALL_SENSOR_DESCRIPTIONS = REST_SENSOR_DESCRIPTIONS + SIGNALR_SENSOR_DESCRIPTIONS
+ALL_SENSOR_DESCRIPTIONS = REST_SENSORS + SIGNALR_SENSORS
 
 
 def _resolve_path(data: dict[str, Any], path: str) -> Any | None:
-    """Resolve a dot-separated path into nested dicts/lists."""
+    """Resolve a dot-separated path into nested dicts."""
     current: Any = data
     for key in path.split("."):
         if isinstance(current, dict):
             current = current.get(key)
-        elif isinstance(current, list) and key.isdigit():
-            idx = int(key)
-            current = current[idx] if idx < len(current) else None
         else:
             return None
         if current is None:
@@ -130,11 +297,10 @@ async def async_setup_entry(
 ) -> None:
     """Set up HYMER Connect sensors from a config entry."""
     coordinator: HymerConnectCoordinator = hass.data[DOMAIN][entry.entry_id]
-    entities: list[HymerConnectSensor] = [
-        HymerConnectSensor(coordinator, description, entry)
-        for description in ALL_SENSOR_DESCRIPTIONS
-    ]
-    async_add_entities(entities)
+    async_add_entities(
+        HymerConnectSensor(coordinator, desc, entry)
+        for desc in ALL_SENSOR_DESCRIPTIONS
+    )
 
 
 class HymerConnectSensor(
