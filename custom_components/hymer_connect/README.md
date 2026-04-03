@@ -4,7 +4,7 @@
 
 Custom integration to connect your HYMER / Erwin Hymer Group motorhome or caravan to [Home Assistant](https://www.home-assistant.io/).
 
-> **Status:** Early development — authentication flow and sensor mapping are being validated against the live API.
+> **Status:** Early development — SignalR authentication for real-time sensor data is partially working. REST API sensors (model, VIN, year) work. See [Help Wanted](#-help-wanted--signalr-ehgaccesstoken) below.
 
 ![HYMER Connect Integration in Home Assistant](images/ha-screenshot.png)
 
@@ -172,31 +172,75 @@ The SIU communicates with the cloud via an Azure SignalR Service hub. The app us
 | **Negotiate URL** | `POST https://scc-appcomm.smartrv.erwinhymergroup.com/datahub/negotiate?negotiateVersion=1` |
 | **WebSocket URL** | `wss://ehg-prod-signalr.service.signalr.net/client/?hub=datahub` |
 | **Protocol** | JSON (SignalR JSON protocol with `\x1e` delimiter) |
-| **Auth for negotiate** | `Authorization: Bearer <access_token>` + `SCC-CsNgAccessToken: <access_token>` |
+| **Auth for negotiate** | None (no auth headers — matches real app behavior) |
 | **Auth for WebSocket** | JWT from negotiate response passed as `access_token` query parameter |
 
 Connection states: `connecting` → `established` → `disconnected` (with auto-reconnect policy).
 
-> **⚠️ HELP WANTED — SignalR Hub Method Names**
+> ## ⚠️ HELP WANTED — SignalR `ehgAccessToken`
 >
-> Sensor data (battery, water levels, temperatures, tire pressure) and vehicle controls (lights, heater, fridge, water pump) flow **exclusively through SignalR WebSocket** — there is NO REST API for live sensor data.
+> **The SignalR connection works, but `UpdateTokens` fails because we cannot obtain the correct `ehgAccessToken`.**
 >
-> The mobile app sends ~10.5 KB through the WebSocket and receives ~21 KB of sensor data back. However, the exact **SignalR hub method name** that the app invokes is unknown.
+> ### What works
+> - OAuth2 authentication ✅
+> - REST API (vehicle model, VIN, year) ✅
+> - SignalR WebSocket connection ✅
+> - PIA Protobuf decoder (131 sensors mapped) ✅
+> - SignalR hub method name: `UpdateTokens` ✅
+> - SignalR hub method name: `PiaRequest` / `PiaResponse` ✅
 >
-> **What we know:**
-> - Hub endpoint: `datahub` on Azure SignalR Service
-> - The app calls `hub.invoke("???", args)` with an unknown method name
-> - The server responds with `type=1` messages containing sensor data
-> - 40+ method names were tested — ALL return `HubException: Method does not exist`
-> - The method names found in the Hermes bytecode bundle (`sendClientDataToHub`, `sendMessageToHub`, `subscribeToHubEvents`, `syncSensors`) are **JavaScript function names** in the app code, NOT the actual SignalR hub method names
-> - The real hub method name is compiled into Hermes bytecode v96 operations and cannot be extracted as a plain string
+> ### What's blocked
 >
-> **How to help:**
-> 1. **Decompile the Hermes bytecode** — The bundle is at `assets/index.android.bundle` in the APK (Hermes v96, ~13 MB). Tools like [`hermes-dec`](https://nicolo-ribaudo.github.io/hermes-dec/) may be able to decompile it
-> 2. **Intercept WebSocket frames** — Use a rooted Android device with Frida to hook `HubConnection.invoke()` and log the method name + arguments
-> 3. **Check the iOS app** — The iOS version may have a more readable JavaScript bundle (not compiled to Hermes bytecode)
+> The `UpdateTokens` hub method requires 4 arguments in a single object:
 >
-> If you can decode the SignalR hub method name, please open an issue or PR!
+> ```json
+> {
+>   "accessToken": "<OAuth2 JWT>",
+>   "ehgAccessToken": "<remote-access-token>",
+>   "vehicleUrn": "urn:ehg:vehicle:hy-XXXXXXXXXX",
+>   "scuUrn": "urn:ehg:scu:sXXX.XX.XX.XXX.XXX"
+> }
+> ```
+>
+> The `ehgAccessToken` is a JWT with:
+> - **`kid`**: `ehg-prod-remote-access-token-key_80d39efc...`
+> - **`ett`**: `access`
+> - **`urn`**: vehicle URN
+> - **`sub`**: user account UUID
+> - **`client_id`**: device BLE MAC address (e.g., `dc:dc:e2:79:30:b9`)
+> - **`exp`**: ~15 minute lifetime
+>
+> This token is **not available from any known HTTP API endpoint**. We tested:
+> - `POST /api/ehg/v1/accounts/confirmationToken` → returns `ett: confirmation` (wrong type)
+> - `POST /api/ehg/v1/accounts/remoteAccessToken` → 404
+> - `POST /api/ehg/v1/vehicles/{urn}/remoteAccess` → 404
+> - `POST /api/ehg/v1/access/token` → 404
+> - Owner activation token (`ett: owner`, no expiry) → `INVALID_INPUT`
+> - Confirmation token (`ett: confirmation`) → `INVALID_INPUT`
+> - 10+ additional endpoint guesses → all 404
+>
+> The token appears **only inside WebSocket frames** in mitmproxy captures, never as an HTTP response. The mobile app uses it remotely for days without Bluetooth, so it must be refreshable somehow.
+>
+> ### Token types discovered
+>
+> | Token | `kid` prefix | `ett` | Expiry | Source |
+> |-------|-------------|-------|--------|--------|
+> | OAuth2 access | — | — | 15 min | `POST /api/v2/oauth/token` |
+> | Confirmation | `ehg-prod-confirmation-token-key` | `confirmation` | 15 min | `POST /accounts/confirmationToken` |
+> | Owner activation | `ehg-prod-main-user-activation-token-key` | `owner` | Never | BLE pairing (stored in app) |
+> | **Remote access** | `ehg-prod-remote-access-token-key` | `access` | 15 min | **❓ UNKNOWN** |
+>
+> ### How to help
+>
+> 1. **Capture the token refresh flow** — Run mitmproxy while the HYMER Connect app refreshes the `ehgAccessToken`. It might be obtained through an API endpoint we haven't discovered, or through a mechanism inside the WebSocket connection itself.
+>
+> 2. **Decompile the Hermes bytecode** — The React Native bundle at `assets/index.android.bundle` (Hermes v96, ~13 MB) contains the token acquisition logic. Tools: [`hermes-dec`](https://nicolo-ribaudo.github.io/hermes-dec/), [`hbctool`](https://github.com/nicolo-ribaudo/hbctool).
+>
+> 3. **Hook the app with Frida** — Intercept the `HubConnection.invoke("UpdateTokens", ...)` call to see where the `ehgAccessToken` argument comes from.
+>
+> 4. **Check the iOS app** — The iOS JavaScript bundle is not compiled to Hermes bytecode and may be more readable.
+>
+> If you can figure out how to obtain the remote access token, please open a PR or comment on [issue #1](https://github.com/BetaHydri/hymer-connect-ha/issues)!
 
 ### Communication Paths
 
