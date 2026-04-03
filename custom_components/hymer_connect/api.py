@@ -286,9 +286,8 @@ class HymerConnectApi:
             "User-Agent": USER_AGENT,
             "Accept-Encoding": "gzip",
         }
-        if self._access_token:
-            headers["Authorization"] = f"Bearer {self._access_token}"
-            headers[HEADER_ACCESS_TOKEN] = self._access_token
+        # NOTE: The mobile app sends negotiate WITHOUT auth headers.
+        # Adding auth headers causes INVALID_INPUT on UpdateTokens.
         return await self._request("POST", url, headers=headers, data="")
 
     # --- Aggregated Data ---
