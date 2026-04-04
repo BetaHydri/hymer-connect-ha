@@ -5,6 +5,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.0] - 2026-04-04
+
+### Changed
+
+- Doors converted to binary sensors with DOOR device class — HA auto-translates: Offen/Geschlossen (DE), Open/Closed (EN)
+- Lock converted to binary sensor with LOCK device class — HA: Gesperrt/Entsperrt
+- Main switch converted to binary sensor with POWER device class — HA: Ein/Aus
+- No more mixed English/German labels — all states translated by HA based on user's language
+
+### Removed
+
+- Duplicate text sensors for doors, lock, and main switch (replaced by binary sensors)
+
 ## [1.2.1] - 2026-04-04
 
 ### Changed
@@ -181,6 +194,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Ready-to-use Lovelace dashboard
 - HACS compatibility
 
+[1.3.0]: https://github.com/BetaHydri/hymer-connect-ha/compare/v1.2.1...v1.3.0
 [1.2.1]: https://github.com/BetaHydri/hymer-connect-ha/compare/v1.2.0...v1.2.1
 [1.2.0]: https://github.com/BetaHydri/hymer-connect-ha/compare/v1.1.0...v1.2.0
 [1.1.0]: https://github.com/BetaHydri/hymer-connect-ha/compare/v1.0.0...v1.1.0
