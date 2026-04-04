@@ -18,12 +18,12 @@ _LOGGER = logging.getLogger(__name__)
 # value_transform: None=raw, "div10"=divide by 10, "div100"=divide by 100
 SENSOR_MAP: dict[tuple[int, int], tuple[str, str | None, str | None]] = {
     # can0 — Vehicle CAN bus
-    (1, 1): ("odometer", "km", "div10"),
+    (1, 1): ("odometer", "km", "div100"),
     (1, 2): ("speed", "km/h", None),
     (1, 3): ("lock_status", None, None),
     (1, 4): ("handbrake", None, None),
     (1, 5): ("rpm", "rpm", "div100"),
-    (1, 6): ("fuel_level", "%", None),
+    (1, 6): ("adblue_level", "%", None),
     (1, 7): ("engine_hours", "h", None),
     (1, 8): ("vin_text", None, None),
     (1, 9): ("coolant_temp", "\u00b0C", None),

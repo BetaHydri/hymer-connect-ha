@@ -40,7 +40,7 @@
       "vehicle_vin": { "name": "VIN" },
       "odometer": { "name": "Odometer" },
       "speed": { "name": "Speed" },
-      "fuel_level": { "name": "Fuel level" },
+      "adblue_level": { "name": "AdBlue level" },
       "coolant_temp": { "name": "Coolant temperature" },
       "lock_status": { "name": "Lock status" },
       "ignition_state": { "name": "Ignition" },

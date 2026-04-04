@@ -80,12 +80,12 @@ SIGNALR_SENSORS: tuple[HymerSensorEntityDescription, ...] = (
         icon="mdi:speedometer",
     ),
     HymerSensorEntityDescription(
-        key="fuel_level",
-        translation_key="fuel_level",
+        key="adblue_level",
+        translation_key="adblue_level",
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
-        value_path="signalr_sensors.fuel_level",
-        icon="mdi:gas-station",
+        value_path="signalr_sensors.adblue_level",
+        icon="mdi:car-coolant-level",
     ),
     HymerSensorEntityDescription(
         key="coolant_temp",
