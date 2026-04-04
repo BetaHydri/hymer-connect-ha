@@ -8,6 +8,8 @@ Custom integration to connect your HYMER / Erwin Hymer Group motorhome or carava
 
 ![HYMER Connect Integration in Home Assistant](https://raw.githubusercontent.com/BetaHydri/hymer-connect-ha/master/images/ha-screenshot.png)
 
+![HYMER Connect Sensors continued](https://raw.githubusercontent.com/BetaHydri/hymer-connect-ha/master/images/ha-screenshot_2.png)
+
 ## Supported Brands
 
 All Erwin Hymer Group brands equipped with a **Smart Interface Unit (SIU)**:
