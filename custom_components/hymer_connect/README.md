@@ -306,6 +306,25 @@ graph TD
 3. Paste the contents of [`dashboards/hymer_connect.yaml`](https://github.com/BetaHydri/hymer-connect-ha/blob/master/dashboards/hymer_connect.yaml)
 4. Save
 
+<details>
+<summary><strong>Dashboard Screenshots</strong> (click to expand)</summary>
+
+![Dashboard - Vehicle Overview](https://raw.githubusercontent.com/BetaHydri/hymer-connect-ha/master/images/Dash1.png)
+
+![Dashboard - Power & Battery](https://raw.githubusercontent.com/BetaHydri/hymer-connect-ha/master/images/Dash2.png)
+
+![Dashboard - Climate & Heater](https://raw.githubusercontent.com/BetaHydri/hymer-connect-ha/master/images/Dash3.png)
+
+![Dashboard - Water](https://raw.githubusercontent.com/BetaHydri/hymer-connect-ha/master/images/Dash4.png)
+
+![Dashboard - Doors & Lights](https://raw.githubusercontent.com/BetaHydri/hymer-connect-ha/master/images/Dash5.png)
+
+![Dashboard - GPS & Location](https://raw.githubusercontent.com/BetaHydri/hymer-connect-ha/master/images/Dash6.png)
+
+![Dashboard - System](https://raw.githubusercontent.com/BetaHydri/hymer-connect-ha/master/images/Dash7.png)
+
+</details>
+
 ## Key Terminology
 
 | Term | Description |
