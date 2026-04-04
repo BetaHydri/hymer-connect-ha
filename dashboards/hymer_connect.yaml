@@ -6,7 +6,7 @@
 #   2. Open the dashboard > Edit > three dots > Raw configuration editor
 #   3. Paste this content and save
 #
-# Note: Entity IDs use the pattern created by the integration.
+# Note: Entity IDs use the pattern "sensor.hymer_hymer_connect_hymer_<key>".
 #       Replace "hymer_hymer_connect_hymer" with your actual device prefix
 #       if different (check Settings > Devices for the exact entity IDs).
 
@@ -18,67 +18,82 @@ views:
     path: vehicle
     icon: mdi:rv-truck
     cards:
-      - type: markdown
-        content: "# 🚐 Vehicle Info"
       - type: entities
         title: Vehicle Information
         entities:
           - entity: sensor.hymer_hymer_connect_hymer_vehicle_model
             name: Model
-            icon: mdi:rv-truck
           - entity: sensor.hymer_hymer_connect_hymer_vehicle_model_year
             name: Model Year
-            icon: mdi:calendar
           - entity: sensor.hymer_hymer_connect_hymer_vehicle_vin
             name: VIN
-            icon: mdi:identifier
       - type: entities
         title: Driving
         entities:
           - entity: sensor.hymer_hymer_connect_hymer_odometer
             name: Odometer
-            icon: mdi:counter
           - entity: sensor.hymer_hymer_connect_hymer_speed
             name: Speed
-            icon: mdi:speedometer
-          - entity: sensor.hymer_hymer_connect_hymer_fuel_level
-            name: Fuel Level
-            icon: mdi:gas-station
-          - entity: sensor.hymer_hymer_connect_hymer_coolant_temp
-            name: Coolant Temperature
-            icon: mdi:coolant-temperature
+          - entity: sensor.hymer_hymer_connect_hymer_rpm
+            name: RPM
           - entity: sensor.hymer_hymer_connect_hymer_current_gear
             name: Current Gear
-            icon: mdi:car-shift-pattern
-          - entity: sensor.hymer_hymer_connect_hymer_ambient_temp
-            name: Ambient Temperature
-            icon: mdi:thermometer
+          - entity: sensor.hymer_hymer_connect_hymer_coolant_temp
+            name: Coolant Temperature
+          - entity: sensor.hymer_hymer_connect_hymer_engine_hours
+            name: Engine Hours
+          - entity: sensor.hymer_hymer_connect_hymer_engine_torque
+            name: Engine Torque
+      - type: entities
+        title: Fuel & Range
+        entities:
+          - entity: sensor.hymer_hymer_connect_hymer_fuel_range
+            name: Fuel Range
+          - entity: sensor.hymer_hymer_connect_hymer_fuel_consumption
+            name: Fuel Consumption
+          - entity: sensor.hymer_hymer_connect_hymer_total_fuel_used
+            name: Total Fuel Used
+          - entity: sensor.hymer_hymer_connect_hymer_trip_distance
+            name: Trip Distance
+          - entity: sensor.hymer_hymer_connect_hymer_adblue_level
+            name: AdBlue Level
+          - entity: sensor.hymer_hymer_connect_hymer_adblue_temp
+            name: AdBlue Temperature
+          - entity: sensor.hymer_hymer_connect_hymer_dpf_status
+            name: DPF Status
       - type: entities
         title: Security
         entities:
-          - entity: sensor.hymer_hymer_connect_hymer_lock_status
+          - entity: binary_sensor.hymer_hymer_connect_hymer_lock_status
             name: Lock Status
-            icon: mdi:lock
           - entity: sensor.hymer_hymer_connect_hymer_ignition_state
             name: Ignition
-            icon: mdi:key
           - entity: binary_sensor.hymer_hymer_connect_hymer_engine_running
             name: Engine Running
-            icon: mdi:engine
           - entity: binary_sensor.hymer_hymer_connect_hymer_handbrake
             name: Handbrake
-            icon: mdi:car-brake-parking
+          - entity: binary_sensor.hymer_hymer_connect_hymer_cruise_control
+            name: Cruise Control
           - entity: binary_sensor.hymer_hymer_connect_hymer_alarm_armed
-            name: Alarm
-            icon: mdi:alarm-light
+            name: Alarm Armed
+          - entity: sensor.hymer_hymer_connect_hymer_alarm_battery
+            name: Alarm Battery
 
   # ── Page 2: Power & Battery ──
   - title: Power
     path: power
     icon: mdi:battery-charging
     cards:
-      - type: markdown
-        content: "# 🔋 Power & Battery"
+      - type: gauge
+        entity: sensor.hymer_hymer_connect_hymer_battery_soc
+        name: Battery SOC
+        min: 0
+        max: 100
+        severity:
+          green: 50
+          yellow: 25
+          red: 10
+        needle: true
       - type: gauge
         entity: sensor.hymer_hymer_connect_hymer_battery_voltage
         name: Battery Voltage
@@ -90,56 +105,82 @@ views:
           red: 11.0
         needle: true
       - type: entities
-        title: Battery
+        title: Habitation Battery
         entities:
           - entity: sensor.hymer_hymer_connect_hymer_battery_voltage
             name: Battery Voltage
-            icon: mdi:battery
           - entity: sensor.hymer_hymer_connect_hymer_battery_current
             name: Battery Current
-            icon: mdi:current-dc
+          - entity: sensor.hymer_hymer_connect_hymer_battery_soc
+            name: State of Charge
           - entity: sensor.hymer_hymer_connect_hymer_battery_type
             name: Battery Type
-            icon: mdi:battery-check
+          - entity: sensor.hymer_hymer_connect_hymer_chassis_battery_voltage
+            name: Chassis Battery
+      - type: entities
+        title: Charging
+        entities:
           - entity: sensor.hymer_hymer_connect_hymer_charge_phase
             name: Charge Phase
-            icon: mdi:battery-charging
           - entity: binary_sensor.hymer_hymer_connect_hymer_charger_active
             name: Charger Active
-            icon: mdi:battery-charging
-      - type: entities
-        title: Solar & Mains
-        entities:
-          - entity: sensor.hymer_hymer_connect_hymer_solar_voltage
-            name: Solar Voltage
-            icon: mdi:solar-power
+          - entity: sensor.hymer_hymer_connect_hymer_charger_status
+            name: Charger Status
+          - entity: sensor.hymer_hymer_connect_hymer_ext_charger_voltage
+            name: External Charger Voltage
           - entity: sensor.hymer_hymer_connect_hymer_power_source
             name: Power Source
-            icon: mdi:power-plug
-          - entity: sensor.hymer_hymer_connect_hymer_main_switch
-            name: Main Switch
-            icon: mdi:power
           - entity: binary_sensor.hymer_hymer_connect_hymer_mains_connected
             name: Mains Connected
-            icon: mdi:power-plug
+          - entity: binary_sensor.hymer_hymer_connect_hymer_main_switch
+            name: Main Switch
 
-  # ── Page 3: Water ──
+  # ── Page 3: Climate & Heater ──
+  - title: Climate
+    path: climate
+    icon: mdi:thermometer
+    cards:
+      - type: entities
+        title: Temperatures
+        entities:
+          - entity: sensor.hymer_hymer_connect_hymer_indoor_temp
+            name: Indoor
+          - entity: sensor.hymer_hymer_connect_hymer_outdoor_temp
+            name: Outdoor
+          - entity: sensor.hymer_hymer_connect_hymer_ambient_temp
+            name: Ambient
+      - type: entities
+        title: Truma Heater
+        entities:
+          - entity: sensor.hymer_hymer_connect_hymer_heater_state
+            name: Heater State
+          - entity: sensor.hymer_hymer_connect_hymer_heater_fan_speed
+            name: Fan Speed
+          - entity: sensor.hymer_hymer_connect_hymer_heater_setpoint
+            name: Setpoint
+          - entity: sensor.hymer_hymer_connect_hymer_heater_fuel_type
+            name: Fuel Type
+          - entity: sensor.hymer_hymer_connect_hymer_heater_electric_power
+            name: Electric Power
+          - entity: sensor.hymer_hymer_connect_hymer_heater_operating_mode
+            name: Operating Mode
+          - entity: binary_sensor.hymer_hymer_connect_hymer_truma_connected
+            name: Truma Connected
+          - entity: sensor.hymer_hymer_connect_hymer_truma_status
+            name: Truma Status
+      - type: entities
+        title: Fridge
+        entities:
+          - entity: sensor.hymer_hymer_connect_hymer_fridge_mode
+            name: Fridge Mode
+          - entity: sensor.hymer_hymer_connect_hymer_fridge_status
+            name: Fridge Status
+
+  # ── Page 4: Water ──
   - title: Water
     path: water
     icon: mdi:water
     cards:
-      - type: markdown
-        content: "# 💧 Water Tanks"
-      - type: gauge
-        entity: sensor.hymer_hymer_connect_hymer_fresh_water_level
-        name: Fresh Water
-        min: 0
-        max: 100
-        severity:
-          green: 50
-          yellow: 25
-          red: 10
-        needle: true
       - type: gauge
         entity: sensor.hymer_hymer_connect_hymer_gray_water_level
         name: Gray Water
@@ -151,83 +192,93 @@ views:
           red: 80
         needle: true
 
-  # ── Page 4: Climate ──
-  - title: Climate
-    path: climate
-    icon: mdi:thermometer
-    cards:
-      - type: markdown
-        content: "# 🌡️ Climate"
-      - type: entities
-        title: Temperatures
-        entities:
-          - entity: sensor.hymer_hymer_connect_hymer_indoor_temp
-            name: Indoor
-            icon: mdi:home-thermometer
-          - entity: sensor.hymer_hymer_connect_hymer_outdoor_temp
-            name: Outdoor
-            icon: mdi:thermometer
-          - entity: sensor.hymer_hymer_connect_hymer_ambient_temp
-            name: Ambient
-            icon: mdi:thermometer
-      - type: entities
-        title: Heater (Truma)
-        entities:
-          - entity: sensor.hymer_hymer_connect_hymer_heater_mode
-            name: Heater Mode
-            icon: mdi:radiator
-          - entity: sensor.hymer_hymer_connect_hymer_heater_setpoint
-            name: Setpoint
-            icon: mdi:thermostat
-          - entity: sensor.hymer_hymer_connect_hymer_heater_fuel_type
-            name: Fuel Type
-            icon: mdi:gas-burner
-
-  # ── Page 5: Doors & Access ──
+  # ── Page 5: Doors & Lights ──
   - title: Doors
     path: doors
     icon: mdi:car-door
     cards:
-      - type: markdown
-        content: "# 🚪 Doors & Access"
       - type: entities
-        title: Door States
+        title: Doors
         entities:
-          - entity: sensor.hymer_hymer_connect_hymer_door_driver
+          - entity: binary_sensor.hymer_hymer_connect_hymer_door_driver
             name: Driver Door
-            icon: mdi:car-door
-          - entity: sensor.hymer_hymer_connect_hymer_door_passenger
+          - entity: binary_sensor.hymer_hymer_connect_hymer_door_passenger
             name: Passenger Door
-            icon: mdi:car-door
-          - entity: sensor.hymer_hymer_connect_hymer_door_sliding
+          - entity: binary_sensor.hymer_hymer_connect_hymer_door_sliding
             name: Sliding Door
-            icon: mdi:door-sliding
-          - entity: sensor.hymer_hymer_connect_hymer_lock_status
+          - entity: binary_sensor.hymer_hymer_connect_hymer_door_rear
+            name: Rear Door
+          - entity: binary_sensor.hymer_hymer_connect_hymer_lock_status
             name: Lock Status
-            icon: mdi:lock
+          - entity: binary_sensor.hymer_hymer_connect_hymer_step_retracted
+            name: Step Retracted
+      - type: entities
+        title: Vehicle Lights
+        entities:
+          - entity: binary_sensor.hymer_hymer_connect_hymer_headlamp
+            name: Headlamp
+          - entity: binary_sensor.hymer_hymer_connect_hymer_high_beam
+            name: High Beam
+          - entity: binary_sensor.hymer_hymer_connect_hymer_parking_light
+            name: Parking Light
+          - entity: binary_sensor.hymer_hymer_connect_hymer_fog_front
+            name: Fog Front
+          - entity: binary_sensor.hymer_hymer_connect_hymer_fog_rear
+            name: Fog Rear
+          - entity: binary_sensor.hymer_hymer_connect_hymer_turn_signal
+            name: Turn Signal
+      - type: entities
+        title: Habitation Lights
+        entities:
+          - entity: sensor.hymer_hymer_connect_hymer_light_1_level
+            name: Light Group 1
+          - entity: sensor.hymer_hymer_connect_hymer_light_2_level
+            name: Light Group 2
 
-  # ── Page 6: GPS ──
+  # ── Page 6: GPS & Location ──
   - title: GPS
     path: gps
     icon: mdi:map-marker
     cards:
-      - type: markdown
-        content: "# 📍 GPS Location"
-      - type: entities
-        title: Position
+      - type: map
         entities:
+          - entity: device_tracker.hymer_hymer_connect_hymer_location
+        default_zoom: 15
+        hours_to_show: 24
+      - type: entities
+        title: GPS Details
+        entities:
+          - entity: device_tracker.hymer_hymer_connect_hymer_location
+            name: Location
           - entity: sensor.hymer_hymer_connect_hymer_gps_coordinates
             name: Coordinates
-            icon: mdi:map-marker
           - entity: sensor.hymer_hymer_connect_hymer_gps_altitude
             name: Altitude
-            icon: mdi:altimeter
+          - entity: sensor.hymer_hymer_connect_hymer_gps_heading
+            name: Heading
+          - entity: sensor.hymer_hymer_connect_hymer_gps_satellites
+            name: Satellites
           - entity: sensor.hymer_hymer_connect_hymer_gps_signal_quality
             name: Signal Quality
-            icon: mdi:signal
           - entity: binary_sensor.hymer_hymer_connect_hymer_gps_fix
             name: GPS Fix
-            icon: mdi:crosshairs-gps
+
+  # ── Page 7: System ──
+  - title: System
+    path: system
+    icon: mdi:chip
+    cards:
+      - type: entities
+        title: Connectivity
+        entities:
           - entity: binary_sensor.hymer_hymer_connect_hymer_scu_connected
             name: SCU Connected
-            icon: mdi:access-point
+          - entity: sensor.hymer_hymer_connect_hymer_scu_firmware
+            name: SCU Firmware
+          - entity: sensor.hymer_hymer_connect_hymer_truma_firmware
+            name: Truma Firmware
+      - type: entities
+        title: Tires
+        entities:
+          - entity: sensor.hymer_hymer_connect_hymer_tire_pressure
+            name: Tire Pressure
