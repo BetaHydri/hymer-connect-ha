@@ -22,6 +22,8 @@ analyze_*.js
 __pycache__/
 *.py[cod]
 *.egg-info/
+.venv*/
+.env
 
 # OS
 .DS_Store
@@ -30,6 +32,7 @@ Thumbs.db
 # Memory bank (local only)
 .memory-bank/
 
-# Personal secrets (QR codes, tokens)
+# Personal secrets (QR codes, tokens, private data)
 secrets/
+private_*
 test_signalr.py
