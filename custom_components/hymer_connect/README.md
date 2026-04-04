@@ -4,7 +4,7 @@
 
 Custom integration to connect your HYMER / Erwin Hymer Group motorhome or caravan to [Home Assistant](https://www.home-assistant.io/).
 
-> **v1.0.0** — Real-time sensor data via SignalR fully working. 130+ sensors including odometer, GPS, battery, water levels, temperatures, door status, and more.
+> **v1.2.0** — Real-time sensor data via SignalR fully working. 130+ sensors with proper names including odometer, GPS, battery, water levels, temperatures, door status, and more.
 
 ![HYMER Connect Integration in Home Assistant](https://raw.githubusercontent.com/BetaHydri/hymer-connect-ha/master/images/ha-screenshot.png)
 
