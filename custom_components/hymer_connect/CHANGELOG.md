@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.7.3] - 2026-04-04
+
+### Fixed
+
+- **Sensor misidentification — solar, not mains** (closes [#13](https://github.com/BetaHydri/hymer-connect-ha/issues/13)) — sensors (3,19), (3,20), (3,21) are the **solar panel** charger, not 230V mains power:
+  - `ext_charger_voltage` → `solar_voltage` (reads ~2-3V with no sun, higher in daylight)
+  - `mains_connected` → `solar_connected` (always 1 because solar panel is hardwired)
+  - `charger_status` → `solar_charger_status` (1 = standby)
+- Icons updated to `mdi:solar-power` / `mdi:solar-power-variant`
+
 ## [1.7.2] - 2026-04-04
 
 ### Fixed

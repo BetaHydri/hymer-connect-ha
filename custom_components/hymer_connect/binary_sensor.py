@@ -51,12 +51,12 @@ BINARY_SENSOR_DESCRIPTIONS: tuple[HymerBinarySensorEntityDescription, ...] = (
         icon="mdi:battery-charging",
     ),
     HymerBinarySensorEntityDescription(
-        key="mains_connected",
-        translation_key="mains_connected",
+        key="solar_connected",
+        translation_key="solar_connected",
         device_class=BinarySensorDeviceClass.PLUG,
-        value_path="signalr_sensors.mains_connected",
+        value_path="signalr_sensors.solar_connected",
         on_value=1,
-        icon="mdi:power-plug",
+        icon="mdi:solar-power",
     ),
     HymerBinarySensorEntityDescription(
         key="gps_fix",

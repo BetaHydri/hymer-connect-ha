@@ -354,19 +354,19 @@ SIGNALR_SENSORS: tuple[HymerSensorEntityDescription, ...] = (
     ),
     # --- Habitation electrics (lin1) ---
     HymerSensorEntityDescription(
-        key="ext_charger_voltage",
-        translation_key="ext_charger_voltage",
+        key="solar_voltage",
+        translation_key="solar_voltage",
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         device_class=SensorDeviceClass.VOLTAGE,
         state_class=SensorStateClass.MEASUREMENT,
-        value_path="signalr_sensors.ext_charger_voltage",
-        icon="mdi:battery-charging",
+        value_path="signalr_sensors.solar_voltage",
+        icon="mdi:solar-power",
     ),
     HymerSensorEntityDescription(
-        key="charger_status",
-        translation_key="charger_status",
-        value_path="signalr_sensors.charger_status",
-        icon="mdi:battery-charging-outline",
+        key="solar_charger_status",
+        translation_key="solar_charger_status",
+        value_path="signalr_sensors.solar_charger_status",
+        icon="mdi:solar-power-variant",
     ),
     HymerSensorEntityDescription(
         key="light_1_level",

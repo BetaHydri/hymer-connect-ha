@@ -65,13 +65,15 @@
       "heater_setpoint": { "name": "Heater setpoint" },
       "heater_fuel_type": { "name": "Heater fuel type" },
       "ambient_temp": { "name": "Ambient temperature" },
-      "current_gear": { "name": "Current gear" }
+      "current_gear": { "name": "Current gear" },
+      "solar_voltage": { "name": "Solar voltage" },
+      "solar_charger_status": { "name": "Solar charger status" }
     },
     "binary_sensor": {
       "engine_running": { "name": "Engine" },
       "handbrake": { "name": "Handbrake" },
       "charger_active": { "name": "Charger" },
-      "mains_connected": { "name": "Mains power" },
+      "solar_connected": { "name": "Solar panel" },
       "gps_fix": { "name": "GPS fix" },
       "scu_connected": { "name": "SCU connected" },
       "cruise_control": { "name": "Cruise control" },
