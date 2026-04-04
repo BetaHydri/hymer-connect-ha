@@ -153,7 +153,7 @@ class HymerSignalRClient:
             _LOGGER.warning("UpdateTokens failed, continuing without it")
 
         self._connected = True
-        _LOGGER.warning("SignalR connected to datahub for %s", self._vehicle_urn)
+        _LOGGER.info("SignalR connected to datahub for %s", self._vehicle_urn)
 
         # Step 6: Send PiaRequest subscription to start receiving sensor data
         try:
@@ -285,7 +285,7 @@ class HymerSignalRClient:
         target = msg.get("target", "")
         args = msg.get("arguments", [])
 
-        _LOGGER.warning(
+        _LOGGER.debug(
             "SignalR message: type=%s target=%s args_count=%d raw=%s",
             msg_type,
             target,
@@ -298,7 +298,7 @@ class HymerSignalRClient:
             if b64_payload:
                 sensor_data = decode_pia_payload(b64_payload)
                 self._sensor_data.update(sensor_data)
-                _LOGGER.warning(
+                _LOGGER.debug(
                     "PiaResponse: %d fields updated, keys=%s",
                     len(sensor_data),
                     list(sensor_data.keys())[:20],
@@ -312,7 +312,7 @@ class HymerSignalRClient:
             return
 
         self._running = True
-        _LOGGER.warning("SignalR listen loop started for %s", self._vehicle_urn)
+        _LOGGER.info("SignalR listen loop started for %s", self._vehicle_urn)
         msg_count = 0
         try:
             async for msg in self._ws:
