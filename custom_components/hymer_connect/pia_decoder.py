@@ -148,6 +148,7 @@ _VALUE_LABELS: dict[str, dict[str, str]] = {
     "parking_light": {"OFF": "Off", "ON": "On"},
     "turn_signal": {"OFF": "Off", "ON": "On"},
     "heater_fan_speed": {"OFF": "Off", "ECO": "Eco", "HIGH": "High"},
+    "heater_state": {"False": "Off", "True": "On"},
 }
 
 # Mercedes Sprinter 7G-TRONIC automatic transmission gear mapping.
