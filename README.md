@@ -4,349 +4,315 @@
 
 Custom integration to connect your HYMER / Erwin Hymer Group motorhome or caravan to [Home Assistant](https://www.home-assistant.io/).
 
-> **Status:** Early development — authentication flow and sensor mapping are being validated against the live API.
+> **v1.2.0** — Real-time sensor data via SignalR fully working. 130+ sensors with proper names including odometer, GPS, battery, water levels, temperatures, door status, and more.
 
-![HYMER Connect Integration in Home Assistant](./images/ha-screenshot.png)
+![HYMER Connect Integration in Home Assistant](https://raw.githubusercontent.com/BetaHydri/hymer-connect-ha/master/images/ha-screenshot.png)
 
 ## Supported Brands
 
-This integration works with all Erwin Hymer Group brands equipped with a **Smart Interface Unit (SIU)**:
+All Erwin Hymer Group brands equipped with a **Smart Interface Unit (SIU)**:
 
 | Brand | | Brand |
 |-------|-|-------|
 | HYMER | | Carado |
-| Bürstner | | Laika |
+| Buerstner | | Laika |
 | Dethleffs | | Sunlight |
 | Eriba | | FreeOnTour |
 | LMC | | Niesmann+Bischoff |
 
 ## Features
 
-### Sensors
-- **Battery** — level (%), voltage (V), chassis battery voltage (V)
-- **Water tanks** — fresh water level (%), grey water level (%)
-- **Temperature** — indoor (°C), outdoor (°C)
-- **Tire pressure** — front left, front right, back left, back right (bar)
+### Real-Time Sensors (via SignalR, requires EHG Refresh Token)
 
-### Binary Sensors
-- **SIU online** — vehicle connectivity status
-- **Mains power** — shore power connected
-- **Door / Window** — open/closed state
-- **Alarm** — alarm system active
-- **Heater / Fridge** — running state
+- **Vehicle** — odometer, speed, RPM, fuel level, fuel range, engine hours, coolant temp, gear
+- **Battery** — voltage, current, solar voltage, charge phase, charger status, battery type
+- **Water** — fresh water level (%), grey water level (%), grey water sensor
+- **Temperature** — indoor, outdoor, ambient, AdBlue
+- **GPS** — coordinates, altitude, heading, satellites, signal quality, UTC time
+- **Doors** — driver, passenger, sliding, rear (open/closed)
+- **Status** — lock status, ignition, handbrake, engine running, headlamp, cruise control
+- **Heating** — Truma heater mode, setpoint, fan speed, fuel type, operating mode
+- **Fridge** — mode, status
+- **Alarm** — armed status, battery level
+- **SCU** — firmware version, connectivity
+- **And more** — 130+ sensors total from CAN bus, LIN bus, GPS, and connected components
+
+### REST API Sensors
+
+- Vehicle model, VIN, model year
+- SIU online status, mains power, door/window state
 
 ### Dashboard
+
 A ready-to-use Lovelace dashboard is included in `dashboards/hymer_connect.yaml`.
 
 ## Installation
 
 ### HACS (recommended)
+
 1. Open HACS in Home Assistant
-2. Click the three dots menu → **Custom repositories**
+2. Click the three dots menu > **Custom repositories**
 3. Add `https://github.com/BetaHydri/hymer-connect-ha` as **Integration**
 4. Search for "HYMER Connect" and install
 5. Restart Home Assistant
 
 ### Manual
+
 1. Copy the `hymer_connect` folder into your `custom_components/` directory
 2. Restart Home Assistant
 
 ## Configuration
 
-1. Go to **Settings → Devices & Services → + Add Integration**
+1. Go to **Settings > Devices & Services > + Add Integration**
 2. Search for **HYMER Connect**
 3. Select your brand and enter your HYMER Connect app credentials
-4. The integration will create sensor entities for your vehicle
+4. Paste your **EHG Remote Access Refresh Token** (see below)
+5. The integration creates sensor entities for your vehicle
 
-## Dashboard Setup
+> **Without the refresh token**, the integration provides only REST API data (vehicle model, VIN, year). **With the refresh token**, you get 130+ real-time sensors via SignalR.
 
-1. Go to **Settings → Dashboards → + Add Dashboard**
-2. Open the new dashboard → Edit → three dots → **Raw configuration editor**
-3. Paste the contents of [`dashboards/hymer_connect.yaml`](dashboards/hymer_connect.yaml)
+---
+
+## Obtaining the EHG Refresh Token
+
+The HYMER Connect cloud requires a special **EHG Remote Access Refresh Token** to stream real-time sensor data. This token is created during the initial Bluetooth (BLE) pairing between your phone and your vehicle's Smart Interface Unit (SIU). It is stored inside the Hymer Connect app and **never expires**.
+
+Since there is no public API to generate this token, you must capture it **once** from your phone's network traffic using a proxy tool. After that, the integration refreshes it automatically.
+
+### Prerequisites
+
+- A **PC** (Windows, Mac, or Linux) on the same WiFi as your phone
+- An **Android phone** with the HYMER Connect app (the phone you originally paired with your vehicle via Bluetooth)
+- **mitmproxy** installed on the PC ([download](https://mitmproxy.org/))
+- **apk-mitm** to patch the app for HTTPS interception ([GitHub](https://github.com/nicbarker/apk-mitm))
+- ~15 minutes
+
+### Step-by-step guide
+
+#### 1. Install mitmproxy on your PC
+
+```bash
+# Windows (winget)
+winget install mitmproxy
+
+# macOS (Homebrew)
+brew install mitmproxy
+
+# Linux (pip)
+pip install mitmproxy
+```
+
+#### 2. Patch the HYMER Connect APK
+
+The app uses certificate pinning, which blocks proxy interception. Patch the APK to disable this:
+
+```bash
+# Install apk-mitm (requires Node.js)
+npm install -g apk-mitm
+
+# Download the HYMER Connect APK from your phone or APKMirror, then patch it:
+apk-mitm com.ehg.hymerconnect.apk
+```
+
+This creates `com.ehg.hymerconnect-patched.apk`.
+
+#### 3. Install the patched APK on your phone
+
+1. Uninstall the original HYMER Connect app
+2. Enable "Install from unknown sources" in Android settings
+3. Transfer the patched APK to your phone and install it
+4. Log in with your HYMER Connect credentials
+
+> **Important:** You do NOT need to re-pair via Bluetooth. The patched app reuses the BLE pairing tokens stored on your phone from the original pairing.
+
+#### 4. Start the proxy on your PC
+
+Find your PC's local IP address:
+
+```powershell
+# Windows
+Get-NetIPAddress -AddressFamily IPv4 | Where-Object { $_.InterfaceAlias -match 'Wi-Fi|WLAN|Ethernet' }
+
+# macOS / Linux
+ifconfig | grep "inet "
+```
+
+Start mitmproxy:
+
+```bash
+mitmdump --mode regular --listen-port 8080 --set flow_detail=3 -w hymer_trace.flow
+```
+
+#### 5. Configure your phone to use the proxy
+
+1. Go to **Settings > Wi-Fi** (or Connections > Wi-Fi)
+2. Long-press your home WiFi network > **Manage network settings**
+3. Set Proxy to **Manual**
+   - **Proxy hostname:** Your PC's IP address (e.g., `192.168.178.154`)
+   - **Proxy port:** `8080`
 4. Save
 
-## API
+#### 6. Install the mitmproxy CA certificate
 
-This integration communicates with the HYMER Connect cloud API at `smartrv.erwinhymergroup.com`. It uses the same OAuth2 ROPC authentication as the official HYMER Connect web and mobile apps.
+1. Open Chrome on your phone and navigate to **http://mitm.it**
+2. Tap **Android** to download the certificate
+3. Open the downloaded file and install it (Settings > Security > Install certificates)
+4. Name it `mitmproxy`, select **VPN and apps**
 
-### Authentication
+#### 7. Capture the token
 
-| Parameter | Value |
-|-----------|-------|
-| **Endpoint** | `POST https://smartrv.erwinhymergroup.com/api/v2/oauth/token` |
-| **Grant type** | `password` (OAuth2 ROPC) |
-| **Client auth** | HTTP Basic `OAUTH2_CLIENT:OAUTH2_CLIENT` |
-| **Content-Type** | `application/x-www-form-urlencoded` |
-| **Body** | `grant_type=password&username=<email>&password=<password>` |
+1. **Force-close** the HYMER Connect app (swipe away from recent apps)
+2. **Open** the patched HYMER Connect app
+3. Wait for it to load the vehicle dashboard with sensor data (~10 seconds)
+4. Close the app
 
-The API returns `access_token`, `refresh_token`, and `id_token` (JWT, RS256). Token refresh uses the same endpoint with `grant_type=refresh_token`.
+#### 8. Extract the token
 
-The `access_token` JWT contains these claims:
-- `account_number` — UUID of the user account
-- `user_name` — email address
-- `scope` — `["default"]`
-- `tenant` — `"ehg"` (Erwin Hymer Group)
-- `client_id` — `"OAUTH2_CLIENT"`
-- `exp` — expiry timestamp (tokens expire after ~15 minutes)
+Stop mitmproxy (`Ctrl+C`). Then extract your refresh token:
 
-### API Domains
+```bash
+python3 -c "
+from mitmproxy.io import FlowReader
+import json
 
-| Domain | IP | Purpose |
-|--------|----|---------|
-| `smartrv.erwinhymergroup.com` | 20.4.141.205 | Authentication, SignalR negotiate, web app |
-| `scc-api.smartrv.erwinhymergroup.com` | 20.103.22.48 | REST API data endpoints (Azure API Management) |
-| `scc-rvtwin.smartrv.erwinhymergroup.com` | 13.107.226.45 | Vehicle twin data (RV digital twin) |
-| `scc-appcomm.smartrv.erwinhymergroup.com` | 20.4.141.205 | SignalR hub (alias of smartrv) |
-| `ehg-prod-signalr.service.signalr.net` | varies | Azure SignalR Service WebSocket |
+with open('hymer_trace.flow', 'rb') as f:
+    reader = FlowReader(f)
+    for flow in reader.stream():
+        if hasattr(flow, 'request') and 'remoteAccessToken' in flow.request.url:
+            body = json.loads(flow.request.content.decode('utf-8'))
+            print('=== YOUR EHG REFRESH TOKEN ===')
+            print(body['token'])
+            print()
+            print('Copy the token above and paste it into the')
+            print('HYMER Connect integration configuration in Home Assistant.')
+            break
+    else:
+        print('Token not found in trace. Make sure the app loaded sensor data.')
+"
+```
 
-### REST API Endpoints
+The output is a long JWT string starting with `eyJ...`. This is your **EHG Remote Access Refresh Token**.
 
-All endpoints require the `SCC-CsNgAccessToken` header with the `access_token` from authentication.
+#### 9. Add the token to Home Assistant
 
-| Method | Endpoint | Purpose |
-|--------|----------|---------|
-| GET | `/api/ehg/v1/accounts/me` | Current user account info |
-| GET | `/api/ehg/v1/accounts/available` | Check email availability |
-| GET | `/api/ehg/v1/vehicles` | List of registered vehicles |
-| GET | `/api/ehg/v1/sius` | List of Smart Interface Units |
-| GET | `/api/ehg/v1/sensors` | Sensor data |
-| GET | `/api/ehg/v1/legal-docs/latest` | Latest legal documents |
-| GET | `/api/ehg/v1/firmwares/sius` | Firmware info for SIUs |
-| POST | `/api/ehg/v1/updates` | Update management |
-| POST | `/api/ehg/v1/accounts/standard/resetPassword` | Password reset |
-| GET | `/api/rv-twin/sensors/sync` | RV twin sensor sync |
-| GET | `/api/rv-twin/rv-model/documents` | RV model documents |
-| GET | `/api/rv-twin/rv-model/filters-hierarchy` | RV model filter hierarchy |
-| GET | `/api/service-catalogue/services` | Service catalogue |
-| GET | `/api/push-notifications/subscriptions/scu` | Push notification subscriptions |
-| GET | `/datahub/negotiate` | SignalR negotiate (no auth required) |
+1. Go to **Settings > Devices & Services**
+2. Find **HYMER Connect** and click **Configure** (or re-add the integration)
+3. Paste the token into the **EHG Remote Access Refresh Token** field
+4. Save — real-time sensor data will start flowing within seconds
 
-### HTTP Headers
+#### 10. Restore your phone
 
-| Header | Description |
-|--------|-------------|
-| `SCC-CsNgAccessToken` | OAuth2 access token |
-| `SCC-CsNgRemoteToken` | OAuth2 refresh token |
-| `SCC-Locale` | Language code (e.g. `de`, `en`) |
-| `SCC-PinCode` | PIN code for certain operations |
-| `SCC-ScuUrn` | SIU URN for device-specific requests |
+1. Remove the WiFi proxy settings (set Proxy back to **None**)
+2. *(Optional)* Uninstall the patched APK and reinstall from the Play Store
+3. *(Optional)* Remove the mitmproxy CA certificate
+
+---
+
+## How It Works
+
+During manufacturing, each vehicle's SCU is registered in the EHG cloud with a unique URN. When you pair your phone with the SCU via Bluetooth, the cloud issues a long-lived **refresh token** bound to your phone's BLE MAC address, your account, and your vehicle. This proves you have physical access to the vehicle.
+
+The integration uses this refresh token to automatically obtain short-lived access tokens every 15 minutes, then streams sensor data via SignalR WebSocket.
+
+```mermaid
+sequenceDiagram
+    participant Factory as Factory
+    participant Cloud as EHG Cloud
+    participant SCU as SCU (Vehicle)
+    participant Phone as Phone (App)
+    participant HA as Home Assistant
+
+    Note over Factory,Cloud: Vehicle manufacturing
+    Factory->>Cloud: Register SCU (urn:ehg:scu:...)
+    Factory->>SCU: Install SCU with cellular modem
+
+    Note over SCU,Phone: One-time BLE pairing (at vehicle)
+    Phone->>SCU: BLE connect + authenticate
+    SCU->>Cloud: Validate pairing request
+    Cloud->>Phone: Refresh token (ett=access-refresh, no expiry)
+    Note over Phone: Token stored permanently in app
+
+    Note over Phone,HA: One-time token capture (mitmproxy)
+    Phone-->>HA: User copies refresh token from traffic capture
+
+    Note over HA,Cloud: Home Assistant integration (automatic)
+    HA->>Cloud: POST /oauth/token (username + password)
+    HA->>Cloud: POST /remoteAccessToken (refresh token)
+    Cloud->>HA: Fresh access token (15 min, auto-refreshed)
+    HA->>Cloud: SignalR connect + UpdateTokens
+    Cloud->>SCU: Forward via cellular
+    SCU->>Cloud: PiaResponse (sensor data)
+    Cloud->>HA: Real-time sensor data (130+ sensors)
+```
 
 ### Architecture
 
 ```mermaid
 graph TD
-    AUTH["smartrv.erwinhymergroup.com<br/>POST /api/v2/oauth/token<br/>(OAuth2 ROPC + HTTP Basic Auth)"]
-    API["scc-api.smartrv.erwinhymergroup<br/>REST API data endpoints<br/>(SCC-CsNgAccessToken header)"]
+    subgraph "EHG Cloud (Azure)"
+        AUTH["OAuth2 Authentication"]
+        RAT["Remote Access Token Exchange"]
+        API["REST API (vehicle info)"]
+        NEG["SignalR Negotiate"]
+        SRH["Azure SignalR Hub"]
+        REG[("SCU Registry +<br/>Token Validation")]
+    end
 
-    AUTH -->|access_token| API
+    subgraph "Vehicle"
+        SIU["SIU / SCU<br/>Cellular + BLE gateway"]
+        BUS["Vehicle Bus (CAN, LIN)"]
+        DEV["Truma - Dometic - Victron<br/>Sensors - Battery - TPMS<br/>Lights - Fridge - Heater"]
+    end
 
-    VD["Vehicle Data<br/>/api/ehg/v1/<br/>vehicles, sius, sensors"]
-    RT["RV Twin<br/>scc-rvtwin<br/>sensors/sync"]
-    SR["SignalR Hub<br/>scc-appcomm<br/>/datahub (real-time)"]
+    subgraph "Home Assistant"
+        HA["HYMER Connect Integration"]
+    end
 
-    API --> VD
-    API --> RT
-    API --> SR
-
-    SIU["SIU (Smart Interface Unit)<br/>Vehicle gateway (cellular/BLE)"]
-
-    VD --> SIU
-    RT --> SIU
-    SR --> SIU
-
-    TH["Truma Heater<br/>Alde Boiler<br/>Hegotec Lights"]
-    DO["Dometic<br/>Fridge<br/>Victron"]
-    SE["Sensors<br/>Battery, Temp<br/>Water, TPMS"]
-
-    SIU -->|Vehicle Bus| TH
-    SIU -->|Vehicle Bus| DO
-    SIU -->|Vehicle Bus| SE
+    REG ---|"registered at<br/>manufacturing"| SIU
+    HA -->|"1. login"| AUTH
+    HA -->|"2. exchange refresh token"| RAT
+    HA -->|"3. negotiate"| NEG
+    HA -->|"4. UpdateTokens"| SRH
+    SRH <-->|"5. PiaRequest/Response"| SIU
+    SIU <-->|"cellular"| SRH
+    SIU <--> BUS
+    BUS <--> DEV
+    HA -->|"vehicle info"| API
+    RAT --> REG
 ```
 
-### SignalR DataHub (Real-Time Communication)
+### Token Types
 
-The SIU communicates with the cloud via an Azure SignalR Service hub. The app uses the `@microsoft/signalr` library.
+| Token | `ett` | Expiry | Source | Purpose |
+|-------|-------|--------|--------|---------|
+| OAuth2 access | — | 15 min | Login API | API authentication |
+| **Remote access refresh** | **`access-refresh`** | **Never** | **BLE pairing** | **Exchange for access token (this is what you capture)** |
+| Remote access | `access` | 15 min | `/remoteAccessToken` API | SignalR UpdateTokens |
 
-| Property | Value |
-|----------|-------|
-| **Negotiate URL** | `POST https://scc-appcomm.smartrv.erwinhymergroup.com/datahub/negotiate?negotiateVersion=1` |
-| **WebSocket URL** | `wss://ehg-prod-signalr.service.signalr.net/client/?hub=datahub` |
-| **Protocol** | JSON (SignalR JSON protocol with `\x1e` delimiter) |
-| **Auth for negotiate** | `Authorization: Bearer <access_token>` + `SCC-CsNgAccessToken: <access_token>` |
-| **Auth for WebSocket** | JWT from negotiate response passed as `access_token` query parameter |
+## Dashboard Setup
 
-Connection states: `connecting` → `established` → `disconnected` (with auto-reconnect policy).
+1. Go to **Settings > Dashboards > + Add Dashboard**
+2. Open the new dashboard > Edit > three dots > **Raw configuration editor**
+3. Paste the contents of [`dashboards/hymer_connect.yaml`](https://github.com/BetaHydri/hymer-connect-ha/blob/master/dashboards/hymer_connect.yaml)
+4. Save
 
-> **⚠️ HELP WANTED — SignalR Hub Method Names**
->
-> Sensor data (battery, water levels, temperatures, tire pressure) and vehicle controls (lights, heater, fridge, water pump) flow **exclusively through SignalR WebSocket** — there is NO REST API for live sensor data.
->
-> The mobile app sends ~10.5 KB through the WebSocket and receives ~21 KB of sensor data back. However, the exact **SignalR hub method name** that the app invokes is unknown.
->
-> **What we know:**
-> - Hub endpoint: `datahub` on Azure SignalR Service
-> - The app calls `hub.invoke("???", args)` with an unknown method name
-> - The server responds with `type=1` messages containing sensor data
-> - 40+ method names were tested — ALL return `HubException: Method does not exist`
-> - The method names found in the Hermes bytecode bundle (`sendClientDataToHub`, `sendMessageToHub`, `subscribeToHubEvents`, `syncSensors`) are **JavaScript function names** in the app code, NOT the actual SignalR hub method names
-> - The real hub method name is compiled into Hermes bytecode v96 operations and cannot be extracted as a plain string
->
-> **How to help:**
-> 1. **Decompile the Hermes bytecode** — The bundle is at `assets/index.android.bundle` in the APK (Hermes v96, ~13 MB). Tools like [`hermes-dec`](https://nicolo-ribaudo.github.io/hermes-dec/) may be able to decompile it
-> 2. **Intercept WebSocket frames** — Use a rooted Android device with Frida to hook `HubConnection.invoke()` and log the method name + arguments
-> 3. **Check the iOS app** — The iOS version may have a more readable JavaScript bundle (not compiled to Hermes bytecode)
->
-> If you can decode the SignalR hub method name, please open an issue or PR!
-
-### Communication Paths
-
-**Cloud Path** (used by this integration):
-```
-Home Assistant → HTTPS REST API → EHG Backend → SignalR DataHub → SIU (via cellular)
-```
-
-**BLE Path** (local, not used by this integration):
-```
-Mobile App → BLE UART → SIU → Vehicle Bus → Connected Components
-```
-
-The SIU connects to the cloud via the vehicle's cellular modem. When BLE and cloud are both available, the app prefers the cloud path.
-
-### Protobuf Message Types
-
-The vehicle communication uses Protocol Buffers for structured messages. Key message types discovered in the app bundle:
-
-#### Vehicle Data
-| Message | Purpose |
-|---------|---------|
-| `ConnectedComponent` | Single device on vehicle bus |
-| `ConnectedComponents` | Collection of all components |
-| `ConnectedComponentControls` | Control commands for a component |
-| `ConnectedComponentSettings` | Configuration for a component |
-| `ConnectedComponentValue` / `Values` | Sensor and state values |
-| `NonCommunicatingComponents` | Offline/unreachable components |
-
-#### Device Management
-| Message | Purpose |
-|---------|---------|
-| `DeviceTwin` | Azure IoT-style device twin |
-| `DeviceInfo` / `DeviceInfoPatch` | Mobile device registration |
-| `MobileDevices` | List of registered mobile devices |
-
-#### Telemetry & Diagnostics
-| Message | Purpose |
-|---------|---------|
-| `Telemetry` / `Telemetries` | Live telemetry data |
-| `DiagnosticsData` / `DiagnosticsDataItem` | Diagnostic information |
-| `SystemEvent` / `SystemEvents` | System event log |
-| `Statistic` / `Statistics` | Usage statistics |
-
-#### Automation & Notifications
-| Message | Purpose |
-|---------|---------|
-| `Scenario` / `Scenarios` | Automation scenarios (scenes) |
-| `ScenarioResult` / `ScenarioType` | Scenario execution results |
-| `Notification` / `NotificationSubscriptions` | Push notification management |
-| `AlarmType` | Alarm definitions |
-
-### App Login Flow (Observed via PCAPdroid)
-
-The complete network flow during a fresh login, in order:
-
-| Step | Domain | Bytes Sent | Bytes Received | Purpose |
-|------|--------|-----------|---------------|---------|
-| 1 | `firebaseinstallations.googleapis.com` | 1.7 KB | 5.2 KB | Firebase SDK init |
-| 2 | `firebase-settings.crashlytics.com` | 1.5 KB | 6.1 KB | Crashlytics config |
-| 3 | `api2.branch.io` | — | — | Branch.io analytics |
-| 4 | `config.mapbox.com` | 3.7 KB | 6.0 KB | Mapbox maps config |
-| 5 | `distributions.crowdin.net` | 5.1 KB | 443.8 KB | Translation strings download |
-| 6 | **`smartrv.erwinhymergroup.com`** | **4.5 KB** | **14.8 KB** | **Auth + config** |
-| 7 | **`scc-api.smartrv.erwinhymergroup.com`** | **11.2 KB** | **14.4 KB** | **REST API calls** |
-| 8 | **`scc-rvtwin.smartrv.erwinhymergroup.com`** | **2.7 KB** | **429.0 KB** | **Vehicle twin data** |
-| 9 | `firebaselogging-pa.googleapis.com` | 2.5 KB | 5.9 KB | Firebase event logging |
-
-### Firebase (NOT Used for Authentication)
-
-The app includes Firebase SDKs but does **not** use Firebase for primary authentication:
-
-| Property | Value |
-|----------|-------|
-| Firebase project | `smart-caravan-ddde6` |
-| Firebase API key | `AIzaSyA1raPCBXULGkXVIBHjkDTI1IWJuDX9D9k` |
-| Firebase DB URL | `https://smart-caravan-ddde6.firebaseio.com` |
-| Password login | **DISABLED** at project level |
-
-Firebase is used only for: Crashlytics (crash reporting), Analytics, Remote Config, and Installations.
-
-### Key Terminology
+## Key Terminology
 
 | Term | Description |
 |------|-------------|
-| **SIU** | Smart Interface Unit — central vehicle gateway module |
-| **SCU** | Smart Control Unit (older term for SIU) |
-| **CSNG** | Internal platform codename (SiuFactoryCsngHttpApi, SccHttpApi) |
+| **SIU / SCU** | Smart Interface Unit / Smart Control Unit — central vehicle gateway |
 | **EHG** | Erwin Hymer Group |
-| **Connected Component** | Any device on the vehicle bus (heaters, fridges, lights, etc.) |
+| **PIA** | Platform Integration API — protobuf-based sensor protocol |
 | **DataHub** | SignalR hub for real-time cloud communication |
-| **RV Twin** | Digital twin representation of the vehicle |
-| **PIA** | Platform Integration API (internal) |
-| **FOTA** | Firmware Over The Air |
-| **BOS Battery** | Battery management system brand |
-| **WWL** | Wireless Water Level sensor |
+| **Connected Component** | Any device on the vehicle bus (heaters, fridges, sensors, etc.) |
 
-### Source App Analysis
+## Reverse Engineering
 
-This integration was reverse-engineered from:
-- **HYMER Connect** Android app v2.10.14 (`com.ehg.hymerconnect`)
-- React Native app with Hermes bytecode engine (compiled JS, ~13 MB)
-- Nordic Semiconductor BLE stack for local SIU communication
-- Microsoft SignalR (`@microsoft/signalr`) for real-time cloud communication
-- Protocol Buffers for structured vehicle messages
-- OkHttp for HTTP networking
-- Web app SPA at `smartrv.erwinhymergroup.com` (React + Vite, provided the auth endpoint discovery)
-- Azure infrastructure: API Management, SignalR Service, Spring Boot backend (nginx/1.25.1)
-
-## Development Status
-
-- [x] API base URL discovered
-- [x] Auth endpoint discovered (`/api/v2/oauth/token` with HTTP Basic Auth)
-- [x] Authentication tested successfully (returns access_token + refresh_token)
-- [x] Integration skeleton (config flow, coordinator, sensors, binary sensors)
-- [x] HA integration login works — device created with entities
-- [x] Vehicle info via REST API (`/api/v2/assets`)
-- [x] Account info via REST API (`/api/v2/accounts/me`)
-- [x] Reauth flow support
-- [x] Dashboard YAML
-- [x] SignalR WebSocket connection + authentication working
-- [ ] **🔴 SignalR hub method name for sensor data** ← CURRENT BLOCKER
-- [ ] Actual sensor data mapping to entities
-- [ ] Climate control entities (heater target temperature)
-- [ ] Switch entities (lights, USB, water pump)
-- [ ] Cover entities (awning, roof, dome)
-- [ ] SignalR real-time push updates
-- [ ] Device tracker (GPS location)
-
-## Contributing
-
-This project needs help with **reverse engineering the SignalR protocol**. See the [SignalR DataHub section](#signalr-datahub-real-time-communication) above for details.
-
-**What's working:**
-- OAuth2 authentication ✅
-- REST API for vehicle/account info ✅
-- SignalR WebSocket connection ✅
-
-**What's blocked:**
-- The exact SignalR hub method name the app uses to request sensor data from the SIU
-- The method name is compiled into Hermes bytecode v96 and cannot be extracted as a plain string
-- 40+ method names have been tested — all return "Method does not exist"
-
-**Tools needed:**
-- Hermes bytecode v96 decompiler (hbctool only supports up to v90)
-- Or: Frida on a rooted Android device to hook `HubConnection.invoke()`
-- Or: iOS app analysis (may have readable JavaScript)
-
-If you have an EHG vehicle and can help, please open an issue!
+This integration was reverse-engineered from the **HYMER Connect** Android app v2.10.14 using:
+- mitmproxy for HTTP/WebSocket traffic analysis
+- apk-mitm for certificate pinning bypass
+- Custom protobuf decoder for PIA sensor data
 
 ## License
 
-This project is not affiliated with or endorsed by the Erwin Hymer Group.
+This project is not affiliated with or endorsed by Erwin Hymer Group. Use at your own risk.
