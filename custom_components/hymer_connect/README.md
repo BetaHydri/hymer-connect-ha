@@ -4,7 +4,7 @@
 
 Custom integration to connect your HYMER / Erwin Hymer Group motorhome or caravan to [Home Assistant](https://www.home-assistant.io/).
 
-> **v1.2.0** — Real-time sensor data via SignalR fully working. 130+ sensors with proper names including odometer, GPS, battery, water levels, temperatures, door status, and more.
+> **v1.5.0** — Real-time sensor data via SignalR. 142 sensors including odometer, GPS, battery, temperatures, door/lock status, Truma heater, fridge, alarm, and more. Correct sensor mappings verified against the Hymer Connect app.
 
 ![HYMER Connect Integration in Home Assistant](https://raw.githubusercontent.com/BetaHydri/hymer-connect-ha/master/images/ha-screenshot.png)
 
@@ -24,14 +24,14 @@ All Erwin Hymer Group brands equipped with a **Smart Interface Unit (SIU)**:
 
 ### Real-Time Sensors (via SignalR, requires EHG Refresh Token)
 
-- **Vehicle** — odometer, speed, RPM, fuel level, fuel range, engine hours, coolant temp, gear
-- **Battery** — voltage, current, solar voltage, charge phase, charger status, battery type
-- **Water** — fresh water level (%), grey water level (%), grey water sensor
+- **Vehicle** — odometer, speed, RPM, AdBlue level, fuel range, engine hours, coolant temp, gear
+- **Battery** — voltage, current, SOC (%), chassis battery voltage, charge phase, charger status, battery type
+- **Water** — grey water level (%), grey water sensor
 - **Temperature** — indoor, outdoor, ambient, AdBlue
 - **GPS** — coordinates, altitude, heading, satellites, signal quality, UTC time
 - **Doors** — driver, passenger, sliding, rear (open/closed)
 - **Status** — lock status, ignition, handbrake, engine running, headlamp, cruise control
-- **Heating** — Truma heater mode, setpoint, fan speed, fuel type, operating mode
+- **Heating** — Truma heater mode, setpoint, electric power (0/900/1800W), fuel type, operating mode
 - **Fridge** — mode, status
 - **Alarm** — armed status, battery level
 - **SCU** — firmware version, connectivity
