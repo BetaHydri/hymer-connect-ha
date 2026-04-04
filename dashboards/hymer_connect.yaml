@@ -1,18 +1,13 @@
 # HYMER Connect Dashboard for Home Assistant
-# Swipe-page layout organized by sensor categories
+# Updated to match actual HA entity IDs (v1.7.1, German locale)
 #
 # Usage:
 #   1. Go to Settings > Dashboards > + Add Dashboard
 #   2. Open the dashboard > Edit > three dots > Raw configuration editor
 #   3. Paste this content and save
-#
-# Note: Entity IDs use the pattern "sensor.hymer_hymer_connect_hymer_<key>".
-#       Replace "hymer_hymer_connect_hymer" with your actual device prefix
-#       if different (check Settings > Devices for the exact entity IDs).
 
 title: HYMER Connect
 views:
-
   # ── Page 1: Vehicle Overview ──
   - title: Vehicle
     path: vehicle
@@ -21,62 +16,62 @@ views:
       - type: entities
         title: Vehicle Information
         entities:
-          - entity: sensor.hymer_hymer_connect_hymer_vehicle_model
+          - entity: sensor.hymer_hymer_connect_hymer
             name: Model
-          - entity: sensor.hymer_hymer_connect_hymer_vehicle_model_year
+          - entity: sensor.hymer_hymer_connect_hymer_2
             name: Model Year
-          - entity: sensor.hymer_hymer_connect_hymer_vehicle_vin
+          - entity: sensor.hymer_hymer_connect_hymer_3
             name: VIN
       - type: entities
         title: Driving
         entities:
-          - entity: sensor.hymer_hymer_connect_hymer_odometer
+          - entity: sensor.hymer_hymer_connect_hymer_strecke
             name: Odometer
-          - entity: sensor.hymer_hymer_connect_hymer_speed
+          - entity: sensor.hymer_hymer_connect_hymer_geschwindigkeit
             name: Speed
-          - entity: sensor.hymer_hymer_connect_hymer_rpm
+          - entity: sensor.hymer_hymer_connect_hymer_5
             name: RPM
-          - entity: sensor.hymer_hymer_connect_hymer_current_gear
+          - entity: sensor.hymer_hymer_connect_hymer_20
             name: Current Gear
-          - entity: sensor.hymer_hymer_connect_hymer_coolant_temp
+          - entity: sensor.hymer_hymer_connect_hymer_temperatur
             name: Coolant Temperature
-          - entity: sensor.hymer_hymer_connect_hymer_engine_hours
+          - entity: sensor.hymer_hymer_connect_hymer_7
             name: Engine Hours
-          - entity: sensor.hymer_hymer_connect_hymer_engine_torque
+          - entity: sensor.hymer_hymer_connect_hymer_25
             name: Engine Torque
       - type: entities
         title: Fuel & Range
         entities:
-          - entity: sensor.hymer_hymer_connect_hymer_fuel_range
+          - entity: sensor.hymer_hymer_connect_hymer_strecke_2
             name: Fuel Range
-          - entity: sensor.hymer_hymer_connect_hymer_fuel_consumption
+          - entity: sensor.hymer_hymer_connect_hymer_23
             name: Fuel Consumption
-          - entity: sensor.hymer_hymer_connect_hymer_total_fuel_used
+          - entity: sensor.hymer_hymer_connect_hymer_24
             name: Total Fuel Used
-          - entity: sensor.hymer_hymer_connect_hymer_trip_distance
+          - entity: sensor.hymer_hymer_connect_hymer_strecke_3
             name: Trip Distance
           - entity: sensor.hymer_hymer_connect_hymer_adblue_level
             name: AdBlue Level
-          - entity: sensor.hymer_hymer_connect_hymer_adblue_temp
+          - entity: sensor.hymer_hymer_connect_hymer_temperatur_6
             name: AdBlue Temperature
-          - entity: sensor.hymer_hymer_connect_hymer_dpf_status
+          - entity: sensor.hymer_hymer_connect_hymer_26
             name: DPF Status
       - type: entities
         title: Security
         entities:
-          - entity: binary_sensor.hymer_hymer_connect_hymer_lock_status
+          - entity: binary_sensor.hymer_hymer_connect_hymer_lock
             name: Lock Status
-          - entity: sensor.hymer_hymer_connect_hymer_ignition_state
+          - entity: sensor.hymer_hymer_connect_hymer_6
             name: Ignition
-          - entity: binary_sensor.hymer_hymer_connect_hymer_engine_running
+          - entity: binary_sensor.hymer_hymer_connect_hymer_betriebszustand
             name: Engine Running
-          - entity: binary_sensor.hymer_hymer_connect_hymer_handbrake
+          - entity: binary_sensor.hymer_hymer_connect_hymer
             name: Handbrake
-          - entity: binary_sensor.hymer_hymer_connect_hymer_cruise_control
+          - entity: binary_sensor.hymer_hymer_connect_hymer_2
             name: Cruise Control
-          - entity: binary_sensor.hymer_hymer_connect_hymer_alarm_armed
+          - entity: binary_sensor.hymer_hymer_connect_hymer_sicherheit
             name: Alarm Armed
-          - entity: sensor.hymer_hymer_connect_hymer_alarm_battery
+          - entity: sensor.hymer_hymer_connect_hymer_batterie
             name: Alarm Battery
 
   # ── Page 2: Power & Battery ──
@@ -85,7 +80,7 @@ views:
     icon: mdi:battery-charging
     cards:
       - type: gauge
-        entity: sensor.hymer_hymer_connect_hymer_battery_soc
+        entity: sensor.hymer_hymer_connect_hymer_battery_level
         name: Battery SOC
         min: 0
         max: 100
@@ -109,28 +104,28 @@ views:
         entities:
           - entity: sensor.hymer_hymer_connect_hymer_battery_voltage
             name: Battery Voltage
-          - entity: sensor.hymer_hymer_connect_hymer_battery_current
+          - entity: sensor.hymer_hymer_connect_hymer_stromstarke
             name: Battery Current
-          - entity: sensor.hymer_hymer_connect_hymer_battery_soc
+          - entity: sensor.hymer_hymer_connect_hymer_battery_level
             name: State of Charge
-          - entity: sensor.hymer_hymer_connect_hymer_battery_type
+          - entity: sensor.hymer_hymer_connect_hymer_10
             name: Battery Type
           - entity: sensor.hymer_hymer_connect_hymer_chassis_battery_voltage
             name: Chassis Battery
       - type: entities
         title: Charging
         entities:
-          - entity: sensor.hymer_hymer_connect_hymer_charge_phase
+          - entity: sensor.hymer_hymer_connect_hymer_11
             name: Charge Phase
-          - entity: binary_sensor.hymer_hymer_connect_hymer_charger_active
+          - entity: binary_sensor.hymer_hymer_connect_hymer_ladestatus
             name: Charger Active
-          - entity: sensor.hymer_hymer_connect_hymer_charger_status
+          - entity: sensor.hymer_hymer_connect_hymer_27
             name: Charger Status
-          - entity: sensor.hymer_hymer_connect_hymer_ext_charger_voltage
+          - entity: sensor.hymer_hymer_connect_hymer_spannung_2
             name: External Charger Voltage
-          - entity: sensor.hymer_hymer_connect_hymer_power_source
+          - entity: sensor.hymer_hymer_connect_hymer_12
             name: Power Source
-          - entity: binary_sensor.hymer_hymer_connect_hymer_mains_connected
+          - entity: binary_sensor.hymer_hymer_connect_hymer_stecker
             name: Mains Connected
           - entity: binary_sensor.hymer_hymer_connect_hymer_main_switch
             name: Main Switch
@@ -143,37 +138,37 @@ views:
       - type: entities
         title: Temperatures
         entities:
-          - entity: sensor.hymer_hymer_connect_hymer_indoor_temp
+          - entity: sensor.hymer_hymer_connect_hymer_temperatur_2
             name: Indoor
-          - entity: sensor.hymer_hymer_connect_hymer_outdoor_temp
+          - entity: sensor.hymer_hymer_connect_hymer_temperatur_3
             name: Outdoor
-          - entity: sensor.hymer_hymer_connect_hymer_ambient_temp
+          - entity: sensor.hymer_hymer_connect_hymer_temperatur_5
             name: Ambient
       - type: entities
         title: Truma Heater
         entities:
-          - entity: sensor.hymer_hymer_connect_hymer_heater_state
+          - entity: sensor.hymer_hymer_connect_hymer_8
             name: Heater State
           - entity: sensor.hymer_hymer_connect_hymer_heater_fan_speed
             name: Fan Speed
-          - entity: sensor.hymer_hymer_connect_hymer_heater_setpoint
+          - entity: sensor.hymer_hymer_connect_hymer_temperatur_4
             name: Setpoint
-          - entity: sensor.hymer_hymer_connect_hymer_heater_fuel_type
+          - entity: sensor.hymer_hymer_connect_hymer_19
             name: Fuel Type
-          - entity: sensor.hymer_hymer_connect_hymer_heater_electric_power
+          - entity: sensor.hymer_hymer_connect_hymer_leistung
             name: Electric Power
-          - entity: sensor.hymer_hymer_connect_hymer_heater_operating_mode
+          - entity: sensor.hymer_hymer_connect_hymer_13
             name: Operating Mode
-          - entity: binary_sensor.hymer_hymer_connect_hymer_truma_connected
+          - entity: binary_sensor.hymer_hymer_connect_hymer_konnektivitat_3
             name: Truma Connected
-          - entity: sensor.hymer_hymer_connect_hymer_truma_status
+          - entity: sensor.hymer_hymer_connect_hymer_32
             name: Truma Status
       - type: entities
         title: Fridge
         entities:
-          - entity: sensor.hymer_hymer_connect_hymer_fridge_mode
+          - entity: sensor.hymer_hymer_connect_hymer_21
             name: Fridge Mode
-          - entity: sensor.hymer_hymer_connect_hymer_fridge_status
+          - entity: sensor.hymer_hymer_connect_hymer_22
             name: Fridge Status
 
   # ── Page 4: Water ──
@@ -182,7 +177,7 @@ views:
     icon: mdi:water
     cards:
       - type: gauge
-        entity: sensor.hymer_hymer_connect_hymer_gray_water_level
+        entity: sensor.hymer_hymer_connect_hymer_14
         name: Gray Water
         min: 0
         max: 100
@@ -200,39 +195,39 @@ views:
       - type: entities
         title: Doors
         entities:
-          - entity: binary_sensor.hymer_hymer_connect_hymer_door_driver
+          - entity: binary_sensor.hymer_hymer_connect_hymer_driver_door
             name: Driver Door
-          - entity: binary_sensor.hymer_hymer_connect_hymer_door_passenger
+          - entity: binary_sensor.hymer_hymer_connect_hymer_passenger_door
             name: Passenger Door
-          - entity: binary_sensor.hymer_hymer_connect_hymer_door_sliding
+          - entity: binary_sensor.hymer_hymer_connect_hymer_sliding_door
             name: Sliding Door
-          - entity: binary_sensor.hymer_hymer_connect_hymer_door_rear
+          - entity: binary_sensor.hymer_hymer_connect_hymer_tur
             name: Rear Door
-          - entity: binary_sensor.hymer_hymer_connect_hymer_lock_status
+          - entity: binary_sensor.hymer_hymer_connect_hymer_lock
             name: Lock Status
-          - entity: binary_sensor.hymer_hymer_connect_hymer_step_retracted
+          - entity: binary_sensor.hymer_hymer_connect_hymer_4
             name: Step Retracted
       - type: entities
         title: Vehicle Lights
         entities:
-          - entity: binary_sensor.hymer_hymer_connect_hymer_headlamp
+          - entity: binary_sensor.hymer_hymer_connect_hymer_licht
             name: Headlamp
-          - entity: binary_sensor.hymer_hymer_connect_hymer_high_beam
+          - entity: binary_sensor.hymer_hymer_connect_hymer_licht_2
             name: High Beam
-          - entity: binary_sensor.hymer_hymer_connect_hymer_parking_light
+          - entity: binary_sensor.hymer_hymer_connect_hymer_licht_3
             name: Parking Light
-          - entity: binary_sensor.hymer_hymer_connect_hymer_fog_front
+          - entity: binary_sensor.hymer_hymer_connect_hymer_licht_4
             name: Fog Front
-          - entity: binary_sensor.hymer_hymer_connect_hymer_fog_rear
+          - entity: binary_sensor.hymer_hymer_connect_hymer_licht_5
             name: Fog Rear
-          - entity: binary_sensor.hymer_hymer_connect_hymer_turn_signal
+          - entity: binary_sensor.hymer_hymer_connect_hymer_3
             name: Turn Signal
       - type: entities
         title: Habitation Lights
         entities:
-          - entity: sensor.hymer_hymer_connect_hymer_light_1_level
+          - entity: sensor.hymer_hymer_connect_hymer_28
             name: Light Group 1
-          - entity: sensor.hymer_hymer_connect_hymer_light_2_level
+          - entity: sensor.hymer_hymer_connect_hymer_29
             name: Light Group 2
 
   # ── Page 6: GPS & Location ──
@@ -250,17 +245,17 @@ views:
         entities:
           - entity: device_tracker.hymer_hymer_connect_hymer_location
             name: Location
-          - entity: sensor.hymer_hymer_connect_hymer_gps_coordinates
+          - entity: sensor.hymer_hymer_connect_hymer_15
             name: Coordinates
-          - entity: sensor.hymer_hymer_connect_hymer_gps_altitude
+          - entity: sensor.hymer_hymer_connect_hymer_17
             name: Altitude
-          - entity: sensor.hymer_hymer_connect_hymer_gps_heading
+          - entity: sensor.hymer_hymer_connect_hymer_34
             name: Heading
-          - entity: sensor.hymer_hymer_connect_hymer_gps_satellites
+          - entity: sensor.hymer_hymer_connect_hymer_33
             name: Satellites
-          - entity: sensor.hymer_hymer_connect_hymer_gps_signal_quality
+          - entity: sensor.hymer_hymer_connect_hymer_16
             name: Signal Quality
-          - entity: binary_sensor.hymer_hymer_connect_hymer_gps_fix
+          - entity: binary_sensor.hymer_hymer_connect_hymer_konnektivitat
             name: GPS Fix
 
   # ── Page 7: System ──
@@ -271,14 +266,14 @@ views:
       - type: entities
         title: Connectivity
         entities:
-          - entity: binary_sensor.hymer_hymer_connect_hymer_scu_connected
+          - entity: binary_sensor.hymer_hymer_connect_hymer_konnektivitat_2
             name: SCU Connected
-          - entity: sensor.hymer_hymer_connect_hymer_scu_firmware
+          - entity: sensor.hymer_hymer_connect_hymer_30
             name: SCU Firmware
-          - entity: sensor.hymer_hymer_connect_hymer_truma_firmware
+          - entity: sensor.hymer_hymer_connect_hymer_31
             name: Truma Firmware
       - type: entities
         title: Tires
         entities:
-          - entity: sensor.hymer_hymer_connect_hymer_tire_pressure
+          - entity: sensor.hymer_hymer_connect_hymer_druck
             name: Tire Pressure
