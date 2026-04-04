@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.7.2] - 2026-04-04
+
+### Fixed
+
+- **Mains power sensor false positive** — `mains_connected` incorrectly reported "plugged in" when the vehicle was parked without shore power; caused by protobuf bool field (field 5) overwriting the uint field (field 3) — since Python `True == 1`, the `on_value=1` check always matched; fixed by preferring uint/int over bool when multiple value fields are present
+
 ## [1.7.1] - 2026-04-04
 
 ### Fixed

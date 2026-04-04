@@ -268,12 +268,24 @@ def _try_string(data: bytes) -> str | None:
 
 
 def _parse_sensor_entry(data: bytes) -> dict[str, Any] | None:
-    """Parse a single sensor entry from protobuf bytes."""
+    """Parse a single sensor entry from protobuf bytes.
+
+    Each sensor carries its value in exactly one of several typed protobuf
+    fields (uint, string, bool, float, int).  However the SCU sometimes
+    populates *both* a uint/int field **and** the bool field for the same
+    sensor.  Because ``True == 1`` in Python the bool would silently
+    satisfy an ``on_value=1`` check even when the uint is 0.
+
+    To avoid this, we collect *all* value candidates and prefer the more
+    specific numeric types (uint → field 3, int → field 7) over the
+    boolean (field 5) whenever both are present.
+    """
     fields = _decode_protobuf(data)
     sensor_id = 0
     bus_id = 0
-    value: Any = None
     bus_name = ""
+    # Collect value candidates keyed by protobuf field number.
+    values: dict[int, Any] = {}
 
     for fn, wt, v in fields:
         if fn == 1 and wt == 0:
@@ -281,21 +293,29 @@ def _parse_sensor_entry(data: bytes) -> dict[str, Any] | None:
         elif fn == 2 and wt == 0:
             bus_id = v
         elif fn == 3 and wt == 0:
-            value = v  # uint
+            values[3] = v  # uint
         elif fn == 4 and wt == 2:
             s = _try_string(v)
             if s is not None:
-                value = s
+                values[4] = s
         elif fn == 5 and wt == 0:
-            value = bool(v)  # bool stored as varint
+            values[5] = bool(v)  # bool stored as varint
         elif fn == 6 and wt == 5:
-            value = v  # float32
+            values[6] = v  # float32
         elif fn == 7 and wt == 0:
-            value = v  # signed int (as varint)
+            values[7] = v  # signed int (as varint)
         elif fn == 10 and wt == 2:
             s = _try_string(v)
             if s:
                 bus_name = s
+
+    # Pick the best value: prefer string → float → uint → int → bool.
+    # uint/int take precedence over bool to avoid True==1 confusion.
+    value: Any = None
+    for candidate_field in (4, 6, 3, 7, 5):
+        if candidate_field in values:
+            value = values[candidate_field]
+            break
 
     if not sensor_id and value is None:
         return None
