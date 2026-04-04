@@ -104,7 +104,7 @@ SENSOR_MAP: dict[tuple[int, int], tuple[str, str | None, str | None]] = {
     (49, 11): ("truma_firmware", None, None),
     # Truma heater (58)
     (58, 4): ("heater_fuel_type", None, None),
-    (58, 5): ("heater_mode", None, None),
+    (58, 5): ("heater_fan_speed", None, None),
     (58, 6): ("heater_fuel_type_2", None, None),
     (58, 7): ("heater_state", None, None),
     (58, 8): ("heater_setpoint", "\u00b0C", None),
@@ -147,7 +147,7 @@ _VALUE_LABELS: dict[str, dict[str, str]] = {
     "high_beam": {"OFF": "Off", "ON": "On"},
     "parking_light": {"OFF": "Off", "ON": "On"},
     "turn_signal": {"OFF": "Off", "ON": "On"},
-    "heater_mode": {"OFF": "Off", "ON": "On"},
+    "heater_fan_speed": {"OFF": "Off", "ECO": "Eco", "HIGH": "High"},
 }
 
 # All PiaRequest payloads captured from the Hymer Connect app.

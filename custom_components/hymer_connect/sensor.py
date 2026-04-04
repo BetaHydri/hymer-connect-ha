@@ -208,10 +208,10 @@ SIGNALR_SENSORS: tuple[HymerSensorEntityDescription, ...] = (
     ),
     # --- Truma heater (bus 58) ---
     HymerSensorEntityDescription(
-        key="heater_mode",
-        translation_key="heater_mode",
-        value_path="signalr_sensors.heater_mode",
-        icon="mdi:radiator",
+        key="heater_fan_speed",
+        translation_key="heater_fan_speed",
+        value_path="signalr_sensors.heater_fan_speed",
+        icon="mdi:fan",
     ),
     HymerSensorEntityDescription(
         key="heater_setpoint",

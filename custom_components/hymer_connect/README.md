@@ -31,7 +31,7 @@ All Erwin Hymer Group brands equipped with a **Smart Interface Unit (SIU)**:
 - **GPS** — coordinates, altitude, heading, satellites, signal quality, UTC time
 - **Doors** — driver, passenger, sliding, rear (open/closed)
 - **Status** — lock status, ignition, handbrake, engine running, headlamp, cruise control
-- **Heating** — Truma heater mode, setpoint, electric power (0/900/1800W), fuel type, operating mode
+- **Heating** — Truma heater fan speed (Off/Eco/High), setpoint, electric power (0/900/1800W), fuel type, operating mode
 - **Fridge** — mode, status
 - **Alarm** — armed status, battery level
 - **SCU** — firmware version, connectivity

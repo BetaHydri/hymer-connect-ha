@@ -61,7 +61,7 @@
       "gps_coordinates": { "name": "GPS coordinates" },
       "gps_signal_quality": { "name": "GPS signal" },
       "gps_altitude": { "name": "Altitude" },
-      "heater_mode": { "name": "Heater mode" },
+      "heater_fan_speed": { "name": "Heater fan speed" },
       "heater_setpoint": { "name": "Heater setpoint" },
       "heater_fuel_type": { "name": "Heater fuel type" },
       "ambient_temp": { "name": "Ambient temperature" },
