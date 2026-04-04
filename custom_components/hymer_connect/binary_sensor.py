@@ -128,6 +128,78 @@ BINARY_SENSOR_DESCRIPTIONS: tuple[HymerBinarySensorEntityDescription, ...] = (
         on_value="On",
         icon="mdi:power",
     ),
+    # --- Rear door ---
+    HymerBinarySensorEntityDescription(
+        key="door_rear",
+        translation_key="door_rear",
+        device_class=BinarySensorDeviceClass.DOOR,
+        value_path="signalr_sensors.door_rear",
+        on_value="Open",
+        icon="mdi:car-door",
+    ),
+    # --- Vehicle lights ---
+    HymerBinarySensorEntityDescription(
+        key="headlamp",
+        translation_key="headlamp",
+        device_class=BinarySensorDeviceClass.LIGHT,
+        value_path="signalr_sensors.headlamp",
+        on_value="On",
+        icon="mdi:car-light-high",
+    ),
+    HymerBinarySensorEntityDescription(
+        key="high_beam",
+        translation_key="high_beam",
+        device_class=BinarySensorDeviceClass.LIGHT,
+        value_path="signalr_sensors.high_beam",
+        on_value="On",
+        icon="mdi:car-light-high",
+    ),
+    HymerBinarySensorEntityDescription(
+        key="parking_light",
+        translation_key="parking_light",
+        device_class=BinarySensorDeviceClass.LIGHT,
+        value_path="signalr_sensors.parking_light",
+        on_value="On",
+        icon="mdi:car-parking-lights",
+    ),
+    HymerBinarySensorEntityDescription(
+        key="fog_front",
+        translation_key="fog_front",
+        device_class=BinarySensorDeviceClass.LIGHT,
+        value_path="signalr_sensors.fog_front",
+        on_value="On",
+        icon="mdi:car-light-fog",
+    ),
+    HymerBinarySensorEntityDescription(
+        key="fog_rear",
+        translation_key="fog_rear",
+        device_class=BinarySensorDeviceClass.LIGHT,
+        value_path="signalr_sensors.fog_rear",
+        on_value="On",
+        icon="mdi:car-light-fog",
+    ),
+    HymerBinarySensorEntityDescription(
+        key="turn_signal",
+        translation_key="turn_signal",
+        value_path="signalr_sensors.turn_signal",
+        on_value="On",
+        icon="mdi:car-turn-signal",
+    ),
+    # --- Truma ---
+    HymerBinarySensorEntityDescription(
+        key="truma_connected",
+        translation_key="truma_connected",
+        device_class=BinarySensorDeviceClass.CONNECTIVITY,
+        value_path="signalr_sensors.truma_connected",
+        icon="mdi:radiator",
+    ),
+    # --- Step ---
+    HymerBinarySensorEntityDescription(
+        key="step_retracted",
+        translation_key="step_retracted",
+        value_path="signalr_sensors.step_retracted",
+        icon="mdi:stairs",
+    ),
 )
 
 

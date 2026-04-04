@@ -5,6 +5,45 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.7.0] - 2026-04-04
+
+### Added
+
+- **26 new sensor entities** (closes [#8](https://github.com/BetaHydri/hymer-connect-ha/issues/8)):
+  - Engine: RPM, engine hours
+  - Heater: state, electric power (W), operating mode
+  - Fridge: mode, status
+  - Fuel: range (km), consumption, total used, trip distance
+  - Engine: torque (%), AdBlue temperature
+  - DPF status
+  - Charger: external voltage, charger status
+  - Lights: dimmer level 1 & 2 (%)
+  - Tire pressure (bar)
+  - Alarm battery (%)
+  - SCU firmware, Truma firmware, Truma status
+  - GPS: satellites, heading
+- **10 new binary sensor entities**:
+  - Rear door, headlamp, high beam, parking light, fog front/rear, turn signal
+  - Truma connected, step retracted
+
+## [1.6.3] - 2026-04-04
+
+### Fixed
+
+- **SignalR log noise** — changed PiaResponse and SignalR message logs from WARNING to DEBUG level; connection events changed to INFO
+
+## [1.6.2] - 2026-04-04
+
+### Fixed
+
+- **device_tracker setup error** — import `TrackerEntity` from `config_entry` module (fixes integration load failure in v1.6.1)
+
+## [1.6.1] - 2026-04-04
+
+### Fixed
+
+- **Brand images** — move to `brand/` subfolder for HA 2026.3+ local brand API
+
 ## [1.6.0] - 2026-04-04
 
 ### Fixed
