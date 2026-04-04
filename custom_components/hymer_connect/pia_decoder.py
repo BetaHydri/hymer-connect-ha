@@ -108,7 +108,7 @@ SENSOR_MAP: dict[tuple[int, int], tuple[str, str | None, str | None]] = {
     (58, 6): ("heater_fuel_type_2", None, None),
     (58, 7): ("heater_state", None, None),
     (58, 8): ("heater_setpoint", "\u00b0C", None),
-    (58, 9): ("heater_fan_speed", None, None),
+    (58, 9): ("heater_electric_power", "W", None),
     (58, 11): ("heater_operating_mode", None, None),
     # can2 — Extended chassis CAN
     (99, 1): ("adblue_temp", "\u00b0C", None),
