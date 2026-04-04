@@ -75,7 +75,12 @@
       "gps_fix": { "name": "GPS fix" },
       "scu_connected": { "name": "SCU connected" },
       "cruise_control": { "name": "Cruise control" },
-      "alarm_armed": { "name": "Alarm" }
+      "alarm_armed": { "name": "Alarm" },
+      "door_driver": { "name": "Driver door" },
+      "door_passenger": { "name": "Passenger door" },
+      "door_sliding": { "name": "Sliding door" },
+      "lock_status": { "name": "Lock" },
+      "main_switch": { "name": "Main switch" }
     }
   }
 }

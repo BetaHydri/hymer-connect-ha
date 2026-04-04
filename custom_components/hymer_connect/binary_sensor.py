@@ -85,6 +85,49 @@ BINARY_SENSOR_DESCRIPTIONS: tuple[HymerBinarySensorEntityDescription, ...] = (
         value_path="signalr_sensors.alarm_armed",
         icon="mdi:alarm-light",
     ),
+    # --- Doors (HA auto-translates: Offen/Geschlossen) ---
+    HymerBinarySensorEntityDescription(
+        key="door_driver",
+        translation_key="door_driver",
+        device_class=BinarySensorDeviceClass.DOOR,
+        value_path="signalr_sensors.door_driver",
+        on_value="Open",
+        icon="mdi:car-door",
+    ),
+    HymerBinarySensorEntityDescription(
+        key="door_passenger",
+        translation_key="door_passenger",
+        device_class=BinarySensorDeviceClass.DOOR,
+        value_path="signalr_sensors.door_passenger",
+        on_value="Open",
+        icon="mdi:car-door",
+    ),
+    HymerBinarySensorEntityDescription(
+        key="door_sliding",
+        translation_key="door_sliding",
+        device_class=BinarySensorDeviceClass.DOOR,
+        value_path="signalr_sensors.door_sliding",
+        on_value="Open",
+        icon="mdi:door-sliding",
+    ),
+    # --- Lock (HA auto-translates: Gesperrt/Entsperrt) ---
+    HymerBinarySensorEntityDescription(
+        key="lock_status",
+        translation_key="lock_status",
+        device_class=BinarySensorDeviceClass.LOCK,
+        value_path="signalr_sensors.lock_status",
+        on_value="Unlocked",
+        icon="mdi:lock",
+    ),
+    # --- Main switch ---
+    HymerBinarySensorEntityDescription(
+        key="main_switch",
+        translation_key="main_switch",
+        device_class=BinarySensorDeviceClass.POWER,
+        value_path="signalr_sensors.main_switch",
+        on_value="On",
+        icon="mdi:power",
+    ),
 )
 
 

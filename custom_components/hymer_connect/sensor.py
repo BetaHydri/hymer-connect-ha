@@ -97,34 +97,10 @@ SIGNALR_SENSORS: tuple[HymerSensorEntityDescription, ...] = (
         icon="mdi:coolant-temperature",
     ),
     HymerSensorEntityDescription(
-        key="lock_status",
-        translation_key="lock_status",
-        value_path="signalr_sensors.lock_status",
-        icon="mdi:lock",
-    ),
-    HymerSensorEntityDescription(
         key="ignition_state",
         translation_key="ignition_state",
         value_path="signalr_sensors.ignition_state",
         icon="mdi:key",
-    ),
-    HymerSensorEntityDescription(
-        key="door_driver",
-        translation_key="door_driver",
-        value_path="signalr_sensors.door_driver",
-        icon="mdi:car-door",
-    ),
-    HymerSensorEntityDescription(
-        key="door_passenger",
-        translation_key="door_passenger",
-        value_path="signalr_sensors.door_passenger",
-        icon="mdi:car-door",
-    ),
-    HymerSensorEntityDescription(
-        key="door_sliding",
-        translation_key="door_sliding",
-        value_path="signalr_sensors.door_sliding",
-        icon="mdi:door-sliding",
     ),
     # --- Habitation (lin1) ---
     HymerSensorEntityDescription(
@@ -179,12 +155,6 @@ SIGNALR_SENSORS: tuple[HymerSensorEntityDescription, ...] = (
         translation_key="power_source",
         value_path="signalr_sensors.power_source",
         icon="mdi:power-plug",
-    ),
-    HymerSensorEntityDescription(
-        key="main_switch",
-        translation_key="main_switch",
-        value_path="signalr_sensors.main_switch",
-        icon="mdi:power",
     ),
     # --- Climate (lin2) ---
     HymerSensorEntityDescription(
