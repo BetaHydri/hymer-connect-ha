@@ -60,7 +60,7 @@ SENSOR_MAP: dict[tuple[int, int], tuple[str, str | None, str | None]] = {
     (3, 16): ("switch_12v_5", None, None),
     (3, 17): ("switch_12v_6", None, None),
     (3, 18): ("switch_12v_7", None, None),
-    (3, 19): ("solar_voltage", "V", None),
+    (3, 19): ("solar_voltage", "V", "div1000"),
     (3, 20): ("solar_connected", None, None),
     (3, 21): ("solar_charger_status", None, None),
     (3, 22): ("switch_22", None, None),

@@ -121,7 +121,7 @@ views:
             name: Charger Active
           - entity: sensor.hymer_hymer_connect_hymer_solar_charger_status
             name: Solar Charger Status
-          - entity: sensor.hymer_hymer_connect_hymer_solar_voltage
+          - entity: sensor.hymer_hymer_connect_hymer_spannung
             name: Solar Voltage
           - entity: sensor.hymer_hymer_connect_hymer_12
             name: Power Source
