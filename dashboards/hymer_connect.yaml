@@ -1,5 +1,5 @@
 # HYMER Connect Dashboard for Home Assistant
-# Updated to match actual HA entity IDs (v1.7.1, German locale)
+# Updated to match actual HA entity IDs (v1.7.3, German locale)
 #
 # Usage:
 #   1. Go to Settings > Dashboards > + Add Dashboard
@@ -113,20 +113,20 @@ views:
           - entity: sensor.hymer_hymer_connect_hymer_chassis_battery_voltage
             name: Chassis Battery
       - type: entities
-        title: Charging
+        title: Charging / Solar
         entities:
           - entity: sensor.hymer_hymer_connect_hymer_11
             name: Charge Phase
           - entity: binary_sensor.hymer_hymer_connect_hymer_ladestatus
             name: Charger Active
-          - entity: sensor.hymer_hymer_connect_hymer_27
-            name: Charger Status
-          - entity: sensor.hymer_hymer_connect_hymer_spannung_2
-            name: External Charger Voltage
+          - entity: sensor.hymer_hymer_connect_hymer_solar_charger_status
+            name: Solar Charger Status
+          - entity: sensor.hymer_hymer_connect_hymer_solar_voltage
+            name: Solar Voltage
           - entity: sensor.hymer_hymer_connect_hymer_12
             name: Power Source
-          - entity: binary_sensor.hymer_hymer_connect_hymer_stecker
-            name: Mains Connected
+          - entity: binary_sensor.hymer_hymer_connect_hymer_solar_panel
+            name: Solar Panel Connected
           - entity: binary_sensor.hymer_hymer_connect_hymer_main_switch
             name: Main Switch
 
