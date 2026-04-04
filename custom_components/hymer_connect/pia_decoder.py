@@ -125,10 +125,10 @@ SENSOR_MAP: dict[tuple[int, int], tuple[str, str | None, str | None]] = {
 
 # Human-readable mappings for raw SCU string values
 _VALUE_LABELS: dict[str, dict[str, str]] = {
-    "door_driver": {"OFF": "Open", "CLS": "Closed", "SNA": "N/A"},
-    "door_passenger": {"OFF": "Open", "CLS": "Closed", "SNA": "N/A"},
-    "door_sliding": {"OFF": "Open", "CLS": "Closed", "SNA": "N/A"},
-    "door_rear": {"OFF": "Open", "CLS": "Closed", "SNA": "N/A"},
+    "door_driver": {"OFF": "Closed", "CLS": "Closed", "ON": "Open", "OPN": "Open", "SNA": "N/A"},
+    "door_passenger": {"OFF": "Closed", "CLS": "Closed", "ON": "Open", "OPN": "Open", "SNA": "N/A"},
+    "door_sliding": {"OFF": "Closed", "CLS": "Closed", "ON": "Open", "OPN": "Open", "SNA": "N/A"},
+    "door_rear": {"OFF": "Closed", "CLS": "Closed", "ON": "Open", "OPN": "Open", "SNA": "N/A"},
     "ignition_state": {
         "IGN_LOCK": "Off",
         "IGN_OFF": "Accessory",
