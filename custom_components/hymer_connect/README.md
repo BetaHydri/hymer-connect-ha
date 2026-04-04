@@ -97,6 +97,8 @@ Since there is no public API to generate this token, you must capture it **once*
 - **apk-mitm** to patch the app for HTTPS interception ([GitHub](https://github.com/niklashigi/apk-mitm))
 - ~15 minutes
 
+> **iOS is not supported** for token capture. The HYMER Connect app uses certificate pinning, and iOS apps cannot be repackaged without a jailbreak. You need an Android device (even a borrowed one) for the one-time token capture. After that, the integration works independently of your phone.
+
 ### Step-by-step guide
 
 #### 1. Install mitmproxy on your PC
