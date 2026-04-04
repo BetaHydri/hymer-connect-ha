@@ -70,6 +70,8 @@ CONF_REFRESH_TOKEN = "refresh_token"
 CONF_VEHICLE_URN = "vehicle_urn"
 CONF_SCU_URN = "scu_urn"
 CONF_VEHICLE_ID = "vehicle_id"
+CONF_EHG_TOKEN = "ehg_access_token"
+CONF_EHG_REFRESH_TOKEN = "ehg_refresh_token"
 
 # Platforms
 PLATFORMS = ["sensor", "binary_sensor"]

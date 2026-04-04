@@ -7,7 +7,11 @@
         "data": {
           "brand": "Brand",
           "username": "Email",
-          "password": "Password"
+          "password": "Password",
+          "ehg_refresh_token": "EHG Remote Access Refresh Token (optional)"
+        },
+        "data_description": {
+          "ehg_refresh_token": "Required for real-time sensor data via SignalR. This is a long-lived token obtained during BLE pairing. Capture it via mitmproxy — see the README for instructions."
         }
       },
       "reauth_confirm": {

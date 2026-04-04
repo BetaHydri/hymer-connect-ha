@@ -37,12 +37,14 @@ class HymerConnectCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         entry: ConfigEntry,
         vehicle_urn: str = "",
         scu_urn: str = "",
+        ehg_refresh_token: str = "",
     ) -> None:
         """Initialize the coordinator."""
         self.api = api
         self._session = session
         self._vehicle_urn = vehicle_urn  # urn:ehg:vehicle:hy-XXXXXXXXXX
         self._scu_urn = scu_urn  # urn:ehg:scu:sXXX.XX.XX.XXX.XXX
+        self._ehg_refresh_token = ehg_refresh_token  # BLE-derived refresh token
         self._signalr: HymerSignalRClient | None = None
         self._signalr_data: dict[str, Any] = {}
         super().__init__(
@@ -77,6 +79,7 @@ class HymerConnectCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             session=self._session,
             vehicle_urn=self._vehicle_urn,
             scu_urn=self._scu_urn,
+            ehg_refresh_token=self._ehg_refresh_token,
             on_sensor_update=self._on_signalr_update,
         )
 

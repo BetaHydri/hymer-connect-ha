@@ -16,7 +16,14 @@ from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 
 from .api import HymerConnectApi, HymerConnectApiError, HymerConnectAuthError
-from .const import BRANDS, CONF_ACCESS_TOKEN, CONF_BRAND, CONF_REFRESH_TOKEN, DOMAIN
+from .const import (
+    BRANDS,
+    CONF_ACCESS_TOKEN,
+    CONF_BRAND,
+    CONF_EHG_REFRESH_TOKEN,
+    CONF_REFRESH_TOKEN,
+    DOMAIN,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -25,6 +32,7 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
         vol.Required(CONF_BRAND, default="hymer"): vol.In(BRANDS),
         vol.Required(CONF_USERNAME): str,
         vol.Required(CONF_PASSWORD): str,
+        vol.Optional(CONF_EHG_REFRESH_TOKEN, default=""): str,
     }
 )
 
@@ -78,6 +86,7 @@ class HymerConnectConfigFlow(ConfigFlow, domain=DOMAIN):
                         CONF_PASSWORD: user_input[CONF_PASSWORD],
                         CONF_ACCESS_TOKEN: tokens["access_token"],
                         CONF_REFRESH_TOKEN: tokens["refresh_token"],
+                        CONF_EHG_REFRESH_TOKEN: user_input.get(CONF_EHG_REFRESH_TOKEN, ""),
                     },
                 )
 

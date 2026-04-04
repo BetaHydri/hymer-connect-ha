@@ -14,6 +14,7 @@ from .api import HymerConnectApi, HymerConnectApiError, HymerConnectAuthError
 from .const import (
     CONF_ACCESS_TOKEN,
     CONF_BRAND,
+    CONF_EHG_REFRESH_TOKEN,
     CONF_REFRESH_TOKEN,
     CONF_SCU_URN,
     CONF_VEHICLE_URN,
@@ -65,11 +66,13 @@ async def async_setup_entry(
 
     vehicle_urn = entry.data.get(CONF_VEHICLE_URN, "")
     scu_urn = entry.data.get(CONF_SCU_URN, "")
+    ehg_refresh_token = entry.data.get(CONF_EHG_REFRESH_TOKEN, "")
 
     coordinator = HymerConnectCoordinator(
         hass, api, session, entry,
         vehicle_urn=vehicle_urn,
         scu_urn=scu_urn,
+        ehg_refresh_token=ehg_refresh_token,
     )
     await coordinator.async_config_entry_first_refresh()
 

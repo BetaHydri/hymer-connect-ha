@@ -35,6 +35,7 @@ class HymerSignalRClient:
         session: aiohttp.ClientSession,
         vehicle_urn: str,
         scu_urn: str,
+        ehg_refresh_token: str = "",
         on_sensor_update: Callable[[dict[str, Any]], None] | None = None,
     ) -> None:
         """Initialize the SignalR client."""
@@ -42,6 +43,7 @@ class HymerSignalRClient:
         self._session = session
         self._vehicle_urn = vehicle_urn
         self._scu_urn = scu_urn
+        self._ehg_refresh_token = ehg_refresh_token  # Long-lived refresh token (ett=access-refresh)
         self._on_sensor_update = on_sensor_update
         self._ws: aiohttp.ClientWebSocketResponse | None = None
         self._running = False
@@ -156,155 +158,106 @@ class HymerSignalRClient:
     async def _send_update_tokens(self) -> None:
         """Send UpdateTokens invocation to authenticate the SignalR connection.
 
-        Try multiple argument formats to find the one the server accepts.
+        Uses the EHG refresh token (ett=access-refresh) to obtain a fresh
+        short-lived access token (ett=access) via the remoteAccessToken API,
+        then sends it in the UpdateTokens invocation.
         """
         if not self._ws:
             return
 
-        # Get ehgAccessToken via confirmation token
-        ehg_access_token = ""
-        try:
-            result = await self._api.get_confirmation_token()
-            ehg_access_token = result.get("token", "")
-            _LOGGER.warning(
-                "Confirmation token: keys=%s, token_len=%d",
-                list(result.keys()),
-                len(ehg_access_token),
-            )
-        except HymerConnectApiError as err:
-            _LOGGER.warning(
-                "Could not get confirmation token for UpdateTokens: %s", err
-            )
-
         access = self._api.access_token
         scu = self._scu_urn
-        vehicle = self._vehicle_urn  # urn:ehg:vehicle:hy-... (NOT scu URN!)
-        signalr_tok = self._signalr_token
+        vehicle = self._vehicle_urn
 
-        # From mitmproxy capture: the app sends a BLE-derived "remote access
-        # token" as ehgAccessToken. This token has ett=access and contains the
-        # vehicle URN and a device MAC.
-        #
-        # The owner activation token (ett=owner, no expiry) is stored from
-        # initial BLE pairing. It has the vehicle URN too. Try both the
-        # owner/activation token and confirmation token.
-        #
-        # We also try the confirmation token which the API provides directly.
-        variants = [
-            # Variant A: OAuth2 + confirmation token + correct vehicleUrn
-            {
-                "accessToken": access,
-                "ehgAccessToken": ehg_access_token,
-                "vehicleUrn": vehicle or scu,
-                "scuUrn": scu,
-            },
-        ]
-
-        # If we have the owner token from the byToken endpoint, try it too
-        owner_token = getattr(self._api, '_owner_token', '') or ''
-        if owner_token:
-            variants.insert(0, {
-                "accessToken": access,
-                "ehgAccessToken": owner_token,
-                "vehicleUrn": vehicle or scu,
-                "scuUrn": scu,
-            })
-
-        # Also try with the captured owner activation token (long-lived, no expiry)
-        # This is obtained from BLE pairing and stored in the app
-        captured_owner = (
-            "eyJraWQiOiJlaGctcHJvZC1tYWluLXVzZXItYWN0aXZhdGlvbi10b2tlbi1r"
-            "ZXlfNGJhYWNjYTg1ZGU5NDk4NjliOWNhMjgwY2JhYjdhYjkiLCJhbGciOi"
-            "JSUzI1NiJ9.eyJ1cm4iOiJ1cm46ZWhnOnZlaGljbGU6aHktMDAyMDQxMTg3"
-            "OCIsImV0dCI6Im93bmVyIiwiaWF0IjoxNzQ0MjY3NzY4fQ.tvCOVXcol1n_"
-            "yDkb85F2N4sUOuyo_sTk6JbHGeUS1be2Lr4oTQe3dJw8lhjyAGQJLKJ2uv"
-            "4B5y7-8fga2d5VXQC3IJcrKkQzWGcl6f-TS-qnts9Qpxmb_ST7jYDwT-mU"
-            "ba7rPyoriSj7Y9IWb6h2V0EpMGB7qG-QObNu3wqCn0psUtp4AFfPsg1ZMNk"
-            "lq4TMdpS1JSzMJ8Mr18af7fFUhUhWyufGqxL_3uJL4fJ9YbQaPROF7Xm-Hm"
-            "pkahW4WngSMTaXzCISQfJKfZmt55jIcWGSqMPwsnZhO-oVS9yDNadj32Ns4"
-            "6pZsJqnAQvLW5wBrm-y11BJDEMH8qNWLF5ihg"
-        )
-        variants.append({
-            "accessToken": access,
-            "ehgAccessToken": captured_owner,
-            "vehicleUrn": vehicle or scu,
-            "scuUrn": scu,
-        })
-
-        for i, args in enumerate(variants):
-            inv_id = str(i)
-            msg = {
-                "arguments": [args],
-                "invocationId": inv_id,
-                "target": "UpdateTokens",
-                "type": MSG_TYPE_INVOCATION,
-            }
+        if not self._ehg_refresh_token:
             _LOGGER.warning(
-                "Sending UpdateTokens variant %s: keys=%s",
-                chr(65 + i),
-                list(args.keys()),
+                "No EHG refresh token configured — cannot authenticate SignalR. "
+                "Provide the EHG Remote Access Refresh Token in the integration config."
             )
-            await self._ws.send_str(
-                json.dumps(msg) + SIGNALR_RECORD_SEPARATOR
-            )
+            return
 
-            # Wait for completion response
-            async for raw_msg in self._ws:
-                if raw_msg.type == aiohttp.WSMsgType.TEXT:
-                    for part in raw_msg.data.split(SIGNALR_RECORD_SEPARATOR):
-                        part = part.strip()
-                        if not part:
-                            continue
-                        try:
-                            parsed = json.loads(part)
-                        except json.JSONDecodeError:
-                            continue
-                        if parsed.get("type") == MSG_TYPE_COMPLETION:
-                            result_data = parsed.get("result", {})
-                            error = parsed.get("error")
-                            if error:
+        if not vehicle:
+            _LOGGER.warning("No vehicle URN — cannot request remote access token")
+            return
+
+        # Exchange refresh token for a fresh short-lived access token
+        try:
+            ehg_access_token = await self._api.get_remote_access_token(
+                vehicle, self._ehg_refresh_token
+            )
+            _LOGGER.info(
+                "Obtained fresh EHG access token (len=%d) for %s",
+                len(ehg_access_token),
+                vehicle,
+            )
+        except HymerConnectApiError as err:
+            _LOGGER.error("Failed to get remote access token: %s", err)
+            return
+
+        args = {
+            "accessToken": access,
+            "ehgAccessToken": ehg_access_token,
+            "vehicleUrn": vehicle,
+            "scuUrn": scu,
+        }
+
+        msg = {
+            "arguments": [args],
+            "invocationId": "0",
+            "target": "UpdateTokens",
+            "type": MSG_TYPE_INVOCATION,
+        }
+        _LOGGER.info("Sending UpdateTokens for %s", vehicle)
+        await self._ws.send_str(
+            json.dumps(msg) + SIGNALR_RECORD_SEPARATOR
+        )
+
+        # Wait for completion response
+        async for raw_msg in self._ws:
+            if raw_msg.type == aiohttp.WSMsgType.TEXT:
+                for part in raw_msg.data.split(SIGNALR_RECORD_SEPARATOR):
+                    part = part.strip()
+                    if not part:
+                        continue
+                    try:
+                        parsed = json.loads(part)
+                    except json.JSONDecodeError:
+                        continue
+                    if parsed.get("type") == MSG_TYPE_COMPLETION:
+                        result_data = parsed.get("result", {})
+                        error = parsed.get("error")
+                        if error:
+                            _LOGGER.error("UpdateTokens failed: %s", error)
+                        else:
+                            response = (
+                                result_data.get("response", {})
+                                if isinstance(result_data, dict)
+                                else {}
+                            )
+                            status = response.get("status", "UNKNOWN")
+                            if status in ("OK", "SUCCESS", "ACCEPTED"):
                                 _LOGGER.warning(
-                                    "UpdateTokens variant %s: ERROR=%s",
-                                    chr(65 + i),
-                                    error,
+                                    "UpdateTokens SUCCESS for %s", vehicle
                                 )
                             else:
-                                response = (
-                                    result_data.get("response", {})
-                                    if isinstance(result_data, dict)
-                                    else {}
+                                _LOGGER.error(
+                                    "UpdateTokens failed: status=%s", status
                                 )
-                                status = response.get("status", "UNKNOWN")
-                                _LOGGER.warning(
-                                    "UpdateTokens variant %s: status=%s, full=%s",
-                                    chr(65 + i),
-                                    status,
-                                    json.dumps(parsed, default=str)[:500],
-                                )
-                                if status in ("OK", "SUCCESS", "ACCEPTED"):
-                                    _LOGGER.warning(
-                                        "UpdateTokens SUCCESS with variant %s!",
-                                        chr(65 + i),
-                                    )
-                                    return
-                            break  # Move to next variant
-                        if parsed.get("type") == MSG_TYPE_INVOCATION:
-                            _LOGGER.warning(
-                                "Got invocation during UpdateTokens variant %s: target=%s",
-                                chr(65 + i),
-                                parsed.get("target"),
-                            )
-                            self._handle_message(parsed)
-                            return
-                elif raw_msg.type in (
-                    aiohttp.WSMsgType.CLOSED,
-                    aiohttp.WSMsgType.ERROR,
-                ):
-                    _LOGGER.warning("WebSocket closed during UpdateTokens")
-                    return
-                break  # Only wait for one response per variant
-
-        _LOGGER.warning("All UpdateTokens variants failed")
+                        return
+                    if parsed.get("type") == MSG_TYPE_INVOCATION:
+                        _LOGGER.info(
+                            "Got invocation during UpdateTokens: target=%s",
+                            parsed.get("target"),
+                        )
+                        self._handle_message(parsed)
+                        return
+            elif raw_msg.type in (
+                aiohttp.WSMsgType.CLOSED,
+                aiohttp.WSMsgType.ERROR,
+            ):
+                _LOGGER.warning("WebSocket closed during UpdateTokens")
+                return
+            break
 
     def _handle_message(self, msg: dict[str, Any]) -> None:
         """Handle an incoming SignalR message."""

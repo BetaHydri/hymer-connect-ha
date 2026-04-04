@@ -231,6 +231,27 @@ class HymerConnectApi:
         url = f"{API_BASE_URL}{ENDPOINT_CONFIRMATION_TOKEN}"
         return await self._request("POST", url, headers=self._main_api_headers())
 
+    async def get_remote_access_token(
+        self, vehicle_urn: str, refresh_token: str
+    ) -> str:
+        """Exchange a remote-access-refresh token for a fresh remote-access token.
+
+        POST /api/ehg/v1/vehicles/{urn}/remoteAccessToken
+        Body: {"token": "<refresh_token_jwt>"}
+        Returns the new access token (ett=access) string.
+        """
+        url = f"{API_BASE_URL}/api/ehg/v1/vehicles/{vehicle_urn}/remoteAccessToken"
+        headers = self._main_api_headers()
+        headers["Content-Type"] = "application/json"
+        result = await self._request(
+            "POST", url, json_data={"token": refresh_token}, headers=headers
+        )
+        if isinstance(result, dict) and "token" in result:
+            return result["token"]
+        raise HymerConnectApiError(
+            "remoteAccessToken response did not contain a token"
+        )
+
     async def get_ehg_vehicles(self) -> list[Any]:
         """Get vehicles from the main EHG API (returns vehicle URN).
 
