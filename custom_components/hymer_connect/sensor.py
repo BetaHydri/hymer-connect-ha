@@ -333,6 +333,12 @@ class HymerConnectSensor(
         """Return the sensor value."""
         if self.coordinator.data is None:
             return None
-        return _resolve_path(
+        value = _resolve_path(
             self.coordinator.data, self.entity_description.value_path
         )
+        # Filter out sentinel values
+        if value is not None and isinstance(value, (int, float)):
+            # -273°C = absolute zero = heater off / sensor unavailable
+            if value <= -273:
+                return None
+        return value
