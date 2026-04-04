@@ -123,6 +123,33 @@ SENSOR_MAP: dict[tuple[int, int], tuple[str, str | None, str | None]] = {
     (99, 10): ("dpf_status", None, None),
 }
 
+# Human-readable mappings for raw SCU string values
+_VALUE_LABELS: dict[str, dict[str, str]] = {
+    "door_driver": {"OFF": "Open", "CLS": "Closed", "SNA": "N/A"},
+    "door_passenger": {"OFF": "Open", "CLS": "Closed", "SNA": "N/A"},
+    "door_sliding": {"OFF": "Open", "CLS": "Closed", "SNA": "N/A"},
+    "door_rear": {"OFF": "Open", "CLS": "Closed", "SNA": "N/A"},
+    "ignition_state": {
+        "IGN_LOCK": "Off",
+        "IGN_OFF": "Accessory",
+        "IGN_ACC": "Accessory",
+        "IGN_ON": "On",
+        "IGN_START": "Starting",
+    },
+    "lock_status": {
+        "Vehicle unlocked": "Unlocked",
+        "Vehicle external locked": "Locked",
+        "Vehicle internal locked": "Locked (inside)",
+    },
+    "headlamp": {"OFF": "Off", "ON": "On"},
+    "fog_front": {"OFF": "Off", "ON": "On"},
+    "fog_rear": {"OFF": "Off", "ON": "On"},
+    "high_beam": {"OFF": "Off", "ON": "On"},
+    "parking_light": {"OFF": "Off", "ON": "On"},
+    "turn_signal": {"OFF": "Off", "ON": "On"},
+    "heater_mode": {"OFF": "Off", "ON": "On"},
+}
+
 # All PiaRequest payloads captured from the Hymer Connect app.
 # These initialise sensor groups and subscribe to all sensor data from the SCU.
 # The server requires all of them to be sent in sequence.
@@ -312,6 +339,9 @@ def _extract_sensors_recursive(
                     val = val / 10
                 elif transform == "div100" and isinstance(val, (int, float)):
                     val = val / 100
+                # Map raw string values to readable labels
+                if isinstance(val, str) and name in _VALUE_LABELS:
+                    val = _VALUE_LABELS[name].get(val, val)
                 sensors[name] = val
             else:
                 fallback = f"bus{entry['bus_id']}_s{entry['sensor_id']}"
