@@ -94,7 +94,7 @@ Since there is no public API to generate this token, you must capture it **once*
 - A **PC** (Windows, Mac, or Linux) on the same WiFi as your phone
 - An **Android phone** with the HYMER Connect app (the phone you originally paired with your vehicle via Bluetooth)
 - **mitmproxy** installed on the PC ([download](https://mitmproxy.org/))
-- **apk-mitm** to patch the app for HTTPS interception ([GitHub](https://github.com/nicbarker/apk-mitm))
+- **apk-mitm** to patch the app for HTTPS interception ([GitHub](https://github.com/niklashigi/apk-mitm))
 - ~15 minutes
 
 ### Step-by-step guide
