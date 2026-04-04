@@ -151,6 +151,12 @@ _VALUE_LABELS: dict[str, dict[str, str]] = {
     "heater_state": {"False": "Off", "True": "On"},
 }
 
+# Integer-to-string label maps for sensors that report numeric codes.
+_INT_LABELS: dict[str, dict[int, str]] = {
+    "fridge_mode": {8: "Off"},
+    "fridge_status": {1: "Off"},
+}
+
 # Mercedes Sprinter 7G-TRONIC automatic transmission gear mapping.
 # CAN bus reports gear position as integers; this maps them to readable labels.
 # Confirmed: 100 = P (observed while parked).
@@ -361,6 +367,9 @@ def _extract_sensors_recursive(
                 # Map raw string values to readable labels
                 if isinstance(val, str) and name in _VALUE_LABELS:
                     val = _VALUE_LABELS[name].get(val, val)
+                # Map integer values to readable labels (gear, fridge, etc.)
+                if isinstance(val, int) and name in _INT_LABELS:
+                    val = _INT_LABELS[name].get(val, val)
                 # Map gear integer to readable position
                 if name == "current_gear" and isinstance(val, int):
                     val = _GEAR_MAP.get(val, str(val))
