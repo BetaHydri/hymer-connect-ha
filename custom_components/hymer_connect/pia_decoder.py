@@ -1,8 +1,7 @@
-"""PIA Protobuf decoder for HYMER Connect sensor data.
+"""PIA Protobuf decoder/encoder for HYMER Connect sensor data.
 
 Decodes Base64-encoded Protobuf payloads from SignalR PiaResponse messages.
-Nesting: top → field3 (wrapper) → field6 (container) → field1[] (sensor entries)
-Each sensor: f1=sensor_id, f2=bus_id, f3=uint, f4=string, f5=bool, f6=float, f7=int, f10=bus_name
+Encodes PiaRequest subscription messages for sensor data streaming.
 """
 
 from __future__ import annotations
@@ -10,6 +9,7 @@ from __future__ import annotations
 import base64
 import logging
 import struct
+import time
 from typing import Any
 
 _LOGGER = logging.getLogger(__name__)
@@ -122,6 +122,36 @@ SENSOR_MAP: dict[tuple[int, int], tuple[str, str | None, str | None]] = {
     (99, 9): ("cruise_control", None, None),
     (99, 10): ("dpf_status", None, None),
 }
+
+# All PiaRequest payloads captured from the Hymer Connect app.
+# These initialise sensor groups and subscribe to all sensor data from the SCU.
+# The server requires all of them to be sent in sequence.
+_PIA_REQUESTS = (
+    "EhcI/4kTEgd2MC4zMi4wGNr5ws4GIgIKAA==",
+    "ErUKCMO2AhIHdjAuMzIuMBja+cLOBiKfChqcCgoKCAEQAVIEY2FuMAoKCAIQAVIEY2FuMAoKCAMQAVIEY2FuMAoKCAQQAVIEY2FuMAoKCAUQAVIEY2FuMAoKCAYQAVIEY2FuMAoKCAcQAVIEY2FuMAoKCAgQAVIEY2FuMAoKCAkQAVIEY2FuMAoKCAoQAVIEY2FuMAoKCAsQAVIEY2FuMAoKCAwQAVIEY2FuMAoKCA0QAVIEY2FuMAoKCA4QAVIEY2FuMAoKCA8QAVIEY2FuMAoKCBAQAVIEY2FuMAoKCBEQAVIEY2FuMAoKCBIQAVIEY2FuMAoKCBMQAVIEY2FuMAoKCBQQAVIEY2FuMAoKCBUQAVIEY2FuMAoKCBYQAVIEY2FuMAoKCBcQAVIEY2FuMAoKCAEQA1IEbGluMQoKCAIQA1IEbGluMQoKCAMQA1IEbGluMQoKCAQQA1IEbGluMQoKCAUQA1IEbGluMQoKCAYQA1IEbGluMQoKCAcQA1IEbGluMQoKCAgQA1IEbGluMQoKCAkQA1IEbGluMQoKCAoQA1IEbGluMQoKCAsQA1IEbGluMQoKCAwQA1IEbGluMQoKCA0QA1IEbGluMQoKCA4QA1IEbGluMQoKCA8QA1IEbGluMQoKCBAQA1IEbGluMQoKCBEQA1IEbGluMQoKCBIQA1IEbGluMQoKCBMQA1IEbGluMQoKCBQQA1IEbGluMQoKCBUQA1IEbGluMQoKCBYQA1IEbGluMQoKCAEQCFIEbGluMgoKCAIQCFIEbGluMgoKCAMQCFIEbGluMgoKCAQQCFIEbGluMgoKCAUQCFIEbGluMgoKCAYQCFIEbGluMgoKCAcQCFIEbGluMgoECAEQCwoECAIQCwoECAEQDAoECAIQDAoECAMQDAoECAEQDwoECAIQDwoECAMQDwoECAEQEAoECAIQEAoECAEQEwoECAIQEwoECAEQFQoECAIQFQoECAEQFgoECAIQFgoECAEQGAoECAIQGAoECAMQGAoECAEQGQoECAIQGQoECAEQGwoECAIQGwoECAMQGwoECAEQHgoECAIQHgoECAMQHgoECAQQHgoECAUQHgoECAYQHgoECAcQHgoECAgQHgoECAkQHgoECAoQHgoECAsQHgoECAwQHgoECA0QHgoECA4QHgoKCAEQIlIEbGluMQoKCAIQIlIEbGluMQoKCAMQIlIEbGluMQoKCAQQIlIEbGluMQoKCAUQIlIEbGluMQoKCAYQIlIEbGluMQoKCAcQIlIEbGluMQoECAEQJQoECAIQJQoECAEQKwoECAIQKwoECAEQLAoECAIQLAoKCAgQLVIEbGluMQoKCAkQLVIEbGluMQoKCAoQLVIEbGluMQoKCAsQLVIEbGluMQoKCAgQMVIEbGluMQoKCAoQMVIEbGluMQoKCAsQMVIEbGluMQoKCAQQOlIEbGluMQoKCAUQOlIEbGluMQoKCAYQOlIEbGluMQoKCAcQOlIEbGluMQoKCAgQOlIEbGluMQoKCAkQOlIEbGluMQoKCAoQOlIEbGluMQoKCAsQOlIEbGluMQoKCAwQOlIEbGluMQoKCA0QOlIEbGluMQoKCA4QOlIEbGluMQoKCAEQY1IEY2FuMgoKCAIQY1IEY2FuMgoKCAMQY1IEY2FuMgoKCAQQY1IEY2FuMgoKCAUQY1IEY2FuMgoKCAYQY1IEY2FuMgoKCAcQY1IEY2FuMgoKCAgQY1IEY2FuMgoKCAkQY1IEY2FuMgoKCAoQY1IEY2FuMg==",
+    "EhsIqdQjEgd2MC4zMi4wGNr5ws4GIgZKBAoCCAA=",
+    "EhcIn7UFEgd2MC4zMi4wGNv5ws4GKgIaAA==",
+    "EhcItPYkEgd2MC4zMi4wGNv5ws4GYgIKAA==",
+    "EhcIjI8GEgd2MC4zMi4wGNv5ws4GSgIKAA==",
+    "EhUIjekiEgd2MC4zMi4wGNz5ws4GegA=",
+    "Eh8I29wPEgd2MC4zMi4wGOn5ws4GIgoSCAoGCAEQDygB",
+    "Eh8IibUiEgd2MC4zMi4wGO75ws4GIgoSCAoGCAEQDygA",
+    "Ei4I9vYmEgd2MC4zMi4wGPb5ws4GIhkSFwoJCAUQOiIDRUNPCgoIBBA6IgRCb3Ro",
+    "Ei4I+qQIEgd2MC4zMi4wGPz5ws4GIhkSFwoJCAUQOiIDT0ZGCgoIBBA6IgRCb3Ro",
+    "Eh8I9v8UEgd2MC4zMi4wGIH6ws4GIgoSCAoGCAIQIigB",
+    "Eh8IveYQEgd2MC4zMi4wGIL6ws4GIgoSCAoGCAIQIigA",
+)
+
+
+def build_subscription_requests() -> list[str]:
+    """Build PiaRequest payloads for sensor data subscription.
+
+    Returns a list of Base64-encoded protobuf payloads ready to send
+    as PiaRequest arguments.  All 13 requests are needed — the first
+    ones initialise different sensor groups before the big subscription
+    triggers the full data flow.
+    """
+    return list(_PIA_REQUESTS)
 
 
 def _decode_varint(data: bytes, pos: int) -> tuple[int, int]:

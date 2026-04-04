@@ -15,7 +15,7 @@ import aiohttp
 
 from .api import HymerConnectApi, HymerConnectApiError
 from .const import USER_AGENT
-from .pia_decoder import decode_pia_payload
+from .pia_decoder import build_subscription_requests, decode_pia_payload
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -146,14 +146,30 @@ class HymerSignalRClient:
 
         _LOGGER.info("SignalR handshake accepted")
 
-        # Step 5: Send UpdateTokens (may fail — connection is already
-        # authenticated via JWT in WebSocket URL, so we continue regardless)
+        # Step 5: Send UpdateTokens
         try:
             await self._send_update_tokens()
         except Exception:
             _LOGGER.warning("UpdateTokens failed, continuing without it")
+
         self._connected = True
         _LOGGER.warning("SignalR connected to datahub for %s", self._vehicle_urn)
+
+        # Step 6: Send PiaRequest subscription to start receiving sensor data
+        try:
+            await self._send_subscription()
+        except Exception:
+            _LOGGER.warning("PiaRequest subscription failed", exc_info=True)
+
+    async def _send_subscription(self) -> None:
+        """Send PiaRequest messages to subscribe to all sensor data from the SCU."""
+        if not self._ws or self._ws.closed:
+            return
+
+        requests = build_subscription_requests()
+        _LOGGER.info("Sending %d PiaRequest subscriptions", len(requests))
+        for payload in requests:
+            await self.send_pia_request(payload)
 
     async def _send_update_tokens(self) -> None:
         """Send UpdateTokens invocation to authenticate the SignalR connection.
