@@ -15,10 +15,10 @@ from typing import Any
 _LOGGER = logging.getLogger(__name__)
 
 # Sensor key map: (bus_id, sensor_id) → (name, unit, value_transform)
-# value_transform: None=raw, "div10"=divide by 10, "div100"=divide by 100
+# value_transform: None=raw, "div10"=divide by 10, "div100"=divide by 100, "div1000"=divide by 1000
 SENSOR_MAP: dict[tuple[int, int], tuple[str, str | None, str | None]] = {
     # can0 — Vehicle CAN bus
-    (1, 1): ("odometer", "km", "div100"),
+    (1, 1): ("odometer", "km", "div1000"),
     (1, 2): ("speed", "km/h", None),
     (1, 3): ("lock_status", None, None),
     (1, 4): ("handbrake", None, None),
@@ -339,6 +339,8 @@ def _extract_sensors_recursive(
                     val = val / 10
                 elif transform == "div100" and isinstance(val, (int, float)):
                     val = val / 100
+                elif transform == "div1000" and isinstance(val, (int, float)):
+                    val = val / 1000
                 # Map raw string values to readable labels
                 if isinstance(val, str) and name in _VALUE_LABELS:
                     val = _VALUE_LABELS[name].get(val, val)
