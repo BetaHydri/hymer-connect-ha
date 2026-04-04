@@ -5,6 +5,57 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.5.2] - 2026-04-04
+
+### Added
+
+- Created GitHub issues for all known TODOs and missing functionality
+- Updated README screenshots (new ha-screenshot.png, added ha-screenshot_2.png)
+- Synced root README.md to v1.5.0 component version
+
+### Known Issues
+
+- **current_gear shows raw value 100** — not a valid gear for Mercedes Sprinter 419 7G-TRONIC automatic; needs value label mapping ([#5](https://github.com/BetaHydri/hymer-connect-ha/issues/5))
+- **Integration is read-only** — no write controls for lights, heater, fridge, awning, switches ([#6](https://github.com/BetaHydri/hymer-connect-ha/issues/6))
+- **9 bus IDs unmapped** — awning, ext_light, dimmer, roof_vent, screen, inverter, generator, wifi, bluetooth ([#7](https://github.com/BetaHydri/hymer-connect-ha/issues/7))
+- **30+ mapped sensors not exposed as HA entities** — rpm, engine_hours, fridge, tire_pressure, fuel_range, and more ([#8](https://github.com/BetaHydri/hymer-connect-ha/issues/8))
+- **Several sensors show Nicht verfügbar** — fresh water, fuel level, heater mode, lock status, duplicate sliding door ([#9](https://github.com/BetaHydri/hymer-connect-ha/issues/9))
+- **Delta-only updates after reconnect** — SCU only sends full dump on first connection ([#10](https://github.com/BetaHydri/hymer-connect-ha/issues/10))
+- **GPS not exposed as device_tracker** — coordinates are a text sensor instead of a map entity ([#11](https://github.com/BetaHydri/hymer-connect-ha/issues/11))
+- **Truma boiler sensors unmapped** — bus 58 sensors 10-14 ([#12](https://github.com/BetaHydri/hymer-connect-ha/issues/12))
+
+## [1.5.1] - 2026-04-04
+
+### Changed
+
+- **heater_mode → heater_fan_speed** — sensor (58,5) reports the Truma Combi 6E fan speed setting: Off/Eco/High (confirmed via PiaRequest protobuf decode)
+- Added ECO and HIGH value labels for fan speed display
+- Updated sensor icon to `mdi:fan`
+
+## [1.5.0] - 2026-04-04
+
+### Changed
+
+- **heater_fan_speed → heater_electric_power** — Truma Combi 6E sensor (58,9) reports electric heating element power in Watts (0/900/1800), not fan speed
+
+### Discovered (not yet mapped)
+
+- **Fridge OFF state**: `fridge_mode=8`, `fridge_status=1` — can identify fridge on/off
+- **Truma heater OFF state**: `heater_mode=Off`, `heater_state=False`, `heater_setpoint=-273.0` — correctly mapped
+- **Truma boiler OFF state**: bus58 sensors 10-14 all False when boiler is off
+- **Light control is write-only** — the app sends PiaRequest commands to toggle lights, but the SCU does not report light state changes back through sensor data. `light_1_level`/`light_2_level` (3,8)/(3,9) show 0% regardless of light state. Needs mitmproxy capture of write PiaRequests at vehicle.
+- **Lights have dimmer + color temperature (CCT)** — each light group supports brightness % and warm↔cool white
+- **SCU only sends full sensor dump on first connection** — subsequent connections receive delta updates only (~17 sensors)
+
+## [1.4.0] - 2026-04-04
+
+### Fixed
+
+- Battery SOC: renamed from fresh_water_level to battery_soc (3,10) — matches app Lithium-Batterie 95%
+- Chassis battery voltage: renamed from solar_voltage to chassis_battery_voltage (3,7) — matches app 12.3V
+- AdBlue level: renamed from fuel_level to adblue_level (1,6) — matches app 88%
+- Odometer divisor: div1000 (raw 11113500 / 1000 = 11,113.5 km)
+
 ## [1.3.0] - 2026-04-04
 
 ### Changed
