@@ -89,6 +89,8 @@ The HYMER Connect cloud requires a special **EHG Remote Access Refresh Token** t
 
 Since there is no public API to generate this token, you must capture it **once** from your phone's network traffic using a proxy tool. After that, the integration refreshes it automatically.
 
+> **🔒 Security:** This token is personal and bound to your account and vehicle. **Never share it** with others. While access to the HYMER Connect cloud is still protected by your email and password, the refresh token could allow someone to obtain short-lived access tokens for your vehicle's sensor data. Treat it like a password.
+
 ### Prerequisites
 
 - A **PC** (Windows, Mac, or Linux) on the same WiFi as your phone
