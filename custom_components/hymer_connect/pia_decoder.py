@@ -150,6 +150,22 @@ _VALUE_LABELS: dict[str, dict[str, str]] = {
     "heater_fan_speed": {"OFF": "Off", "ECO": "Eco", "HIGH": "High"},
 }
 
+# Mercedes Sprinter 7G-TRONIC automatic transmission gear mapping.
+# CAN bus reports gear position as integers; this maps them to readable labels.
+# Confirmed: 100 = P (observed while parked).
+# TODO: Capture R, N, D values while driving via mitmproxy (#5).
+_GEAR_MAP: dict[int, str] = {
+    0: "N",
+    1: "1",
+    2: "2",
+    3: "3",
+    4: "4",
+    5: "5",
+    6: "6",
+    7: "7",
+    100: "P",
+}
+
 # All PiaRequest payloads captured from the Hymer Connect app.
 # These initialise sensor groups and subscribe to all sensor data from the SCU.
 # The server requires all of them to be sent in sequence.
@@ -344,6 +360,9 @@ def _extract_sensors_recursive(
                 # Map raw string values to readable labels
                 if isinstance(val, str) and name in _VALUE_LABELS:
                     val = _VALUE_LABELS[name].get(val, val)
+                # Map gear integer to readable position
+                if name == "current_gear" and isinstance(val, int):
+                    val = _GEAR_MAP.get(val, str(val))
                 sensors[name] = val
             else:
                 fallback = f"bus{entry['bus_id']}_s{entry['sensor_id']}"
