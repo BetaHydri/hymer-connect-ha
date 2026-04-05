@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.8.1] - 2026-04-05
+
+### Fixed
+
+- **Fresh water level wrong bus** — was mapped to bus 21 s2 (=91%, a config value); corrected to bus 22 s2 which shows ~6% matching empty tanks
+- **Grey water level wrong bus** — was mapped to bus 12 s2 (=35%, likely step/drainage sensor); corrected to bus 25 s2 which shows ~6% matching empty tanks
+- Both water levels now match the Hymer Connect app's "<10%" display when tanks are empty
+
 ## [1.8.0] - 2026-04-05
 
 ### Added

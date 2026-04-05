@@ -81,8 +81,8 @@ SENSOR_MAP: dict[tuple[int, int], tuple[str, str | None, str | None]] = {
     (11, 2): ("alarm_battery", "%", None),
     # Step (12)
     (12, 1): ("step_retracted", None, None),
-    (12, 2): ("gray_water_level", "%", None),
-    (12, 3): ("gray_water_mode", None, None),
+    (12, 2): ("step_sensor_2", None, None),
+    (12, 3): ("step_sensor_3", None, None),
     # GPS (30)
     (30, 1): ("gps_coordinates", None, None),
     (30, 2): ("gps_utc_time", None, None),
@@ -99,9 +99,11 @@ SENSOR_MAP: dict[tuple[int, int], tuple[str, str | None, str | None]] = {
     # Water pump (bus 16)
     (16, 1): ("water_pump", None, None),
     (16, 2): ("water_pump_status", None, None),
-    # Fresh water (bus 21)
-    (21, 1): ("fresh_water_sensor", None, None),
-    (21, 2): ("fresh_water_level", "%", None),
+    # Water tanks — bus 22 = fresh water, bus 25 = grey water (confirmed: both ~6% when tanks empty)
+    (22, 1): ("fresh_water_sensor", None, None),
+    (22, 2): ("fresh_water_level", "%", None),
+    (25, 1): ("gray_water_sensor_ext", None, None),
+    (25, 2): ("gray_water_level", "%", None),
     # Fridge (37)
     (37, 1): ("fridge_mode", None, None),
     (37, 2): ("fridge_status", None, None),
