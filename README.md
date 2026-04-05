@@ -12,7 +12,7 @@ Custom integration to connect your HYMER / Erwin Hymer Group motorhome or carava
 
 > **⚠️ Important:** Real-time sensor data (70+ entities: GPS, battery, doors, heater, fridge, etc.) requires an **EHG Remote Access Refresh Token**. This token must be captured **once** from your phone using mitmproxy during the initial setup. Without it, only basic vehicle metadata (model, VIN, year) is available. See [Obtaining the EHG Refresh Token](custom_components/hymer_connect/README.md#obtaining-the-ehg-refresh-token) for the step-by-step guide.
 
-> **v1.5.0** — Real-time sensor data via SignalR. 142 sensors including odometer, GPS, battery, temperatures, door/lock status, Truma heater, fridge, alarm, and more. Correct sensor mappings verified against the Hymer Connect app.
+> Real-time sensor data via SignalR. Up to 142 sensors including odometer, GPS, battery, temperatures, door/lock status, Truma heater, fridge, alarm, and more. Correct sensor mappings verified against the Hymer Connect app.
 
 ![HYMER Connect Integration in Home Assistant](https://raw.githubusercontent.com/BetaHydri/hymer-connect-ha/master/images/ha-screenshot.png)
 
