@@ -8,7 +8,6 @@ from typing import Any
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
-    ATTR_COLOR_TEMP,
     ColorMode,
     LightEntity,
     LightEntityDescription,
