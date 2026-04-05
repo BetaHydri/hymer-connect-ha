@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.8.4] - 2026-04-05
+
+### Fixed
+
+- **False errors in HA log** — coordinator and SignalR client used `warning` level for normal operational messages ("SignalR not connected", "Data update", "UpdateTokens SUCCESS"), causing them to appear as errors in the HA UI. Downgraded to `info`/`debug` level. Only actual failures remain as warnings/errors
+
 ## [1.8.3] - 2026-04-05
 
 ### Changed

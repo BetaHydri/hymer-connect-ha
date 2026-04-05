@@ -114,12 +114,12 @@ class HymerConnectCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             vehicle = rest_data["vehicle"]
             self._scu_urn = vehicle.get("smartUnitUrn", "")
             vin = vehicle.get("vin", "")
-            _LOGGER.warning("Discovered VIN=%s SCU=%s", vin, self._scu_urn)
+            _LOGGER.info("Discovered VIN=%s SCU=%s", vin, self._scu_urn)
 
         # Get vehicle URN (urn:ehg:vehicle:hy-...) from EHG API
         if not self._vehicle_urn and rest_data.get("vehicle_urn"):
             self._vehicle_urn = rest_data["vehicle_urn"]
-            _LOGGER.warning(
+            _LOGGER.info(
                 "Discovered vehicle_urn=%s, scu_urn=%s",
                 self._vehicle_urn,
                 self._scu_urn,
@@ -141,7 +141,7 @@ class HymerConnectCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
         # Try to start SignalR if not connected
         if not self._signalr or not self._signalr.connected:
-            _LOGGER.warning(
+            _LOGGER.debug(
                 "SignalR not connected, attempting start (vehicle=%s, scu=%s)",
                 self._vehicle_urn,
                 self._scu_urn,
@@ -152,7 +152,7 @@ class HymerConnectCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 _LOGGER.warning("SignalR connect attempt failed", exc_info=True)
 
         # Merge REST + SignalR data
-        _LOGGER.warning(
+        _LOGGER.debug(
             "Data update: rest_keys=%s, signalr_sensors=%d, signalr_connected=%s",
             list(rest_data.keys()),
             len(self._signalr_data),

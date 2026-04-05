@@ -252,7 +252,7 @@ class HymerSignalRClient:
                             )
                             status = response.get("status", "UNKNOWN")
                             if status in ("OK", "SUCCESS", "ACCEPTED"):
-                                _LOGGER.warning(
+                                _LOGGER.info(
                                     "UpdateTokens SUCCESS for %s", vehicle
                                 )
                             else:
