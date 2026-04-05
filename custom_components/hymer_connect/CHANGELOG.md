@@ -5,6 +5,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.9.1] - 2026-04-05
+
+### Fixed
+
+- **Battery SOC now shows correct live value** — was reading from bus 3 s10 (habitation electronics, stale at 95%). Now reads from bus 99 s4 (`lithium_soc`) which reports the actual Lithium BMS SOC (93%) and updates via re-subscription
+- **Removed false `fuel_consumption` sensor** — bus 99 s4 was misidentified as fuel consumption; it’s actually Lithium battery SOC
+- **Removed false `trip_distance` sensor** — bus 99 s8 was misidentified as trip distance (showed 93 “km” when actual trip was 0.1 km); it’s a duplicate Lithium SOC value
+- **Outdoor temperature** — confirmed as cached Mercedes CAN value from last drive (shows 3°C when actual outdoor temp is 19°C). Only updates when engine is running
+
 ## [1.9.0] - 2026-04-05
 
 ### Added

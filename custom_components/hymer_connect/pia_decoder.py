@@ -126,14 +126,16 @@ SENSOR_MAP: dict[tuple[int, int], tuple[str, str | None, str | None]] = {
     (58, 9): ("heater_electric_power", "W", None),
     (58, 11): ("heater_operating_mode", None, None),
     # can2 — Extended chassis CAN
-    (99, 1): ("adblue_temp", "\u00b0C", None),
+    # Note: Many of these are cached Mercedes CAN values from last drive.
+    # Outdoor/ambient temp only updates when engine is running.
+    (99, 1): ("adblue_temp", "°C", None),
     (99, 2): ("engine_torque", "%", None),
-    (99, 3): ("ambient_temp", "\u00b0C", None),
-    (99, 4): ("fuel_consumption", None, None),
+    (99, 3): ("ambient_temp", "°C", None),
+    (99, 4): ("lithium_soc", "%", None),
     (99, 5): ("fuel_range", "km", None),
     (99, 6): ("current_gear", None, None),
     (99, 7): ("total_fuel_used", None, None),
-    (99, 8): ("trip_distance", None, None),
+    (99, 8): ("lithium_soc_2", "%", None),
     (99, 9): ("cruise_control", None, None),
     (99, 10): ("dpf_status", None, None),
 }

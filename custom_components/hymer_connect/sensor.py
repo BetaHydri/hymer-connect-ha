@@ -139,7 +139,7 @@ SIGNALR_SENSORS: tuple[HymerSensorEntityDescription, ...] = (
         native_unit_of_measurement=PERCENTAGE,
         device_class=SensorDeviceClass.BATTERY,
         state_class=SensorStateClass.MEASUREMENT,
-        value_path="signalr_sensors.battery_soc",
+        value_path="signalr_sensors.lithium_soc",
         icon="mdi:battery",
     ),
     HymerSensorEntityDescription(
@@ -309,25 +309,11 @@ SIGNALR_SENSORS: tuple[HymerSensorEntityDescription, ...] = (
         icon="mdi:gas-station",
     ),
     HymerSensorEntityDescription(
-        key="fuel_consumption",
-        translation_key="fuel_consumption",
-        value_path="signalr_sensors.fuel_consumption",
-        icon="mdi:fuel",
-    ),
-    HymerSensorEntityDescription(
         key="total_fuel_used",
         translation_key="total_fuel_used",
         state_class=SensorStateClass.TOTAL_INCREASING,
         value_path="signalr_sensors.total_fuel_used",
         icon="mdi:fuel",
-    ),
-    HymerSensorEntityDescription(
-        key="trip_distance",
-        translation_key="trip_distance",
-        native_unit_of_measurement=UnitOfLength.KILOMETERS,
-        device_class=SensorDeviceClass.DISTANCE,
-        value_path="signalr_sensors.trip_distance",
-        icon="mdi:map-marker-distance",
     ),
     HymerSensorEntityDescription(
         key="engine_torque",
