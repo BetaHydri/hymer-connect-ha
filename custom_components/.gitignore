@@ -9,4 +9,5 @@ logs/
 test_*.py
 *_data.json
 *_on.json
+sensor_dump.json
 .memory-bank/

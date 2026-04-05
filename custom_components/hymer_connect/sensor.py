@@ -369,6 +369,33 @@ SIGNALR_SENSORS: tuple[HymerSensorEntityDescription, ...] = (
         icon="mdi:solar-power-variant",
     ),
     HymerSensorEntityDescription(
+        key="solar_current",
+        translation_key="solar_current",
+        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
+        device_class=SensorDeviceClass.CURRENT,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_path="signalr_sensors.solar_current",
+        icon="mdi:solar-power",
+    ),
+    HymerSensorEntityDescription(
+        key="solar_power",
+        translation_key="solar_power",
+        native_unit_of_measurement=UnitOfPower.WATT,
+        device_class=SensorDeviceClass.POWER,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_path="signalr_sensors.solar_power",
+        icon="mdi:solar-power",
+    ),
+    # --- Fresh water (bus 21) ---
+    HymerSensorEntityDescription(
+        key="fresh_water_level",
+        translation_key="fresh_water_level",
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_path="signalr_sensors.fresh_water_level",
+        icon="mdi:water",
+    ),
+    HymerSensorEntityDescription(
         key="light_1_level",
         translation_key="light_1_level",
         native_unit_of_measurement=PERCENTAGE,
@@ -507,5 +534,8 @@ class HymerConnectSensor(
         if value is not None and isinstance(value, (int, float)):
             # -273°C = absolute zero = heater off / sensor unavailable
             if value <= -273:
+                return None
+            # 3276.8 = 32768/10 = CAN "no data" sentinel (solar voltage etc.)
+            if value in (3276.8, 32768.0, 65535.0, 6553.5):
                 return None
         return value

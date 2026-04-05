@@ -60,10 +60,14 @@ SENSOR_MAP: dict[tuple[int, int], tuple[str, str | None, str | None]] = {
     (3, 16): ("switch_12v_5", None, None),
     (3, 17): ("switch_12v_6", None, None),
     (3, 18): ("switch_12v_7", None, None),
-    (3, 19): ("solar_voltage", "V", "div1000"),
+    (3, 19): ("solar_voltage", "V", None),
     (3, 20): ("solar_connected", None, None),
     (3, 21): ("solar_charger_status", None, None),
     (3, 22): ("switch_22", None, None),
+    # Solar charger details (bus 15)
+    (15, 1): ("solar_active", None, None),
+    (15, 2): ("solar_current", "A", "div10"),
+    (15, 3): ("solar_power", "W", None),
     # lin2 — Climate / secondary
     (8, 1): ("gray_water_sensor", None, None),
     (8, 2): ("indoor_temp", "\u00b0C", None),
@@ -92,6 +96,12 @@ SENSOR_MAP: dict[tuple[int, int], tuple[str, str | None, str | None]] = {
     (34, 2): ("heat_switch_2", None, None),
     (34, 3): ("heat_mode", None, None),
     (34, 7): ("heat_setpoint_raw", None, None),
+    # Water pump (bus 16)
+    (16, 1): ("water_pump", None, None),
+    (16, 2): ("water_pump_status", None, None),
+    # Fresh water (bus 21)
+    (21, 1): ("fresh_water_sensor", None, None),
+    (21, 2): ("fresh_water_level", "%", None),
     # Fridge (37)
     (37, 1): ("fridge_mode", None, None),
     (37, 2): ("fridge_status", None, None),
@@ -153,9 +163,13 @@ _VALUE_LABELS: dict[str, dict[str, str]] = {
 
 # Integer-to-string label maps for sensors that report numeric codes.
 _INT_LABELS: dict[str, dict[int, str]] = {
-    "fridge_mode": {8: "Off"},
-    "fridge_status": {1: "Off"},
+    "fridge_mode": {0: "On", 1: "Eco", 2: "Boost", 8: "Off"},
+    "fridge_status": {0: "Running", 1: "Off", 2: "Standby"},
 }
+
+# Sentinel float values that indicate "sensor unavailable / not connected".
+# The SCU stores 32768 (0x8000) as CAN "no data" — scaled to float as 3276.8.
+_FLOAT_SENTINELS: set[float] = {3276.8, 32768.0, 65535.0, 6553.5}
 
 # Mercedes Sprinter 7G-TRONIC automatic transmission gear mapping.
 # CAN bus reports gear position as integers; this maps them to readable labels.
@@ -378,6 +392,9 @@ def _extract_sensors_recursive(
             if mapped:
                 name, unit, transform = mapped
                 val = entry["value"]
+                # Filter out CAN/SCU sentinel "not available" values
+                if isinstance(val, (int, float)) and val in _FLOAT_SENTINELS:
+                    return
                 if transform == "div10" and isinstance(val, (int, float)):
                     val = val / 10
                 elif transform == "div100" and isinstance(val, (int, float)):

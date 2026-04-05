@@ -1,5 +1,5 @@
 # HYMER Connect Dashboard for Home Assistant
-# Updated to match actual HA entity IDs (v1.7.3, German locale)
+# Updated to match actual HA entity IDs (v1.8.0, German locale)
 #
 # Usage:
 #   1. Go to Settings > Dashboards > + Add Dashboard
@@ -121,8 +121,14 @@ views:
             name: Charger Active
           - entity: sensor.hymer_hymer_connect_hymer_solar_charger_status
             name: Solar Charger Status
+          - entity: binary_sensor.hymer_hymer_connect_hymer_solar_active
+            name: Solar Active
           - entity: sensor.hymer_hymer_connect_hymer_spannung
             name: Solar Voltage
+          - entity: sensor.hymer_hymer_connect_hymer_solar_current
+            name: Solar Current
+          - entity: sensor.hymer_hymer_connect_hymer_solar_power
+            name: Solar Power
           - entity: sensor.hymer_hymer_connect_hymer_12
             name: Power Source
           - entity: binary_sensor.hymer_hymer_connect_hymer_solar_panel
@@ -177,6 +183,16 @@ views:
     icon: mdi:water
     cards:
       - type: gauge
+        entity: sensor.hymer_hymer_connect_hymer_fresh_water_level
+        name: Fresh Water
+        min: 0
+        max: 100
+        severity:
+          green: 50
+          yellow: 25
+          red: 10
+        needle: true
+      - type: gauge
         entity: sensor.hymer_hymer_connect_hymer_14
         name: Gray Water
         min: 0
@@ -186,6 +202,15 @@ views:
           yellow: 60
           red: 80
         needle: true
+      - type: entities
+        title: Water System
+        entities:
+          - entity: sensor.hymer_hymer_connect_hymer_fresh_water_level
+            name: Fresh Water Level
+          - entity: sensor.hymer_hymer_connect_hymer_14
+            name: Grey Water Level
+          - entity: binary_sensor.hymer_hymer_connect_hymer_water_pump
+            name: Water Pump
 
   # ── Page 5: Doors & Lights ──
   - title: Doors

@@ -5,6 +5,25 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.8.0] - 2026-04-05
+
+### Added
+
+- **Solar current sensor** (bus 15, s2) — solar panel charge current in amps (div10 transform)
+- **Solar power sensor** (bus 15, s3) — solar panel output power in watts
+- **Solar active binary sensor** (bus 15, s1) — indicates whether the solar charger is actively charging
+- **Fresh water level sensor** (bus 21, s2) — fresh water tank fill percentage
+- **Water pump binary sensor** (bus 16, s1) — water pump on/off state
+- **Sentinel value filtering** — CAN "no data" values (3276.8, 32768, 65535, 6553.5) now filtered out in both the decoder and sensor entities, preventing display of stale/invalid readings
+- **30+ missing translations** — added translation keys for all existing sensors that were previously untranslated
+
+### Fixed
+
+- **Solar voltage showing 3276.8V** — removed incorrect `div1000` transform; the protobuf float value IS the voltage directly (like battery voltage). The 3276.8 value was a CAN sentinel (32768/10) indicating "sensor unavailable" when main power is off
+- **Fridge mode labels** — expanded from `{8: Off}` to `{0: On, 1: Eco, 2: Boost, 8: Off}`
+- **Fridge status labels** — expanded from `{1: Off}` to `{0: Running, 1: Off, 2: Standby}`
+- **Dashboard YAML** — added solar current, solar power, solar active, fresh water level, and water pump entities
+
 ## [1.7.4] - 2026-04-04
 
 ### Fixed

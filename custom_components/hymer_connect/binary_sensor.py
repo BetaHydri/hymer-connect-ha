@@ -200,6 +200,22 @@ BINARY_SENSOR_DESCRIPTIONS: tuple[HymerBinarySensorEntityDescription, ...] = (
         value_path="signalr_sensors.step_retracted",
         icon="mdi:stairs",
     ),
+    # --- Solar ---
+    HymerBinarySensorEntityDescription(
+        key="solar_active",
+        translation_key="solar_active",
+        device_class=BinarySensorDeviceClass.POWER,
+        value_path="signalr_sensors.solar_active",
+        icon="mdi:solar-power",
+    ),
+    # --- Water pump ---
+    HymerBinarySensorEntityDescription(
+        key="water_pump",
+        translation_key="water_pump",
+        device_class=BinarySensorDeviceClass.RUNNING,
+        value_path="signalr_sensors.water_pump",
+        icon="mdi:water-pump",
+    ),
 )
 
 
