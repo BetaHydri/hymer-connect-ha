@@ -105,7 +105,8 @@
       "light_bedroom_ambient": { "name": "Bedroom ambient" },
       "light_nightlight": { "name": "Night light" },
       "light_bathroom_ceiling": { "name": "Bathroom ceiling" },
-      "light_bedroom_overhead": { "name": "Bedroom overhead" }
+      "light_bedroom_overhead": { "name": "Bedroom overhead" },
+      "light_outside": { "name": "Outside light" }
     },
     "binary_sensor": {
       "engine_running": { "name": "Engine" },

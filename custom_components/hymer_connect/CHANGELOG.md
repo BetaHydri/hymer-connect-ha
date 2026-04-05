@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.0.3] - 2026-04-06
+
+### Added
+
+- **Outside light (LED strip)** — bus 24 added as 9th controllable light entity
+- Dashboard updated with Außen (Outside) section
+
 ## [2.0.2] - 2026-04-06
 
 ### Fixed

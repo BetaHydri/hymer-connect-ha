@@ -341,6 +341,9 @@
       },
       "light_bedroom_overhead": {
         "name": "Bedroom overhead"
+      },
+      "light_outside": {
+        "name": "Outside light"
       }
     }
   }
