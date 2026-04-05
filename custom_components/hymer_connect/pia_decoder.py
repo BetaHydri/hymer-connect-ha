@@ -64,13 +64,15 @@ SENSOR_MAP: dict[tuple[int, int], tuple[str, str | None, str | None]] = {
     (3, 20): ("solar_connected", None, None),
     (3, 21): ("solar_charger_status", None, None),
     (3, 22): ("switch_22", None, None),
-    # Solar charger details (bus 15)
-    # s1 toggles True/False during active charging (solar charger boost/pulse)
-    # s2 = solar current in deciamps (div10)
-    # s3 = unknown (58 observed — possibly panel temp °C or charger internal)
-    (15, 1): ("solar_charger_boost", None, None),
+    # Light: Schlafzimmer Ambientebeleuchtung / Bedroom ambient (bus 15)
+    # NOTE: Bus 15 is shared - read values show solar charger data,
+    # write commands control the bedroom ambient light
+    (15, 1): ("light_bedroom_ambient", None, None),
     (15, 2): ("solar_current", "A", "div10"),
     (15, 3): ("solar_panel_temp", None, None),
+    # Light: Badezimmer Deckenbeleuchtung / Bathroom ceiling (bus 19)
+    (19, 1): ("light_bathroom_ceiling", None, None),
+    (19, 2): ("light_bathroom_ceiling_brightness", "%", None),
     # lin2 — Climate / secondary
     (8, 1): ("gray_water_sensor", None, None),
     (8, 2): ("indoor_temp", "\u00b0C", None),
@@ -79,13 +81,13 @@ SENSOR_MAP: dict[tuple[int, int], tuple[str, str | None, str | None]] = {
     (8, 5): ("vent_2", None, None),
     (8, 6): ("vent_3", None, None),
     (8, 7): ("tire_pressure", "bar", None),
-    # Alarm (11)
-    (11, 1): ("alarm_armed", None, None),
-    (11, 2): ("alarm_battery", "%", None),
-    # Step (12)
-    (12, 1): ("step_retracted", None, None),
-    (12, 2): ("step_sensor_2", None, None),
-    (12, 3): ("step_sensor_3", None, None),
+    # Light: Wohnraum Deckenbeleuchtung / Living room ceiling (bus 11)
+    (11, 1): ("light_living_ceiling", None, None),
+    (11, 2): ("light_living_ceiling_brightness", "%", None),
+    # Light: Wohnraum Ambientebeleuchtung / Living room ambient (bus 12)
+    (12, 1): ("light_living_ambient", None, None),
+    (12, 2): ("light_living_ambient_brightness", "%", None),
+    (12, 3): ("light_living_ambient_color_temp", None, None),
     # GPS (30)
     (30, 1): ("gps_coordinates", None, None),
     (30, 2): ("gps_utc_time", None, None),
@@ -109,17 +111,33 @@ SENSOR_MAP: dict[tuple[int, int], tuple[str, str | None, str | None]] = {
     (34, 5): ("heat_ctrl_5", None, None),
     (34, 6): ("heat_ctrl_6", None, None),
     (34, 7): ("heat_setpoint_raw", None, "div1000"),
-    # Water pump (bus 16)
-    (16, 1): ("water_pump", None, None),
+    # Light: Nachtlicht / Night light (bus 16)
+    # NOTE: Bus 16 is shared - sid 1 also controls Nachtlicht
+    (16, 1): ("light_nightlight", None, None),
     (16, 2): ("water_pump_status", None, None),
+    # Light: Küchenbeleuchtung / Kitchen (bus 21)
+    (21, 1): ("light_kitchen", None, None),
+    (21, 2): ("light_kitchen_brightness", "%", None),
+    (21, 3): ("light_kitchen_color_temp", None, None),
     # Water tanks — bus 22 = fresh water, bus 25 = grey water (confirmed: both ~6% when tanks empty)
     (22, 1): ("fresh_water_sensor", None, None),
     (22, 2): ("fresh_water_level", "%", None),
+    # Light: Außenbeleuchtung / Outside light (bus 24)
+    (24, 1): ("light_outside", None, None),
+    (24, 2): ("light_outside_brightness", "%", None),
+    (24, 3): ("light_outside_color_temp", None, None),
+    # Grey water / inverter (25)
     (25, 1): ("gray_water_sensor_ext", None, None),
     (25, 2): ("gray_water_level", "%", None),
     # Fridge (37)
     (37, 1): ("fridge_mode", None, None),
     (37, 2): ("fridge_status", None, None),
+    # Light: Sitzgruppe Dachschrank / Seating area overhead (bus 43)
+    (43, 1): ("light_seating_overhead", None, None),
+    (43, 2): ("light_seating_overhead_brightness", "%", None),
+    # Light: Schlafzimmer Dachschrank / Bedroom overhead (bus 44)
+    (44, 1): ("light_bedroom_overhead", None, None),
+    (44, 2): ("light_bedroom_overhead_brightness", "%", None),
     # SCU (45)
     (45, 8): ("scu_connected", None, None),
     (45, 9): ("scu_sensor_9", None, None),

@@ -5,6 +5,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.11.0] - 2026-04-05
+
+### Added
+
+- **Individual light sensors** — all 9 lights mapped with on/off binary sensors and brightness sensors (#18)
+- Wohnen: Living ceiling (11), Living ambient (12), Kitchen (21), Seating overhead (43)
+- Privat: Bedroom ambient (15), Night light (16), Bathroom ceiling (19), Bedroom overhead (44)
+- Außen: Outside light (24)
+
+### Changed
+
+- Bus IDs 11, 12, 15, 16 renamed from alarm/step/solar/water to light names
+
 ## [1.10.1] - 2026-04-05
 
 ### Fixed

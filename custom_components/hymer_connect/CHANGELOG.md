@@ -5,6 +5,25 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.11.0] - 2026-04-05
+
+### Added
+
+- **Individual light sensors** — all 9 lights now mapped with on/off binary sensors and brightness percentage sensors (#18):
+  - **Wohnen**: Living ceiling (bus 11), Living ambient (bus 12), Kitchen (bus 21), Seating overhead (bus 43)
+  - **Privat**: Bedroom ambient (bus 15), Night light (bus 16), Bathroom ceiling (bus 19), Bedroom overhead (bus 44)
+  - **Außen**: Outside light (bus 24)
+- **8 new binary sensors** for light on/off state
+- **6 new brightness sensors** showing last-used brightness percentage
+
+### Changed
+
+- **Sensor renames** — bus IDs previously misidentified as alarm/step/dimmer are actually individual lights:
+  - Bus 11: `alarm_armed` → `light_living_ceiling`, `alarm_battery` → `light_living_ceiling_brightness`
+  - Bus 12: `step_retracted` → `light_living_ambient`, `step_sensor_2` → `light_living_ambient_brightness`
+  - Bus 16: `water_pump` → `light_nightlight` (shared bus — same signal)
+  - Bus 15: `solar_charger_boost` → `light_bedroom_ambient` (shared bus with solar current)
+
 ## [1.10.1] - 2026-04-05
 
 ### Fixed

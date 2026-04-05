@@ -79,11 +79,11 @@ BINARY_SENSOR_DESCRIPTIONS: tuple[HymerBinarySensorEntityDescription, ...] = (
         icon="mdi:car-cruise-control",
     ),
     HymerBinarySensorEntityDescription(
-        key="alarm_armed",
-        translation_key="alarm_armed",
-        device_class=BinarySensorDeviceClass.SAFETY,
-        value_path="signalr_sensors.alarm_armed",
-        icon="mdi:alarm-light",
+        key="light_living_ceiling",
+        translation_key="light_living_ceiling",
+        device_class=BinarySensorDeviceClass.LIGHT,
+        value_path="signalr_sensors.light_living_ceiling",
+        icon="mdi:ceiling-light",
     ),
     # --- Doors (HA auto-translates: Offen/Geschlossen) ---
     HymerBinarySensorEntityDescription(
@@ -193,12 +193,55 @@ BINARY_SENSOR_DESCRIPTIONS: tuple[HymerBinarySensorEntityDescription, ...] = (
         value_path="signalr_sensors.truma_connected",
         icon="mdi:radiator",
     ),
-    # --- Step ---
+    # --- Interior lights ---
     HymerBinarySensorEntityDescription(
-        key="step_retracted",
-        translation_key="step_retracted",
-        value_path="signalr_sensors.step_retracted",
-        icon="mdi:stairs",
+        key="light_living_ambient",
+        translation_key="light_living_ambient",
+        device_class=BinarySensorDeviceClass.LIGHT,
+        value_path="signalr_sensors.light_living_ambient",
+        icon="mdi:wall-sconce-flat",
+    ),
+    HymerBinarySensorEntityDescription(
+        key="light_kitchen",
+        translation_key="light_kitchen",
+        device_class=BinarySensorDeviceClass.LIGHT,
+        value_path="signalr_sensors.light_kitchen",
+        icon="mdi:ceiling-light",
+    ),
+    HymerBinarySensorEntityDescription(
+        key="light_seating_overhead",
+        translation_key="light_seating_overhead",
+        device_class=BinarySensorDeviceClass.LIGHT,
+        value_path="signalr_sensors.light_seating_overhead",
+        icon="mdi:ceiling-light",
+    ),
+    HymerBinarySensorEntityDescription(
+        key="light_bedroom_ambient",
+        translation_key="light_bedroom_ambient",
+        device_class=BinarySensorDeviceClass.LIGHT,
+        value_path="signalr_sensors.light_bedroom_ambient",
+        icon="mdi:wall-sconce-flat",
+    ),
+    HymerBinarySensorEntityDescription(
+        key="light_nightlight",
+        translation_key="light_nightlight",
+        device_class=BinarySensorDeviceClass.LIGHT,
+        value_path="signalr_sensors.light_nightlight",
+        icon="mdi:lightbulb-night",
+    ),
+    HymerBinarySensorEntityDescription(
+        key="light_bathroom_ceiling",
+        translation_key="light_bathroom_ceiling",
+        device_class=BinarySensorDeviceClass.LIGHT,
+        value_path="signalr_sensors.light_bathroom_ceiling",
+        icon="mdi:ceiling-light",
+    ),
+    HymerBinarySensorEntityDescription(
+        key="light_bedroom_overhead",
+        translation_key="light_bedroom_overhead",
+        device_class=BinarySensorDeviceClass.LIGHT,
+        value_path="signalr_sensors.light_bedroom_overhead",
+        icon="mdi:ceiling-light",
     ),
     # --- Solar ---
     # Derived from solar_current: True when solar current > 0
@@ -214,7 +257,7 @@ BINARY_SENSOR_DESCRIPTIONS: tuple[HymerBinarySensorEntityDescription, ...] = (
         key="water_pump",
         translation_key="water_pump",
         device_class=BinarySensorDeviceClass.RUNNING,
-        value_path="signalr_sensors.water_pump",
+        value_path="signalr_sensors.light_nightlight",
         icon="mdi:water-pump",
     ),
 )

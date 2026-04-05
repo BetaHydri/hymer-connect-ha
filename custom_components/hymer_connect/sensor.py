@@ -366,21 +366,54 @@ SIGNALR_SENSORS: tuple[HymerSensorEntityDescription, ...] = (
         value_path="signalr_sensors.fresh_water_level",
         icon="mdi:water",
     ),
+    # --- Interior light brightness levels ---
     HymerSensorEntityDescription(
-        key="light_1_level",
-        translation_key="light_1_level",
+        key="light_living_ceiling_brightness",
+        translation_key="light_living_ceiling_brightness",
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
-        value_path="signalr_sensors.light_1_level",
-        icon="mdi:lightbulb-on",
+        value_path="signalr_sensors.light_living_ceiling_brightness",
+        icon="mdi:ceiling-light",
     ),
     HymerSensorEntityDescription(
-        key="light_2_level",
-        translation_key="light_2_level",
+        key="light_living_ambient_brightness",
+        translation_key="light_living_ambient_brightness",
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
-        value_path="signalr_sensors.light_2_level",
-        icon="mdi:lightbulb-on",
+        value_path="signalr_sensors.light_living_ambient_brightness",
+        icon="mdi:wall-sconce-flat",
+    ),
+    HymerSensorEntityDescription(
+        key="light_kitchen_brightness",
+        translation_key="light_kitchen_brightness",
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_path="signalr_sensors.light_kitchen_brightness",
+        icon="mdi:ceiling-light",
+    ),
+    HymerSensorEntityDescription(
+        key="light_seating_overhead_brightness",
+        translation_key="light_seating_overhead_brightness",
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_path="signalr_sensors.light_seating_overhead_brightness",
+        icon="mdi:ceiling-light",
+    ),
+    HymerSensorEntityDescription(
+        key="light_bathroom_ceiling_brightness",
+        translation_key="light_bathroom_ceiling_brightness",
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_path="signalr_sensors.light_bathroom_ceiling_brightness",
+        icon="mdi:ceiling-light",
+    ),
+    HymerSensorEntityDescription(
+        key="light_bedroom_overhead_brightness",
+        translation_key="light_bedroom_overhead_brightness",
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_path="signalr_sensors.light_bedroom_overhead_brightness",
+        icon="mdi:ceiling-light",
     ),
     # --- Climate (lin2) ---
     HymerSensorEntityDescription(
@@ -392,16 +425,8 @@ SIGNALR_SENSORS: tuple[HymerSensorEntityDescription, ...] = (
         value_path="signalr_sensors.tire_pressure",
         icon="mdi:car-tire-alert",
     ),
-    # --- Alarm ---
-    HymerSensorEntityDescription(
-        key="alarm_battery",
-        translation_key="alarm_battery",
-        native_unit_of_measurement=PERCENTAGE,
-        device_class=SensorDeviceClass.BATTERY,
-        state_class=SensorStateClass.MEASUREMENT,
-        value_path="signalr_sensors.alarm_battery",
-        icon="mdi:alarm-light",
-    ),
+    # --- Living ceiling brightness (was alarm_battery) ---
+    # Bus 11 sid 2 is living room ceiling brightness, not alarm battery
     # --- SCU/Truma firmware ---
     HymerSensorEntityDescription(
         key="scu_firmware",
