@@ -161,6 +161,14 @@ class HymerConnectCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 await self.start_signalr()
             except Exception:
                 _LOGGER.warning("SignalR connect attempt failed", exc_info=True)
+        else:
+            # Re-send PIA subscriptions on each poll to get fresh sensor data.
+            # The SCU only sends updated values in response to subscription
+            # requests — without periodic re-subscribing, data goes stale.
+            try:
+                await self._signalr.resubscribe()
+            except Exception:
+                _LOGGER.debug("PIA re-subscription failed", exc_info=True)
 
         # Merge REST + SignalR data
         signalr_ok = self._signalr.connected if self._signalr else False

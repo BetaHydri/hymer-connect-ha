@@ -171,6 +171,21 @@ class HymerSignalRClient:
         for payload in requests:
             await self.send_pia_request(payload)
 
+    async def resubscribe(self) -> None:
+        """Re-send PIA subscriptions to trigger fresh sensor data from the SCU.
+
+        The SCU only pushes updated values in response to subscription
+        requests.  Without periodic re-subscribing, many sensors (battery SOC,
+        solar current, fuel range, etc.) stay at their initial cached values.
+        """
+        if not self._ws or self._ws.closed or not self._connected:
+            return
+
+        requests = build_subscription_requests()
+        _LOGGER.debug("Re-sending %d PiaRequest subscriptions", len(requests))
+        for payload in requests:
+            await self.send_pia_request(payload)
+
     async def _send_update_tokens(self) -> None:
         """Send UpdateTokens invocation to authenticate the SignalR connection.
 
