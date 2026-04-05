@@ -10,9 +10,9 @@
 
 Custom integration to connect your HYMER / Erwin Hymer Group motorhome or caravan to [Home Assistant](https://www.home-assistant.io/).
 
-> **⚠️ Important:** Real-time sensor data (70+ entities: GPS, battery, doors, heater, fridge, etc.) requires an **EHG Remote Access Refresh Token**. This token must be captured **once** from your phone using mitmproxy during the initial setup. Without it, only basic vehicle metadata (model, VIN, year) is available. See [Obtaining the EHG Refresh Token](custom_components/hymer_connect/README.md#obtaining-the-ehg-refresh-token) for the step-by-step guide.
+> **⚠️ Important:** Real-time sensor data (70+ entities: GPS, battery, doors, heater, fridge, etc.) requires an **EHG Remote Access Refresh Token**. This token must be captured **once** from your phone using mitmproxy during the initial setup. Without it, only basic vehicle metadata (model, VIN, year) is available. See [Obtaining the EHG Refresh Token](#obtaining-the-ehg-refresh-token) for the step-by-step guide.
 
-> Real-time sensor data via SignalR. Up to 142 sensors including odometer, GPS, battery, temperatures, door/lock status, Truma heater, fridge, alarm, and more. Correct sensor mappings verified against the Hymer Connect app.
+> **v2.0** — **Light controls!** Turn on/off 8 interior lights from Home Assistant. Real-time sensor data via SignalR. 140+ sensors including odometer, GPS, battery, temperatures, door/lock status, Truma heater, fridge, and more.
 
 ![HYMER Connect Integration in Home Assistant](https://raw.githubusercontent.com/BetaHydri/hymer-connect-ha/master/images/ha-screenshot.png)
 
@@ -31,6 +31,19 @@ All Erwin Hymer Group brands equipped with a **Smart Interface Unit (SIU)**:
 | LMC | | Niesmann+Bischoff |
 
 ## Features
+
+### 💡 Light Controls (NEW in v2.0)
+
+Control your motorhome's interior lights directly from Home Assistant:
+
+| Group | Lights |
+|-------|--------|
+| **Wohnen** (Living) | Ceiling Light, Ambient Light, Kitchen, Seating Overhead |
+| **Privat** (Private) | Bedroom Ambient, Night Light, Bathroom Ceiling, Bedroom Overhead |
+
+- **On/Off toggle** for each light via the HA dashboard
+- Commands sent in real-time via SignalR WebSocket to the SCU
+- Works remotely — control lights from anywhere with internet access
 
 ### Real-Time Sensors (via SignalR, requires EHG Refresh Token)
 
