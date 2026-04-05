@@ -55,6 +55,11 @@ class HymerConnectCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             config_entry=entry,
         )
 
+    @property
+    def signalr_client(self) -> HymerSignalRClient | None:
+        """Return the active SignalR client for sending commands."""
+        return self._signalr
+
     def _on_signalr_update(self, sensor_data: dict[str, Any]) -> None:
         """Handle incoming SignalR sensor data."""
         self._signalr_data.update(sensor_data)

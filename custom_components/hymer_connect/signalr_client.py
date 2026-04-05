@@ -15,7 +15,7 @@ import aiohttp
 
 from .api import HymerConnectApi, HymerConnectApiError
 from .const import USER_AGENT
-from .pia_decoder import build_subscription_requests, decode_pia_payload
+from .pia_decoder import build_subscription_requests, decode_pia_payload, build_light_command
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -394,6 +394,31 @@ class HymerSignalRClient:
         await self._ws.send_str(
             json.dumps(msg) + SIGNALR_RECORD_SEPARATOR
         )
+
+    async def send_light_command(
+        self,
+        bus_id: int,
+        sensor_id: int,
+        *,
+        bool_value: bool | None = None,
+        uint_value: int | None = None,
+    ) -> None:
+        """Send a light control command to the SCU.
+
+        Args:
+            bus_id: Light bus ID (e.g. 11 for living ceiling).
+            sensor_id: 1=on/off, 2=brightness, 3=color_temp.
+            bool_value: True/False for on/off.
+            uint_value: 0-100 for brightness/color_temp.
+        """
+        payload = build_light_command(
+            bus_id, sensor_id, bool_value=bool_value, uint_value=uint_value
+        )
+        _LOGGER.info(
+            "Sending light command: bus=%d sid=%d bool=%s uint=%s",
+            bus_id, sensor_id, bool_value, uint_value,
+        )
+        await self.send_pia_request(payload)
 
     async def start(self) -> None:
         """Connect and start listening in the background."""

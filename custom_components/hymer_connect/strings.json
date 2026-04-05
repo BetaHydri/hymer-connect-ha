@@ -97,6 +97,16 @@
       "fridge_status": { "name": "Fridge status" },
       "fresh_water_level": { "name": "Fresh water level" }
     },
+    "light": {
+      "light_living_ceiling": { "name": "Living ceiling" },
+      "light_living_ambient": { "name": "Living ambient" },
+      "light_kitchen": { "name": "Kitchen" },
+      "light_seating_overhead": { "name": "Seating overhead" },
+      "light_bedroom_ambient": { "name": "Bedroom ambient" },
+      "light_nightlight": { "name": "Night light" },
+      "light_bathroom_ceiling": { "name": "Bathroom ceiling" },
+      "light_bedroom_overhead": { "name": "Bedroom overhead" }
+    },
     "binary_sensor": {
       "engine_running": { "name": "Engine" },
       "handbrake": { "name": "Handbrake" },
