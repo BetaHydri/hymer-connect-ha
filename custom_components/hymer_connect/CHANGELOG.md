@@ -5,6 +5,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.8.3] - 2026-04-05
+
+### Changed
+
+- **Solar voltage removed** — bus 3 s19 always reports sentinel 3276.8 even during active solar charging; the SCU does not expose solar panel voltage via SignalR. The Hymer app likely reads voltage from the solar charger directly via a different channel
+- **Solar power removed** — bus 15 s3 is not watts (value 58 doesn’t match V×I); likely panel temperature or charger internal value (renamed to `solar_panel_temp`)
+- **Solar active** — reverted to bus 15 s1 which toggles True/False during active charging (confirmed in live capture)
+- **Dashboard** — removed solar voltage, solar power, and solar charger status entities (unavailable via SignalR)
+
 ## [1.8.2] - 2026-04-05
 
 ### Fixed

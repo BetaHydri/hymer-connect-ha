@@ -119,16 +119,10 @@ views:
             name: Charge Phase
           - entity: binary_sensor.hymer_hymer_connect_hymer_ladestatus
             name: Charger Active
-          - entity: sensor.hymer_hymer_connect_hymer_solar_charger_status
-            name: Solar Charger Status
           - entity: binary_sensor.hymer_hymer_connect_hymer_solar_active
             name: Solar Active
-          - entity: sensor.hymer_hymer_connect_hymer_spannung
-            name: Solar Voltage
           - entity: sensor.hymer_hymer_connect_hymer_solar_current
             name: Solar Current
-          - entity: sensor.hymer_hymer_connect_hymer_solar_power
-            name: Solar Power
           - entity: sensor.hymer_hymer_connect_hymer_12
             name: Power Source
           - entity: binary_sensor.hymer_hymer_connect_hymer_solar_panel

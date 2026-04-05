@@ -201,13 +201,12 @@ BINARY_SENSOR_DESCRIPTIONS: tuple[HymerBinarySensorEntityDescription, ...] = (
         icon="mdi:stairs",
     ),
     # --- Solar ---
-    # solar_connected (3,20) = 1 when solar panel is connected and active
+    # solar_charger_boost (bus 15 s1) toggles True/False during active charging
     HymerBinarySensorEntityDescription(
         key="solar_active",
         translation_key="solar_active",
         device_class=BinarySensorDeviceClass.POWER,
-        value_path="signalr_sensors.solar_connected",
-        on_value=1,
+        value_path="signalr_sensors.solar_charger_boost",
         icon="mdi:solar-power",
     ),
     # --- Water pump ---

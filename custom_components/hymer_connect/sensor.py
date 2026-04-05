@@ -353,15 +353,9 @@ SIGNALR_SENSORS: tuple[HymerSensorEntityDescription, ...] = (
         icon="mdi:car-exhaust",
     ),
     # --- Habitation electrics (lin1) ---
-    HymerSensorEntityDescription(
-        key="solar_voltage",
-        translation_key="solar_voltage",
-        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
-        device_class=SensorDeviceClass.VOLTAGE,
-        state_class=SensorStateClass.MEASUREMENT,
-        value_path="signalr_sensors.solar_voltage",
-        icon="mdi:solar-power",
-    ),
+    # Solar voltage is NOT available from the SCU (bus 3 s19 always sends
+    # sentinel 3276.8).  The Hymer app likely reads it from the solar charger
+    # directly via a different channel.
     HymerSensorEntityDescription(
         key="solar_charger_status",
         translation_key="solar_charger_status",
@@ -377,16 +371,7 @@ SIGNALR_SENSORS: tuple[HymerSensorEntityDescription, ...] = (
         value_path="signalr_sensors.solar_current",
         icon="mdi:solar-power",
     ),
-    HymerSensorEntityDescription(
-        key="solar_power",
-        translation_key="solar_power",
-        native_unit_of_measurement=UnitOfPower.WATT,
-        device_class=SensorDeviceClass.POWER,
-        state_class=SensorStateClass.MEASUREMENT,
-        value_path="signalr_sensors.solar_power",
-        icon="mdi:solar-power",
-    ),
-    # --- Fresh water (bus 21) ---
+    # --- Fresh water (bus 22) ---
     HymerSensorEntityDescription(
         key="fresh_water_level",
         translation_key="fresh_water_level",
