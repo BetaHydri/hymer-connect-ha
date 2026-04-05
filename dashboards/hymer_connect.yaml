@@ -40,16 +40,8 @@ views:
           - entity: sensor.hymer_hymer_connect_hymer_25
             name: Engine Torque
       - type: entities
-        title: Fuel & Range
+        title: Fuel & AdBlue
         entities:
-          - entity: sensor.hymer_hymer_connect_hymer_strecke_2
-            name: Fuel Range
-          - entity: sensor.hymer_hymer_connect_hymer_23
-            name: Fuel Consumption
-          - entity: sensor.hymer_hymer_connect_hymer_24
-            name: Total Fuel Used
-          - entity: sensor.hymer_hymer_connect_hymer_strecke_3
-            name: Trip Distance
           - entity: sensor.hymer_hymer_connect_hymer_adblue_level
             name: AdBlue Level
           - entity: sensor.hymer_hymer_connect_hymer_temperatur_6
