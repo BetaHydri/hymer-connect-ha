@@ -234,43 +234,35 @@ views:
           - entity: binary_sensor.hymer_hymer_connect_hymer_3
             name: Turn Signal
 
-  # ── Page 6: Interior Lights ──
+  # ── Page 6: Interior Lights (controllable) ──
   - title: Lights
     path: lights
     icon: mdi:lightbulb-group
     cards:
       - type: entities
         title: "💡 Wohnen (Living)"
-        show_header_toggle: false
+        show_header_toggle: true
         entities:
-          - entity: binary_sensor.hymer_hymer_connect_hymer_living_ceiling_light
+          - entity: light.hymer_hymer_connect_hymer_living_ceiling
             name: Ceiling Light
-            icon: mdi:ceiling-light
-          - entity: binary_sensor.hymer_hymer_connect_hymer_living_ambient_light
+          - entity: light.hymer_hymer_connect_hymer_living_ambient
             name: Ambient Light
-            icon: mdi:wall-sconce-flat
-          - entity: binary_sensor.hymer_hymer_connect_hymer_kitchen_light
+          - entity: light.hymer_hymer_connect_hymer_kitchen
             name: Kitchen
-            icon: mdi:ceiling-light
-          - entity: binary_sensor.hymer_hymer_connect_hymer_seating_overhead_light
+          - entity: light.hymer_hymer_connect_hymer_seating_overhead
             name: Seating Overhead
-            icon: mdi:ceiling-light
       - type: entities
         title: "🛏️ Privat (Private)"
-        show_header_toggle: false
+        show_header_toggle: true
         entities:
-          - entity: binary_sensor.hymer_hymer_connect_hymer_bedroom_ambient_light
+          - entity: light.hymer_hymer_connect_hymer_bedroom_ambient
             name: Bedroom Ambient
-            icon: mdi:wall-sconce-flat
-          - entity: binary_sensor.hymer_hymer_connect_hymer_night_light
+          - entity: light.hymer_hymer_connect_hymer_nightlight
             name: Night Light
-            icon: mdi:lightbulb-night
-          - entity: binary_sensor.hymer_hymer_connect_hymer_bathroom_ceiling_light
+          - entity: light.hymer_hymer_connect_hymer_bathroom_ceiling
             name: Bathroom Ceiling
-            icon: mdi:ceiling-light
-          - entity: binary_sensor.hymer_hymer_connect_hymer_bedroom_overhead_light
+          - entity: light.hymer_hymer_connect_hymer_bedroom_overhead
             name: Bedroom Overhead
-            icon: mdi:ceiling-light
 
   # ── Page 7: GPS & Location ──
   - title: GPS
