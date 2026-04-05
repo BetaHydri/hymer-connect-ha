@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.10.1] - 2026-04-05
+
+### Fixed
+
+- **engine_hours wrong divisor** — v1.10.0 used `div100` (= 36174h, impossible for a 9-month-old vehicle). Raw CAN value is in **seconds**. Corrected to `div3600`: 3,617,400s ÷ 3600 = **1,004.8 hours**
+
 ## [1.10.0] - 2026-04-05
 
 ### Fixed
