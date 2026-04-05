@@ -134,12 +134,8 @@ class HymerConnectLight(
             "model": "Smart Interface Unit",
         }
         modes = {ColorMode.ONOFF}
-        if description.brightness_path:
-            modes.add(ColorMode.BRIGHTNESS)
         self._attr_supported_color_modes = modes
-        self._attr_color_mode = (
-            ColorMode.BRIGHTNESS if ColorMode.BRIGHTNESS in modes else ColorMode.ONOFF
-        )
+        self._attr_color_mode = ColorMode.ONOFF
 
     @property
     def is_on(self) -> bool | None:
