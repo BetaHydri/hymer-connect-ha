@@ -257,7 +257,7 @@ views:
         entities:
           - entity: light.hymer_hymer_connect_hymer_bedroom_ambient
             name: Bedroom Ambient
-          - entity: light.hymer_hymer_connect_hymer_nightlight
+          - entity: light.hymer_hymer_connect_hymer_night_light
             name: Night Light
           - entity: light.hymer_hymer_connect_hymer_bathroom_ceiling
             name: Bathroom Ceiling
