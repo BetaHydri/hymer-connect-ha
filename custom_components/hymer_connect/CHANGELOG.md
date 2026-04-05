@@ -5,6 +5,24 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.0.0] - 2026-04-06
+
+### Added
+
+- **Light write controls** — 8 controllable HA light entities with on/off and brightness (#23, #6)
+  - Turn lights on/off from Home Assistant via SignalR PiaRequest commands
+  - Brightness control (0-100%) with HA slider
+  - New `light.py` platform with `LightEntity` subclass
+  - `build_light_command()` protobuf encoder in pia_decoder.py
+  - `send_light_command()` method in signalr_client.py
+  - `signalr_client` property exposed on coordinator
+- **Dedicated Lights dashboard page** with Wohnen (Living) and Privat (Private) groups
+
+### Known Issues
+
+- Light state reading may not update when lights are toggled physically or via the Hymer app (#25)
+- Outside light brightness shows 10000 instead of percentage (#21)
+
 ## [1.11.0] - 2026-04-05
 
 ### Added

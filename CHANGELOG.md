@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.0.0] - 2026-04-06
+
+### Added
+
+- **Light write controls** — 8 controllable HA light entities with on/off and brightness (#23, #6)
+- New light.py platform, protobuf command encoder, SignalR send method
+- Dedicated Lights dashboard page
+
 ## [1.11.0] - 2026-04-05
 
 ### Added
