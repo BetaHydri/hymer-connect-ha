@@ -65,7 +65,9 @@ SENSOR_MAP: dict[tuple[int, int], tuple[str, str | None, str | None]] = {
     (3, 21): ("solar_charger_status", None, None),
     (3, 22): ("switch_22", None, None),
     # Solar charger details (bus 15)
-    (15, 1): ("solar_active", None, None),
+    # s1 is NOT "solar active" — it's False even while solar is charging.
+    # Solar active state is determined by solar_connected (3,20) or power_source (3,2).
+    (15, 1): ("solar_charger_boost", None, None),
     (15, 2): ("solar_current", "A", "div10"),
     (15, 3): ("solar_power", "W", None),
     # lin2 — Climate / secondary

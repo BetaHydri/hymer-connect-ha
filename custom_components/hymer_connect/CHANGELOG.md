@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.8.2] - 2026-04-05
+
+### Fixed
+
+- **Solar Active showing "Aus" while charging** — bus 15 s1 is NOT the solar active flag (it’s False even during active charging); changed `solar_active` binary sensor to read from `solar_connected` (bus 3, s20) which correctly reports 1 when solar is active
+- Bus 15 s1 renamed to `solar_charger_boost` (purpose still TBD)
+
 ## [1.8.1] - 2026-04-05
 
 ### Fixed
