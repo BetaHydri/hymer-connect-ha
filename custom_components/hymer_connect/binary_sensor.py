@@ -201,12 +201,12 @@ BINARY_SENSOR_DESCRIPTIONS: tuple[HymerBinarySensorEntityDescription, ...] = (
         icon="mdi:stairs",
     ),
     # --- Solar ---
-    # solar_charger_boost (bus 15 s1) toggles True/False during active charging
+    # Derived from solar_current: True when solar current > 0
     HymerBinarySensorEntityDescription(
         key="solar_active",
         translation_key="solar_active",
         device_class=BinarySensorDeviceClass.POWER,
-        value_path="signalr_sensors.solar_charger_boost",
+        value_path="computed.solar_active",
         icon="mdi:solar-power",
     ),
     # --- Water pump ---
@@ -263,9 +263,18 @@ class HymerConnectBinarySensor(
         """Return True if the sensor is on."""
         if self.coordinator.data is None:
             return None
-        value = _resolve_path(
-            self.coordinator.data, self.entity_description.value_path
-        )
+
+        path = self.entity_description.value_path
+
+        # Computed binary sensors
+        if path == "computed.solar_active":
+            sensors = self.coordinator.data.get("signalr_sensors", {})
+            current = sensors.get("solar_current")
+            if isinstance(current, (int, float)):
+                return current > 0
+            return None
+
+        value = _resolve_path(self.coordinator.data, path)
         if value is None:
             return None
         return value == self.entity_description.on_value
