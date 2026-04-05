@@ -344,6 +344,9 @@
       },
       "light_outside": {
         "name": "Outside light"
+      },
+      "light_wohnen_group": {
+        "name": "Wohnen all lights"
       }
     }
   }

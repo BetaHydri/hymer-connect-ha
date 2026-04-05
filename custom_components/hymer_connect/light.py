@@ -98,11 +98,11 @@ LIGHT_DESCRIPTIONS: tuple[HymerLightEntityDescription, ...] = (
         icon="mdi:ceiling-light",
     ),
     HymerLightEntityDescription(
-        key="light_outside",
-        translation_key="light_outside",
+        key="light_wohnen_group",
+        translation_key="light_wohnen_group",
         bus_id=24,
         on_off_path="signalr_sensors.light_outside",
-        icon="mdi:outdoor-lamp",
+        icon="mdi:lightbulb-group",
     ),
 )
 
