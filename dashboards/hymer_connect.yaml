@@ -234,12 +234,27 @@ views:
           - entity: binary_sensor.hymer_hymer_connect_hymer_3
             name: Turn Signal
       - type: entities
-        title: Habitation Lights
+        title: Habitation Lights — Wohnen
         entities:
-          - entity: sensor.hymer_hymer_connect_hymer_28
-            name: Light Group 1
-          - entity: sensor.hymer_hymer_connect_hymer_29
-            name: Light Group 2
+          - entity: binary_sensor.hymer_hymer_connect_hymer_licht_6
+            name: Living Room Ceiling
+          - entity: binary_sensor.hymer_hymer_connect_hymer_licht_7
+            name: Living Room Ambient
+          - entity: binary_sensor.hymer_hymer_connect_hymer_licht_8
+            name: Kitchen
+          - entity: binary_sensor.hymer_hymer_connect_hymer_licht_9
+            name: Seating Overhead
+      - type: entities
+        title: Habitation Lights — Privat
+        entities:
+          - entity: binary_sensor.hymer_hymer_connect_hymer_licht_10
+            name: Bedroom Ambient
+          - entity: binary_sensor.hymer_hymer_connect_hymer_licht_11
+            name: Night Light
+          - entity: binary_sensor.hymer_hymer_connect_hymer_licht_12
+            name: Bathroom Ceiling
+          - entity: binary_sensor.hymer_hymer_connect_hymer_licht_13
+            name: Bedroom Overhead
 
   # ── Page 6: GPS & Location ──
   - title: GPS
