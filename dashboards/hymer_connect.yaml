@@ -267,7 +267,7 @@ views:
         title: "🌙 Außen (Outside)"
         show_header_toggle: true
         entities:
-          - entity: light.hymer_hymer_connect_hymer_outside
+          - entity: light.hymer_hymer_connect_hymer_outside_light
             name: Outside LED Strip
 
   # ── Page 7: GPS & Location ──
