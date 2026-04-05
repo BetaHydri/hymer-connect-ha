@@ -233,30 +233,46 @@ views:
             name: Fog Rear
           - entity: binary_sensor.hymer_hymer_connect_hymer_3
             name: Turn Signal
-      - type: entities
-        title: Habitation Lights — Wohnen
-        entities:
-          - entity: binary_sensor.hymer_hymer_connect_hymer_licht_6
-            name: Living Room Ceiling
-          - entity: binary_sensor.hymer_hymer_connect_hymer_licht_7
-            name: Living Room Ambient
-          - entity: binary_sensor.hymer_hymer_connect_hymer_licht_8
-            name: Kitchen
-          - entity: binary_sensor.hymer_hymer_connect_hymer_licht_9
-            name: Seating Overhead
-      - type: entities
-        title: Habitation Lights — Privat
-        entities:
-          - entity: binary_sensor.hymer_hymer_connect_hymer_licht_10
-            name: Bedroom Ambient
-          - entity: binary_sensor.hymer_hymer_connect_hymer_licht_11
-            name: Night Light
-          - entity: binary_sensor.hymer_hymer_connect_hymer_licht_12
-            name: Bathroom Ceiling
-          - entity: binary_sensor.hymer_hymer_connect_hymer_licht_13
-            name: Bedroom Overhead
 
-  # ── Page 6: GPS & Location ──
+  # ── Page 6: Interior Lights ──
+  - title: Lights
+    path: lights
+    icon: mdi:lightbulb-group
+    cards:
+      - type: entities
+        title: "💡 Wohnen (Living)"
+        show_header_toggle: false
+        entities:
+          - entity: binary_sensor.hymer_hymer_connect_hymer_living_ceiling_light
+            name: Ceiling Light
+            icon: mdi:ceiling-light
+          - entity: binary_sensor.hymer_hymer_connect_hymer_living_ambient_light
+            name: Ambient Light
+            icon: mdi:wall-sconce-flat
+          - entity: binary_sensor.hymer_hymer_connect_hymer_kitchen_light
+            name: Kitchen
+            icon: mdi:ceiling-light
+          - entity: binary_sensor.hymer_hymer_connect_hymer_seating_overhead_light
+            name: Seating Overhead
+            icon: mdi:ceiling-light
+      - type: entities
+        title: "🛏️ Privat (Private)"
+        show_header_toggle: false
+        entities:
+          - entity: binary_sensor.hymer_hymer_connect_hymer_bedroom_ambient_light
+            name: Bedroom Ambient
+            icon: mdi:wall-sconce-flat
+          - entity: binary_sensor.hymer_hymer_connect_hymer_night_light
+            name: Night Light
+            icon: mdi:lightbulb-night
+          - entity: binary_sensor.hymer_hymer_connect_hymer_bathroom_ceiling_light
+            name: Bathroom Ceiling
+            icon: mdi:ceiling-light
+          - entity: binary_sensor.hymer_hymer_connect_hymer_bedroom_overhead_light
+            name: Bedroom Overhead
+            icon: mdi:ceiling-light
+
+  # ── Page 7: GPS & Location ──
   - title: GPS
     path: gps
     icon: mdi:map-marker
@@ -284,7 +300,7 @@ views:
           - entity: binary_sensor.hymer_hymer_connect_hymer_konnektivitat
             name: GPS Fix
 
-  # ── Page 7: System ──
+  # ── Page 8: System ──
   - title: System
     path: system
     icon: mdi:chip
