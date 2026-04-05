@@ -335,7 +335,14 @@ class HymerSignalRClient:
                             )
                         else:
                             msg_count += 1
-                            self._handle_message(parsed)
+                            try:
+                                self._handle_message(parsed)
+                            except Exception:
+                                _LOGGER.warning(
+                                    "Error handling SignalR message #%d",
+                                    msg_count,
+                                    exc_info=True,
+                                )
                 elif msg.type in (
                     aiohttp.WSMsgType.CLOSED,
                     aiohttp.WSMsgType.ERROR,
@@ -344,9 +351,16 @@ class HymerSignalRClient:
                         "SignalR WebSocket closed/error after %d messages", msg_count
                     )
                     break
+        except Exception:
+            _LOGGER.warning(
+                "SignalR listen loop exception after %d messages",
+                msg_count,
+                exc_info=True,
+            )
         finally:
-            _LOGGER.debug(
-                "SignalR listen loop ended, processed %d messages", msg_count
+            _LOGGER.warning(
+                "SignalR listen loop ended after %d messages — will reconnect on next poll",
+                msg_count,
             )
             self._connected = False
             self._running = False

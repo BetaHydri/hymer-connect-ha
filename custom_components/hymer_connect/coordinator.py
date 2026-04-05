@@ -58,6 +58,9 @@ class HymerConnectCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     def _on_signalr_update(self, sensor_data: dict[str, Any]) -> None:
         """Handle incoming SignalR sensor data."""
         self._signalr_data.update(sensor_data)
+        _LOGGER.debug(
+            "SignalR push: %d total sensors", len(self._signalr_data)
+        )
         # Trigger HA entity updates immediately
         self.async_set_updated_data({
             **(self.data or {}),
@@ -73,6 +76,11 @@ class HymerConnectCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         if self._signalr and self._signalr.connected:
             _LOGGER.debug("SignalR already connected")
             return
+
+        # Stop any existing dead connection first
+        if self._signalr:
+            _LOGGER.info("Stopping stale SignalR client before reconnect")
+            await self.stop_signalr()
 
         self._signalr = HymerSignalRClient(
             api=self.api,
@@ -139,12 +147,15 @@ class HymerConnectCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         if not self._scu_urn and self._vehicle_urn:
             self._scu_urn = self._vehicle_urn
 
-        # Try to start SignalR if not connected
-        if not self._signalr or not self._signalr.connected:
-            _LOGGER.debug(
-                "SignalR not connected, attempting start (vehicle=%s, scu=%s)",
-                self._vehicle_urn,
-                self._scu_urn,
+        # Try to start/reconnect SignalR if not connected
+        signalr_connected = (
+            self._signalr is not None and self._signalr.connected
+        )
+        if not signalr_connected:
+            _LOGGER.info(
+                "SignalR not connected (obj=%s, connected=%s), attempting start",
+                self._signalr is not None,
+                self._signalr.connected if self._signalr else "N/A",
             )
             try:
                 await self.start_signalr()
@@ -152,11 +163,11 @@ class HymerConnectCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 _LOGGER.warning("SignalR connect attempt failed", exc_info=True)
 
         # Merge REST + SignalR data
+        signalr_ok = self._signalr.connected if self._signalr else False
         _LOGGER.debug(
-            "Data update: rest_keys=%s, signalr_sensors=%d, signalr_connected=%s",
-            list(rest_data.keys()),
+            "Data update: signalr_sensors=%d, signalr_connected=%s",
             len(self._signalr_data),
-            self._signalr.connected if self._signalr else False,
+            signalr_ok,
         )
         rest_data["signalr_sensors"] = self._signalr_data
         return rest_data

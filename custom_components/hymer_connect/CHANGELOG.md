@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.8.6] - 2026-04-05
+
+### Fixed
+
+- **Stale sensor data / no live updates** — SignalR listen loop could silently die (unhandled exception in message handler, WebSocket disconnect), leaving sensor data frozen at initial values. Fixed with:
+  - Proper error handling in the listen loop — individual message errors no longer crash the entire loop
+  - Automatic reconnection — coordinator now detects dead connections on each poll and reconnects with fresh subscriptions
+  - Stale client cleanup — old SignalR client is properly stopped before creating a new one
+  - Warning-level log when listen loop ends — logs message count for diagnostics
+
 ## [1.8.5] - 2026-04-05
 
 ### Fixed
