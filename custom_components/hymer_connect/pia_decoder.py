@@ -259,6 +259,80 @@ def build_subscription_requests() -> list[str]:
     return list(_PIA_REQUESTS)
 
 
+def _encode_varint(value: int) -> bytes:
+    """Encode an integer as a protobuf varint."""
+    result = bytearray()
+    while value > 0x7F:
+        result.append((value & 0x7F) | 0x80)
+        value >>= 7
+    result.append(value & 0x7F)
+    return bytes(result)
+
+
+def _encode_field(field_number: int, wire_type: int, data: bytes) -> bytes:
+    """Encode a protobuf field with tag and data."""
+    tag = _encode_varint((field_number << 3) | wire_type)
+    return tag + data
+
+
+def _encode_varint_field(field_number: int, value: int) -> bytes:
+    """Encode a varint field."""
+    return _encode_field(field_number, 0, _encode_varint(value))
+
+
+def _encode_bytes_field(field_number: int, data: bytes) -> bytes:
+    """Encode a length-delimited field."""
+    return _encode_field(field_number, 2, _encode_varint(len(data)) + data)
+
+
+def build_light_command(
+    bus_id: int,
+    sensor_id: int,
+    *,
+    bool_value: bool | None = None,
+    uint_value: int | None = None,
+) -> str:
+    """Build a PiaRequest payload to control a light.
+
+    Args:
+        bus_id: The light's bus ID (e.g. 11 for living ceiling).
+        sensor_id: 1=on/off, 2=brightness, 3=color_temp.
+        bool_value: True/False for on/off (sensor_id=1).
+        uint_value: 0-100 for brightness/color_temp (sensor_id=2,3).
+
+    Returns:
+        Base64-encoded protobuf payload ready to send as PiaRequest argument.
+    """
+    # Build sensor entry: field1=sensor_id, field2=bus_id, field3/5=value
+    sensor_data = _encode_varint_field(1, sensor_id)
+    sensor_data += _encode_varint_field(2, bus_id)
+    if bool_value is not None:
+        sensor_data += _encode_varint_field(5, 1 if bool_value else 0)
+    elif uint_value is not None:
+        sensor_data += _encode_varint_field(3, uint_value)
+
+    # Nest: sensor_data inside field1 of sub2, inside field2 of inner
+    sub2 = _encode_bytes_field(1, sensor_data)
+    inner = _encode_bytes_field(2, sub2)
+    command = _encode_bytes_field(2, inner)  # field 4 placeholder → using field 2
+
+    # Build wrapper: msg_id, version, timestamp, command
+    import random
+    msg_id = random.randint(1, 10_000_000)
+    version_bytes = b"v0.32.0"
+    ts = int(time.time())
+
+    wrapper = _encode_varint_field(1, msg_id)
+    wrapper += _encode_bytes_field(2, version_bytes)
+    wrapper += _encode_varint_field(3, ts)
+    wrapper += _encode_bytes_field(4, inner)
+
+    # Top-level: field 2 = wrapper
+    payload = _encode_bytes_field(2, wrapper)
+
+    return base64.b64encode(payload).decode("ascii")
+
+
 def _decode_varint(data: bytes, pos: int) -> tuple[int, int]:
     """Decode a varint, return (value, new_pos)."""
     result = 0
