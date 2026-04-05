@@ -5,6 +5,22 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.10.0] - 2026-04-05
+
+### Fixed
+
+- **engine_hours now shows correct value** — raw CAN value 3617400 was displayed as-is; now applies `div100` transform to show 36174.0 hours. Confirmed via mitmproxy traces across 3 sessions (#15)
+- **Removed stale translation keys** — cleaned up orphaned `fuel_consumption`, `trip_distance`, `solar_voltage`, and `solar_power` entries from strings.json and translations/en.json that were left over from v1.9.1 sensor removal
+
+### Added
+
+- **heat_setpoint_raw div1000 transform** — heating control raw setpoint (bus 34, sensor 7) now converts from millidegrees to °C (raw 13000 → 13.0°C)
+- **New sensor map entries from mitmproxy capture** — added 14 previously unmapped sensors discovered during Apr 5 WebSocket trace:
+  - GPS extended: `(30, 8-14)` — additional GPS metadata sensors
+  - Heat control: `(34, 4-6)` — additional heating controller sensors
+  - SCU: `(45, 9-10)` — additional SCU status sensors
+  - Heater: `(58, 10, 12-14)` — additional Truma heater sensors
+
 ## [1.9.1] - 2026-04-05
 
 ### Fixed

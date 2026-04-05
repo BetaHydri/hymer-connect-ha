@@ -24,7 +24,7 @@ SENSOR_MAP: dict[tuple[int, int], tuple[str, str | None, str | None]] = {
     (1, 4): ("handbrake", None, None),
     (1, 5): ("rpm", "rpm", "div100"),
     (1, 6): ("adblue_level", "%", None),
-    (1, 7): ("engine_hours", "h", None),
+    (1, 7): ("engine_hours", "h", "div100"),
     (1, 8): ("vin_text", None, None),
     (1, 9): ("coolant_temp", "\u00b0C", None),
     (1, 10): ("engine_running", None, None),
@@ -94,11 +94,21 @@ SENSOR_MAP: dict[tuple[int, int], tuple[str, str | None, str | None]] = {
     (30, 5): ("gps_altitude", "m", None),
     (30, 6): ("gps_satellites", None, None),
     (30, 7): ("gps_heading", "\u00b0", None),
+    (30, 8): ("gps_sensor_8", None, None),
+    (30, 9): ("gps_sensor_9", None, None),
+    (30, 10): ("gps_sensor_10", None, None),
+    (30, 11): ("gps_sensor_11", None, None),
+    (30, 12): ("gps_sensor_12", None, None),
+    (30, 13): ("gps_sensor_13", None, None),
+    (30, 14): ("gps_sensor_14", None, None),
     # Heating control (34)
     (34, 1): ("heat_switch_1", None, None),
     (34, 2): ("heat_switch_2", None, None),
     (34, 3): ("heat_mode", None, None),
-    (34, 7): ("heat_setpoint_raw", None, None),
+    (34, 4): ("heat_ctrl_4", None, None),
+    (34, 5): ("heat_ctrl_5", None, None),
+    (34, 6): ("heat_ctrl_6", None, None),
+    (34, 7): ("heat_setpoint_raw", None, "div1000"),
     # Water pump (bus 16)
     (16, 1): ("water_pump", None, None),
     (16, 2): ("water_pump_status", None, None),
@@ -112,6 +122,8 @@ SENSOR_MAP: dict[tuple[int, int], tuple[str, str | None, str | None]] = {
     (37, 2): ("fridge_status", None, None),
     # SCU (45)
     (45, 8): ("scu_connected", None, None),
+    (45, 9): ("scu_sensor_9", None, None),
+    (45, 10): ("scu_sensor_10", None, None),
     (45, 11): ("scu_firmware", None, None),
     # Truma (49)
     (49, 8): ("truma_connected", None, None),
@@ -124,7 +136,11 @@ SENSOR_MAP: dict[tuple[int, int], tuple[str, str | None, str | None]] = {
     (58, 7): ("heater_state", None, None),
     (58, 8): ("heater_setpoint", "\u00b0C", None),
     (58, 9): ("heater_electric_power", "W", None),
+    (58, 10): ("heater_sensor_10", None, None),
     (58, 11): ("heater_operating_mode", None, None),
+    (58, 12): ("heater_sensor_12", None, None),
+    (58, 13): ("heater_sensor_13", None, None),
+    (58, 14): ("heater_sensor_14", None, None),
     # can2 — Extended chassis CAN
     # Note: Many of these are cached Mercedes CAN values from last drive.
     # Outdoor/ambient temp only updates when engine is running.

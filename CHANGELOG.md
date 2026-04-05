@@ -5,6 +5,92 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.10.0] - 2026-04-05
+
+### Fixed
+
+- **engine_hours now shows correct value** — raw CAN value 3617400 was displayed as-is; now applies `div100` transform to show 36174.0 hours. Confirmed via mitmproxy traces across 3 sessions (#15)
+- **Removed stale translation keys** — cleaned up orphaned `fuel_consumption`, `trip_distance`, `solar_voltage`, and `solar_power` entries from strings.json and translations/en.json that were left over from v1.9.1 sensor removal
+
+### Added
+
+- **heat_setpoint_raw div1000 transform** — heating control raw setpoint (bus 34, sensor 7) now converts from millidegrees to °C (raw 13000 → 13.0°C)
+- **New sensor map entries from mitmproxy capture** — added 14 previously unmapped sensors discovered during Apr 5 WebSocket trace:
+  - GPS extended: `(30, 8-14)` — additional GPS metadata sensors
+  - Heat control: `(34, 4-6)` — additional heating controller sensors
+  - SCU: `(45, 9-10)` — additional SCU status sensors
+  - Heater: `(58, 10, 12-14)` — additional Truma heater sensors
+
+## [1.9.1] - 2026-04-05
+
+### Fixed
+
+- **Battery SOC now shows correct live value** — was reading from bus 3 s10 (habitation electronics, stale at 95%). Now reads from bus 99 s4 (`lithium_soc`) which reports the actual Lithium BMS SOC (93%) and updates via re-subscription
+- **Removed false `fuel_consumption` sensor** — bus 99 s4 was misidentified as fuel consumption; it's actually Lithium battery SOC
+- **Removed false `trip_distance` sensor** — bus 99 s8 was misidentified as trip distance (showed 93 "km" when actual trip was 0.1 km); it's a duplicate Lithium SOC value
+- **Outdoor temperature** — confirmed as cached Mercedes CAN value from last drive (shows 3°C when actual outdoor temp is 19°C). Only updates when engine is running
+
+## [1.9.0] - 2026-04-05
+
+### Added
+
+- **Periodic PIA re-subscription** — the coordinator now re-sends all PIA subscription requests on each 60-second poll cycle. This is required because the SCU only pushes updated sensor values in response to subscription requests. Without re-subscribing, sensors like battery SOC, solar current, fuel range, and trip distance stay at their initial cached values. Confirmed via 5-minute delta capture: re-subscribing triggered fuel_range, trip_distance, engine_torque, and total_fuel_used updates
+
+### Changed
+
+- **Outdoor temperature** — documented as Mercedes CAN cached value (bus 8 s3 / bus 99 s3). Only updates when the engine is running. The Hymer has no dedicated outdoor temperature sensor; requires a mitmproxy capture of Mercedes me API for real-time outdoor temp
+
+## [1.8.6] - 2026-04-05
+
+### Fixed
+
+- **Stale sensor data / no live updates** — SignalR listen loop could silently die (unhandled exception in message handler, WebSocket disconnect), leaving sensor data frozen at initial values. Fixed with proper error handling, automatic reconnection, stale client cleanup, and diagnostic logging
+
+## [1.8.5] - 2026-04-05
+
+### Fixed
+
+- **Solar Active always showing "Aus"** — bus 15 s1 is a PWM pulse indicator, not a steady charging flag. Changed `solar_active` to be computed from `solar_current > 0`
+
+## [1.8.4] - 2026-04-05
+
+### Fixed
+
+- **False errors in HA log** — coordinator and SignalR client used `warning` level for normal operational messages. Downgraded to `info`/`debug` level
+
+## [1.8.3] - 2026-04-05
+
+### Changed
+
+- **Solar voltage removed** — bus 3 s19 always reports sentinel 3276.8; SCU does not expose solar panel voltage via SignalR
+- **Solar power removed** — bus 15 s3 is not watts; renamed to `solar_panel_temp`
+- **Dashboard** — removed solar voltage, solar power, and solar charger status entities
+
+## [1.8.2] - 2026-04-05
+
+### Fixed
+
+- **Solar Active showing "Aus" while charging** — changed `solar_active` binary sensor to read from `solar_connected` (bus 3, s20). Bus 15 s1 renamed to `solar_charger_boost`
+
+## [1.8.1] - 2026-04-05
+
+### Fixed
+
+- **Fresh water level wrong bus** — corrected from bus 21 s2 to bus 22 s2
+- **Grey water level wrong bus** — corrected from bus 12 s2 to bus 25 s2
+
+## [1.8.0] - 2026-04-05
+
+### Added
+
+- **Solar current sensor** (bus 15, s2) — solar panel charge current in amps
+- **Solar power sensor** (bus 15, s3) — solar panel output power in watts
+- **Solar active binary sensor** (bus 15, s1) — solar charger active state
+- **Fresh water level sensor** (bus 21, s2) — fresh water tank fill percentage
+- **Water pump binary sensor** (bus 16, s1) — water pump on/off state
+- **Sentinel value filtering** — CAN "no data" values filtered out
+- **30+ missing translations** — added translation keys for all existing sensors
+
 ## [1.7.4] - 2026-04-04
 
 ### Fixed
