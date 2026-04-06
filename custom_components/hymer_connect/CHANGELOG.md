@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.3.8] - 2026-04-06
+
+### Fixed
+
+- **Lights don't turn on** — v2.3.7 broke all lights because HA always includes ATTR_BRIGHTNESS in kwargs for COLOR_TEMP/BRIGHTNESS modes, so `has_attrs` was always True and sid=1 was never sent. Reverted: normal lights always send sid=1 on turn_on, regardless of whether brightness/color_temp kwargs are present
+
 ## [2.3.7] - 2026-04-06
 
 ### Fixed
