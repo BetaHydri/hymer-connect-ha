@@ -140,9 +140,13 @@ class HymerConnectLight(
             "manufacturer": MANUFACTURER,
             "model": "Smart Interface Unit",
         }
-        modes = {ColorMode.ONOFF}
+        modes = set()
+        if description.brightness_path:
+            modes.add(ColorMode.BRIGHTNESS)
+        else:
+            modes.add(ColorMode.ONOFF)
         self._attr_supported_color_modes = modes
-        self._attr_color_mode = ColorMode.ONOFF
+        self._attr_color_mode = ColorMode.BRIGHTNESS if ColorMode.BRIGHTNESS in modes else ColorMode.ONOFF
 
     @property
     def is_on(self) -> bool | None:
@@ -164,7 +168,7 @@ class HymerConnectLight(
         )
         if val is None or not isinstance(val, (int, float)):
             return None
-        return int(val * 255 / 100)
+        return min(255, max(0, int(val * 255 / 100)))
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         client = self.coordinator.signalr_client
@@ -173,7 +177,7 @@ class HymerConnectLight(
             return
         bus = self.entity_description.bus_id
         if ATTR_BRIGHTNESS in kwargs:
-            pct = int(kwargs[ATTR_BRIGHTNESS] * 100 / 255)
+            pct = min(100, max(0, int(kwargs[ATTR_BRIGHTNESS] * 100 / 255)))
             await client.send_light_command(bus, 2, uint_value=pct)
         await client.send_light_command(bus, 1, bool_value=True)
         await self.coordinator.async_request_refresh()

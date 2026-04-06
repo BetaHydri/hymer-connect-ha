@@ -5,6 +5,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.1.0] - 2026-04-06
+
+### Added
+
+- **Brightness slider controls** — lights with brightness support now show a slider in the HA UI
+  - Living ceiling, Living ambient, Kitchen, Seating overhead, Bathroom ceiling, Bedroom overhead: brightness 0-100%
+  - Bedroom ambient, Night light, Wohnen group: on/off only
+- Brightness commands sent via `(bus, sid=2, uint=0-100)` write protocol
+
 ## [2.0.4] - 2026-04-06
 
 ### Fixed
