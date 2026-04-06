@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.2.3] - 2026-04-06
+
+### Fixed
+
+- **Light turns off immediately after turning on** — immediate `async_request_refresh()` was reading stale SCU state before the command was processed. Now uses optimistic state: UI stays in the commanded state for 5 seconds while the SCU processes, then refreshes to confirm
+
 ## [2.2.2] - 2026-04-06
 
 ### Fixed

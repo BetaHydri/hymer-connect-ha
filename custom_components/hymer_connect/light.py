@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import logging
 from dataclasses import dataclass
 from typing import Any
@@ -160,9 +161,14 @@ class HymerConnectLight(
         if description.color_temp_path:
             self._attr_min_color_temp_kelvin = MIN_COLOR_TEMP_KELVIN
             self._attr_max_color_temp_kelvin = MAX_COLOR_TEMP_KELVIN
+        self._optimistic_on: bool | None = None
+        self._optimistic_brightness: int | None = None
+        self._optimistic_color_temp: int | None = None
 
     @property
     def is_on(self) -> bool | None:
+        if self._optimistic_on is not None:
+            return self._optimistic_on
         if self.coordinator.data is None:
             return None
         val = _resolve_path(self.coordinator.data, self.entity_description.on_off_path)
@@ -172,6 +178,8 @@ class HymerConnectLight(
 
     @property
     def brightness(self) -> int | None:
+        if self._optimistic_brightness is not None:
+            return self._optimistic_brightness
         if not self.entity_description.brightness_path:
             return None
         if self.coordinator.data is None:
@@ -185,6 +193,8 @@ class HymerConnectLight(
 
     @property
     def color_temp_kelvin(self) -> int | None:
+        if self._optimistic_color_temp is not None:
+            return self._optimistic_color_temp
         if not self.entity_description.color_temp_path:
             return None
         if self.coordinator.data is None:
@@ -219,11 +229,15 @@ class HymerConnectLight(
                 ),
             )
             await client.send_light_command(bus, 3, uint_value=pct)
+            self._optimistic_color_temp = kelvin
         if ATTR_BRIGHTNESS in kwargs:
             pct = min(100, max(0, int(kwargs[ATTR_BRIGHTNESS] * 100 / 255)))
             await client.send_light_command(bus, 2, uint_value=pct)
+            self._optimistic_brightness = kwargs[ATTR_BRIGHTNESS]
         await client.send_light_command(bus, 1, bool_value=True)
-        await self.coordinator.async_request_refresh()
+        self._optimistic_on = True
+        self.async_write_ha_state()
+        self._schedule_clear_optimistic()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         client = self.coordinator.signalr_client
@@ -232,4 +246,17 @@ class HymerConnectLight(
             return
         bus = self.entity_description.bus_id
         await client.send_light_command(bus, 1, bool_value=False)
-        await self.coordinator.async_request_refresh()
+        self._optimistic_on = False
+        self.async_write_ha_state()
+        self._schedule_clear_optimistic()
+
+    def _schedule_clear_optimistic(self) -> None:
+        """Clear optimistic state after delay and refresh from SCU."""
+        async def _clear() -> None:
+            await asyncio.sleep(5)
+            self._optimistic_on = None
+            self._optimistic_brightness = None
+            self._optimistic_color_temp = None
+            await self.coordinator.async_request_refresh()
+
+        asyncio.ensure_future(_clear())
