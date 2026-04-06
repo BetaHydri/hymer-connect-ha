@@ -5,6 +5,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.2.8] - 2026-04-06
+
+### Fixed
+
+- **Bedroom ambient sid 1 is a private area group switch** — sending on/off via sid 1 on bus 15 toggles ALL private area lights (bath, bedroom). Now uses brightness to control on/off instead:
+  - Turn on: sets brightness > 0 (skips sid=1)
+  - Turn off: sets brightness = 0 (skips sid=1)
+  - Added `use_brightness_for_on_off` flag to entity description for bus 15
+
 ## [2.2.7] - 2026-04-06
 
 ### Fixed
