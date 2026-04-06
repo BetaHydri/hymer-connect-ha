@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.2.9] - 2026-04-06
+
+### Fixed
+
+- **Regression: all lights bouncing off** — v2.2.7 changed `is_on` to use brightness > 0 for ALL lights with brightness_path, but this broke lights where brightness reads 0 when off even though on_off_path reads True. Reverted: only bedroom ambient (use_brightness_for_on_off=True) uses brightness-based detection, all other lights use on_off_path as before
+
 ## [2.2.8] - 2026-04-06
 
 ### Fixed
