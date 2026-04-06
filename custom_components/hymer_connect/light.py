@@ -288,7 +288,7 @@ class HymerConnectLight(
     def _schedule_clear_optimistic(self) -> None:
         """Clear optimistic state after delay and refresh from SCU."""
         async def _clear() -> None:
-            await asyncio.sleep(30)
+            await asyncio.sleep(5)
             self._optimistic_on = None
             self._optimistic_brightness = None
             self._optimistic_color_temp = None
