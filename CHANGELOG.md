@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.5.3] - 2026-04-06
+
+### Fixed
+
+- **Lights switch back on after turning off** — The timer-based optimistic clear was reading stale SCU sensor data (still showing ON) and overwriting the OFF command. Replaced with confirmation-based approach: optimistic on/off state now persists until the SCU pushes a matching value via SignalR. No more timer, no more stale readback
+
 ## [2.5.2] - 2026-04-06
 
 ### Fixed

@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import asyncio
 import logging
 from dataclasses import dataclass
 from typing import Any
@@ -263,7 +262,6 @@ class HymerConnectLight(
                 await client.send_light_command(bus, 3, uint_value=pct)
                 self._optimistic_color_temp = kelvin
             self.async_write_ha_state()
-            self._schedule_clear_optimistic()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         client = self.coordinator.signalr_client
@@ -282,10 +280,16 @@ class HymerConnectLight(
             await client.send_light_command(bus, 1, bool_value=False)
             self._optimistic_on = False
             self.async_write_ha_state()
-            self._schedule_clear_optimistic()
 
     def _handle_coordinator_update(self) -> None:
-        """Clear optimistic brightness/color_temp when coordinator data updates."""
+        """Clear optimistic state only when SCU confirms the commanded value."""
+        if self._optimistic_on is not None and self.coordinator.data:
+            val = _resolve_path(
+                self.coordinator.data,
+                self.entity_description.on_off_path,
+            )
+            if val is not None and bool(val) == self._optimistic_on:
+                self._optimistic_on = None
         if self._optimistic_brightness is not None and self.coordinator.data:
             val = _resolve_path(
                 self.coordinator.data,
@@ -305,19 +309,3 @@ class HymerConnectLight(
                 if abs(scu_ct - self._optimistic_color_temp) <= 100:
                     self._optimistic_color_temp = None
         super()._handle_coordinator_update()
-
-    def _schedule_clear_optimistic(self) -> None:
-        """Clear optimistic on/off state after delay.
-
-        Only clears the optimistic flag — does NOT trigger a coordinator
-        refresh.  The next regular poll (60 s) or the next SignalR push
-        will update the entity with the real SCU state.  Triggering an
-        immediate refresh caused a resubscribe that returned stale cached
-        data from the SCU, making the light appear to turn off again.
-        """
-        async def _clear() -> None:
-            await asyncio.sleep(10)
-            self._optimistic_on = None
-            self.async_write_ha_state()
-
-        asyncio.ensure_future(_clear())
