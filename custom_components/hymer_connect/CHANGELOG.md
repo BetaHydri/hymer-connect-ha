@@ -5,6 +5,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.2.5] - 2026-04-06
+
+### Fixed
+
+- **Bedroom ambient bounce-off root cause** — bus 15 sid 2 is NOT brightness, it's solar current. Sending brightness commands to sid 2 was confusing the SCU and turning the light off
+  - Reverted `(15, 2)` back to `solar_current` (restoring solar current + solar_active sensors)
+  - Removed `brightness_path` from bedroom ambient — this light has on/off + color temp only
+  - Brightness commands now gated on `brightness_path` existing (won't send sid=2 to lights without it)
+
 ## [2.2.4] - 2026-04-06
 
 ### Fixed

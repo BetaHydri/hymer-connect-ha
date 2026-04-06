@@ -78,7 +78,6 @@ LIGHT_DESCRIPTIONS: tuple[HymerLightEntityDescription, ...] = (
         translation_key="light_bedroom_ambient",
         bus_id=15,
         on_off_path="signalr_sensors.light_bedroom_ambient",
-        brightness_path="signalr_sensors.light_bedroom_ambient_brightness",
         color_temp_path="signalr_sensors.light_bedroom_ambient_color_temp",
         icon="mdi:wall-sconce-flat",
     ),
@@ -218,7 +217,7 @@ class HymerConnectLight(
         # Send on command first, then brightness/color_temp
         # (SCU needs the light on before accepting attribute changes)
         await client.send_light_command(bus, 1, bool_value=True)
-        if ATTR_BRIGHTNESS in kwargs:
+        if ATTR_BRIGHTNESS in kwargs and self.entity_description.brightness_path:
             pct = min(100, max(0, int(kwargs[ATTR_BRIGHTNESS] * 100 / 255)))
             await client.send_light_command(bus, 2, uint_value=pct)
             self._optimistic_brightness = kwargs[ATTR_BRIGHTNESS]
