@@ -239,6 +239,7 @@ class HymerConnectLight(
                 pct = int((self.brightness or 255) * 100 / 255)
                 if pct == 0:
                     pct = 100
+                self._optimistic_on = True  # only for pure toggle
             await client.send_light_command(bus, 2, uint_value=pct)
             self._optimistic_brightness = min(255, max(1, int(pct * 255 / 100)))
             if ATTR_COLOR_TEMP_KELVIN in kwargs:
@@ -251,6 +252,7 @@ class HymerConnectLight(
             has_attrs = ATTR_BRIGHTNESS in kwargs or ATTR_COLOR_TEMP_KELVIN in kwargs
             if not has_attrs:
                 await client.send_light_command(bus, 1, bool_value=True)
+                self._optimistic_on = True
             if ATTR_BRIGHTNESS in kwargs and self.entity_description.brightness_path:
                 pct = min(100, max(0, int(kwargs[ATTR_BRIGHTNESS] * 100 / 255)))
                 await client.send_light_command(bus, 2, uint_value=pct)
@@ -260,7 +262,6 @@ class HymerConnectLight(
                 pct = min(100, max(0, int((kelvin - MIN_COLOR_TEMP_KELVIN) * 100 / (MAX_COLOR_TEMP_KELVIN - MIN_COLOR_TEMP_KELVIN))))
                 await client.send_light_command(bus, 3, uint_value=pct)
                 self._optimistic_color_temp = kelvin
-        self._optimistic_on = True
         self.async_write_ha_state()
         self._schedule_clear_optimistic()
 

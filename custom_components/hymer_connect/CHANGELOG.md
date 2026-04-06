@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.3.5] - 2026-04-06
+
+### Fixed
+
+- **Sliders don't turn light on anymore** — optimistic_on was always set to True in async_turn_on, causing HA to briefly show the light as on when just moving a slider. Now optimistic_on is only set when sid=1 is actually sent (pure on/off toggle). Adjusting brightness/color temp on an off light only stores the value without toggling the light state
+
 ## [2.3.4] - 2026-04-06
 
 ### Fixed
