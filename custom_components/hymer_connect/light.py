@@ -81,7 +81,6 @@ LIGHT_DESCRIPTIONS: tuple[HymerLightEntityDescription, ...] = (
         on_off_path="signalr_sensors.light_bedroom_ambient",
         brightness_path="signalr_sensors.light_bedroom_ambient_brightness",
         color_temp_path="signalr_sensors.light_bedroom_ambient_color_temp",
-        use_brightness_for_on_off=True,  # sid=1 is group switch — skip it
         icon="mdi:wall-sconce-flat",
     ),
     HymerLightEntityDescription(
