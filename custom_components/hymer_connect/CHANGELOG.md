@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- **Night light brightness** — `(16, 2)` remapped from `water_pump_status` to `light_nightlight_brightness`. Night light now has a brightness slider in the HA UI
+- **Night light brightness confirmed** — `(16, 2)` remapped from `water_pump_status` to `light_nightlight_brightness`. Night light now has a working brightness slider (confirmed by live test)
 
 ## [2.2.0] - 2026-04-06
 
