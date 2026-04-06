@@ -81,6 +81,7 @@ LIGHT_DESCRIPTIONS: tuple[HymerLightEntityDescription, ...] = (
         on_off_path="signalr_sensors.light_bedroom_ambient",
         brightness_path="signalr_sensors.light_bedroom_ambient_brightness",
         color_temp_path="signalr_sensors.light_bedroom_ambient_color_temp",
+        use_brightness_for_on_off=True,  # sid=1 is group switch — skip it
         icon="mdi:wall-sconce-flat",
     ),
     HymerLightEntityDescription(
@@ -248,8 +249,7 @@ class HymerConnectLight(
                 await client.send_light_command(bus, 3, uint_value=ct_pct)
                 self._optimistic_color_temp = kelvin
             self.async_write_ha_state()
-            if not (ATTR_BRIGHTNESS in kwargs):
-                self._schedule_clear_optimistic()
+            # Don't schedule clear — keep optimistic state until next toggle
         else:
             # Normal lights: always send on (sid=1)
             await client.send_light_command(bus, 1, bool_value=True)
@@ -276,11 +276,14 @@ class HymerConnectLight(
             # Turn off via brightness=0 instead of sid=1 group switch
             await client.send_light_command(bus, 2, uint_value=0)
             self._optimistic_brightness = 0
+            self._optimistic_on = False
+            self.async_write_ha_state()
+            # Don't schedule clear — keep optimistic state until next toggle
         else:
             await client.send_light_command(bus, 1, bool_value=False)
-        self._optimistic_on = False
-        self.async_write_ha_state()
-        self._schedule_clear_optimistic()
+            self._optimistic_on = False
+            self.async_write_ha_state()
+            self._schedule_clear_optimistic()
 
     def _schedule_clear_optimistic(self) -> None:
         """Clear optimistic state after delay and refresh from SCU."""

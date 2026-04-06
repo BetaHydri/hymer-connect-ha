@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.3.9] - 2026-04-06
+
+### Fixed
+
+- **Bedroom ambient on/off via brightness** — re-enabled `use_brightness_for_on_off` for bedroom ambient (bus 15). On/off toggle now sends brightness=100/0 instead of sid=1 (avoiding group switch). Optimistic state is permanent (never auto-clears) so the on/off state stays until the next explicit toggle
+- Other lights unchanged — still use sid=1 for on/off
+
 ## [2.3.8] - 2026-04-06
 
 ### Fixed
