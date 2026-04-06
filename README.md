@@ -342,6 +342,49 @@ graph TD
 
 </details>
 
+## Compatibility with Other Vehicles
+
+> **⚠️ This integration was developed and tested on a HYMER Grand Canyon S 600 CrossOver (2025)** on a Mercedes Sprinter base with Truma Combi D6E heater, Dometic fridge, and Voltronic MPP260CI solar charger. The sensor mapping, light configuration, and bus IDs are based on this specific vehicle.
+
+### Will it work on my vehicle?
+
+The integration should work on **any EHG vehicle with an SCU**, but with some limitations:
+
+| What | Works? | Details |
+|------|--------|---------|
+| **Login & SignalR connection** | ✅ Yes | OAuth2 and the SignalR protocol are the same across all EHG brands |
+| **REST API** (model, VIN, year) | ✅ Yes | These endpoints are brand-agnostic |
+| **Core sensors** (GPS, odometer, doors, locks, ignition, battery) | ✅ Likely | CAN bus sensors on bus 1 (can0) and bus 30 (GPS) are standard across Sprinter/Ducato/Transit bases |
+| **Habitation sensors** (water, power source, charge phase) | ✅ Likely | LIN bus sensors on bus 3 (lin1) are part of the standard SCU wiring |
+| **Lights** | ⚠️ Partial | Light bus IDs (11, 12, 15, 16, 19, 21, 43, 44) and their capabilities (brightness, color temp) are specific to the Grand Canyon S layout. Your vehicle may have different lights on different buses, or fewer/more lights |
+| **Truma heater** (bus 58) | ⚠️ Depends | Only if your vehicle has a Truma heater connected via the SCU. Vehicles with Alde or other heating systems may use different bus IDs |
+| **Fridge** (bus 37) | ⚠️ Depends | Only if your vehicle has a Dometic fridge connected via the SCU |
+| **Solar** (bus 8) | ⚠️ Depends | Specific to the Voltronic MPP260CI MPPT charger. Other solar setups may report on different bus IDs or not at all |
+| **Extended CAN** (bus 99) | ⚠️ Depends | Mercedes Sprinter-specific sensors (AdBlue, ambient temp, fuel range, gear). Fiat Ducato or Ford Transit bases may use different CAN mappings |
+
+### What happens with missing sensors?
+
+The integration creates entities for **all** known sensors and lights. If your vehicle doesn't have a particular component (e.g., no solar charger, no Truma heater), those entities will simply show as **"Unavailable"** in Home Assistant. This is normal and does not cause errors or crashes.
+
+Similarly, if your vehicle has components that send data on bus/sensor IDs not yet in the integration's sensor map, that data will be silently ignored. It won't break anything, but those sensors won't appear in HA.
+
+### How you can help
+
+If you have a different EHG vehicle and want to help expand compatibility:
+
+1. **Install the integration** and check which sensors show data vs. "Unavailable"
+2. **Enable debug logging** by adding this to your `configuration.yaml`:
+   ```yaml
+   logger:
+     logs:
+       custom_components.hymer_connect: debug
+   ```
+3. **Open a GitHub issue** with:
+   - Your vehicle brand, model, and base vehicle (Sprinter/Ducato/Transit)
+   - Which sensors work and which show "Unavailable"
+   - Any debug log snippets showing unmapped `(bus_id, sensor_id)` pairs
+4. This helps map sensor IDs for different vehicle configurations and benefits all users
+
 ## Key Terminology
 
 | Term | Description |
