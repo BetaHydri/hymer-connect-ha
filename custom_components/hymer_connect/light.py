@@ -284,13 +284,35 @@ class HymerConnectLight(
             self.async_write_ha_state()
             self._schedule_clear_optimistic()
 
+    def _handle_coordinator_update(self) -> None:
+        """Clear optimistic brightness/color_temp when coordinator data updates."""
+        if self._optimistic_brightness is not None and self.coordinator.data:
+            val = _resolve_path(
+                self.coordinator.data,
+                self.entity_description.brightness_path or "",
+            )
+            if val is not None and isinstance(val, (int, float)):
+                scu_brightness = min(255, max(0, int(val * 255 / 100)))
+                if abs(scu_brightness - self._optimistic_brightness) <= 5:
+                    self._optimistic_brightness = None
+        if self._optimistic_color_temp is not None and self.coordinator.data:
+            val = _resolve_path(
+                self.coordinator.data,
+                self.entity_description.color_temp_path or "",
+            )
+            if val is not None and isinstance(val, (int, float)):
+                scu_ct = int(MIN_COLOR_TEMP_KELVIN + val * (MAX_COLOR_TEMP_KELVIN - MIN_COLOR_TEMP_KELVIN) / 100)
+                if abs(scu_ct - self._optimistic_color_temp) <= 100:
+                    self._optimistic_color_temp = None
+        super()._handle_coordinator_update()
+
     def _schedule_clear_optimistic(self) -> None:
-        """Clear optimistic state after delay and refresh from SCU."""
+        """Clear optimistic on/off state after delay and refresh from SCU."""
         async def _clear() -> None:
             await asyncio.sleep(5)
             self._optimistic_on = None
-            self._optimistic_brightness = None
-            self._optimistic_color_temp = None
+            # Don't clear brightness/color_temp — let coordinator update naturally
+            # to avoid reverting to stale SCU values
             await self.coordinator.async_request_refresh()
 
         asyncio.ensure_future(_clear())
