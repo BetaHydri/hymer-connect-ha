@@ -5,6 +5,25 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.5.0] - 2026-04-06
+
+### Fixed
+
+- **Protobuf decoder bug** — Message wrappers (F1>1000) were misidentified as sensor entries, blocking recursion into nested data. Only 20 of 129 sensors were decoded per PiaResponse. Added guard to skip wrapper entries and recurse into actual sensor data
+- **Bus 8 sid 2/3 remapped** — Previously wrongly mapped as indoor/outdoor temperature. Live correlation with the Hymer app confirmed these are **solar voltage (V)** and **solar current (A)** from the **Voltronic MPP260CI** MPPT charger. Delta tracking shows voltage fluctuating 16–20V matching cloud cover on the 95W panel
+- **Bus 15 sid 2 restored as bedroom ambient brightness** — Was incorrectly mapped as solar_current in v2.4.3
+
+### Added
+
+- **Solar voltage sensor** — Real-time panel voltage from Voltronic MPP260CI (bus 8, sid 2)
+- **Solar current sensor** — Real-time charge current from Voltronic MPP260CI (bus 8, sid 3)
+- **Solar power sensor** — Computed voltage × current (W) for HA Energy dashboard
+- **solar_active binary sensor** — True when solar current > 0
+
+### Removed
+
+- **indoor_temp / outdoor_temp** — These sensors never existed on this vehicle; the values were actually solar voltage/current from the Voltronic charger
+
 ## [2.4.3] - 2026-04-06
 
 ### Fixed

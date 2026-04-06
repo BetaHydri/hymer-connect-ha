@@ -49,8 +49,9 @@ Control your motorhome's interior lights directly from Home Assistant:
 
 - **Vehicle** — odometer, speed, RPM, AdBlue level, fuel range, engine hours, coolant temp, gear
 - **Battery** — voltage, current, SOC (%), chassis battery voltage, charge phase, charger status, battery type
+- **Solar** — panel voltage (V), charge current (A), computed power (W), charger status, solar active (from Voltronic MPP260CI)
 - **Water** — grey water level (%), grey water sensor
-- **Temperature** — indoor, outdoor, ambient, AdBlue
+- **Temperature** — ambient, AdBlue
 - **GPS** — coordinates, altitude, heading, satellites, signal quality, UTC time
 - **Doors** — driver, passenger, sliding, rear (open/closed)
 - **Status** — lock status, ignition, handbrake, engine running, headlamp, cruise control

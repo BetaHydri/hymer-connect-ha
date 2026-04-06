@@ -60,22 +60,24 @@ SENSOR_MAP: dict[tuple[int, int], tuple[str, str | None, str | None]] = {
     (3, 16): ("switch_12v_5", None, None),
     (3, 17): ("switch_12v_6", None, None),
     (3, 18): ("switch_12v_7", None, None),
-    (3, 19): ("solar_voltage", "V", None),
+    (3, 19): ("solar_voltage_sentinel", "V", None),  # Always 3276.8 — real voltage is on bus 8
     (3, 20): ("solar_connected", None, None),
     (3, 21): ("solar_charger_status", None, None),
     (3, 22): ("switch_22", None, None),
     # Light: Schlafzimmer Ambientebeleuchtung / Bedroom ambient (bus 15)
-    # Dual-purpose bus: READ sid=2 reports solar current, WRITE sid=2 controls brightness
+    # sid=1: on/off, sid=2: brightness (WRITE only), sid=3: color_temp
     (15, 1): ("light_bedroom_ambient", None, None),
-    (15, 2): ("solar_current", "A", "div10"),
+    (15, 2): ("light_bedroom_ambient_brightness", "%", None),
     (15, 3): ("light_bedroom_ambient_color_temp", None, None),
     # Light: Badezimmer Deckenbeleuchtung / Bathroom ceiling (bus 19)
     (19, 1): ("light_bathroom_ceiling", None, None),
     (19, 2): ("light_bathroom_ceiling_brightness", "%", None),
-    # lin2 — Climate / secondary
+    # lin2 — Voltronic MPP260CI solar charger + climate
+    # sid=2/3 are solar voltage/current from the Voltronic MPPT charger,
+    # confirmed by live correlation with app Energy display (fluctuating V/A).
     (8, 1): ("gray_water_sensor", None, None),
-    (8, 2): ("indoor_temp", "\u00b0C", None),
-    (8, 3): ("outdoor_temp", "\u00b0C", None),
+    (8, 2): ("solar_voltage", "V", None),
+    (8, 3): ("solar_current", "A", None),
     (8, 4): ("vent_1", None, None),
     (8, 5): ("vent_2", None, None),
     (8, 6): ("vent_3", None, None),
@@ -498,40 +500,47 @@ def _extract_sensors_recursive(
     )
 
     if has_sid and has_bus and has_value:
-        entry = _parse_sensor_entry(data)
-        if entry and entry["value"] is not None:
-            key = (entry["bus_id"], entry["sensor_id"])
-            mapped = SENSOR_MAP.get(key)
-            if mapped:
-                name, unit, transform = mapped
-                val = entry["value"]
-                # Filter out CAN/SCU sentinel "not available" values
-                if isinstance(val, (int, float)) and val in _FLOAT_SENTINELS:
-                    return
-                if transform == "div10" and isinstance(val, (int, float)):
-                    val = val / 10
-                elif transform == "div100" and isinstance(val, (int, float)):
-                    val = val / 100
-                elif transform == "div1000" and isinstance(val, (int, float)):
-                    val = val / 1000
-                elif transform == "div3600" and isinstance(val, (int, float)):
-                    val = round(val / 3600, 1)
-                # Map raw string values to readable labels
-                if isinstance(val, str) and name in _VALUE_LABELS:
-                    val = _VALUE_LABELS[name].get(val, val)
-                # Map integer values to readable labels (gear, fridge, etc.)
-                if isinstance(val, int) and name in _INT_LABELS:
-                    val = _INT_LABELS[name].get(val, val)
-                # Map gear integer to readable position
-                if name == "current_gear" and isinstance(val, int):
-                    val = _GEAR_MAP.get(val, str(val))
-                sensors[name] = val
-            else:
-                fallback = f"bus{entry['bus_id']}_s{entry['sensor_id']}"
-                sensors[fallback] = entry["value"]
-        return
+        # Guard against message wrappers that mimic sensor structure.
+        # Wrappers carry F1=msg_id (e.g. 39747) and F3=epoch-ms timestamp;
+        # real sensors have IDs < 1000.  Wrappers must fall through to
+        # recursion so the actual sensor entries nested inside get decoded.
+        sid_val = next((v for fn, wt, v in fields if fn == 1 and wt == 0), 0)
+        bus_val = next((v for fn, wt, v in fields if fn == 2 and wt == 0), 0)
+        if sid_val < 1000 and bus_val < 1000:
+            entry = _parse_sensor_entry(data)
+            if entry and entry["value"] is not None:
+                key = (entry["bus_id"], entry["sensor_id"])
+                mapped = SENSOR_MAP.get(key)
+                if mapped:
+                    name, unit, transform = mapped
+                    val = entry["value"]
+                    # Filter out CAN/SCU sentinel "not available" values
+                    if isinstance(val, (int, float)) and val in _FLOAT_SENTINELS:
+                        return
+                    if transform == "div10" and isinstance(val, (int, float)):
+                        val = val / 10
+                    elif transform == "div100" and isinstance(val, (int, float)):
+                        val = val / 100
+                    elif transform == "div1000" and isinstance(val, (int, float)):
+                        val = val / 1000
+                    elif transform == "div3600" and isinstance(val, (int, float)):
+                        val = round(val / 3600, 1)
+                    # Map raw string values to readable labels
+                    if isinstance(val, str) and name in _VALUE_LABELS:
+                        val = _VALUE_LABELS[name].get(val, val)
+                    # Map integer values to readable labels (gear, fridge, etc.)
+                    if isinstance(val, int) and name in _INT_LABELS:
+                        val = _INT_LABELS[name].get(val, val)
+                    # Map gear integer to readable position
+                    if name == "current_gear" and isinstance(val, int):
+                        val = _GEAR_MAP.get(val, str(val))
+                    sensors[name] = val
+                else:
+                    fallback = f"bus{entry['bus_id']}_s{entry['sensor_id']}"
+                    sensors[fallback] = entry["value"]
+            return
 
-    # Not a sensor entry — recurse into length-delimited sub-fields
+    # Not a sensor entry (or wrapper) — recurse into length-delimited sub-fields
     for fn, wt, v in fields:
         if wt == 2 and isinstance(v, bytes) and len(v) > 2:
             _extract_sensors_recursive(v, sensors, depth + 1)

@@ -95,11 +95,11 @@
       "main_switch": {
         "name": "Main switch"
       },
-      "indoor_temp": {
-        "name": "Indoor temperature"
+      "solar_voltage": {
+        "name": "Solar voltage"
       },
-      "outdoor_temp": {
-        "name": "Outdoor temperature"
+      "solar_power": {
+        "name": "Solar power"
       },
       "gray_water_level": {
         "name": "Grey water level"

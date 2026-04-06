@@ -160,24 +160,15 @@ SIGNALR_SENSORS: tuple[HymerSensorEntityDescription, ...] = (
         value_path="signalr_sensors.power_source",
         icon="mdi:power-plug",
     ),
-    # --- Climate (lin2) ---
+    # --- Solar (Voltronic MPP260CI via lin2 bus 8) ---
     HymerSensorEntityDescription(
-        key="indoor_temp",
-        translation_key="indoor_temp",
-        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
-        device_class=SensorDeviceClass.TEMPERATURE,
+        key="solar_voltage",
+        translation_key="solar_voltage",
+        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
+        device_class=SensorDeviceClass.VOLTAGE,
         state_class=SensorStateClass.MEASUREMENT,
-        value_path="signalr_sensors.indoor_temp",
-        icon="mdi:thermometer",
-    ),
-    HymerSensorEntityDescription(
-        key="outdoor_temp",
-        translation_key="outdoor_temp",
-        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
-        device_class=SensorDeviceClass.TEMPERATURE,
-        state_class=SensorStateClass.MEASUREMENT,
-        value_path="signalr_sensors.outdoor_temp",
-        icon="mdi:thermometer",
+        value_path="signalr_sensors.solar_voltage",
+        icon="mdi:solar-power-variant",
     ),
     # --- Gray water (bus 12) ---
     HymerSensorEntityDescription(
@@ -339,15 +330,13 @@ SIGNALR_SENSORS: tuple[HymerSensorEntityDescription, ...] = (
         icon="mdi:car-exhaust",
     ),
     # --- Habitation electrics (lin1) ---
-    # Solar voltage is NOT available from the SCU (bus 3 s19 always sends
-    # sentinel 3276.8).  The Hymer app likely reads it from the solar charger
-    # directly via a different channel.
     HymerSensorEntityDescription(
         key="solar_charger_status",
         translation_key="solar_charger_status",
         value_path="signalr_sensors.solar_charger_status",
         icon="mdi:solar-power-variant",
     ),
+    # Solar current from the Voltronic MPP260CI MPPT charger (bus 8, sid 3)
     HymerSensorEntityDescription(
         key="solar_current",
         translation_key="solar_current",
@@ -355,6 +344,16 @@ SIGNALR_SENSORS: tuple[HymerSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.CURRENT,
         state_class=SensorStateClass.MEASUREMENT,
         value_path="signalr_sensors.solar_current",
+        icon="mdi:solar-power",
+    ),
+    # Solar power computed from voltage × current
+    HymerSensorEntityDescription(
+        key="solar_power",
+        translation_key="solar_power",
+        native_unit_of_measurement=UnitOfPower.WATT,
+        device_class=SensorDeviceClass.POWER,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_path="computed.solar_power",
         icon="mdi:solar-power",
     ),
     # --- Fresh water (bus 22) ---
@@ -523,8 +522,20 @@ class HymerConnectSensor(
         """Return the sensor value."""
         if self.coordinator.data is None:
             return None
+
+        path = self.entity_description.value_path
+
+        # Computed solar power = voltage × current
+        if path == "computed.solar_power":
+            sensors = self.coordinator.data.get("signalr_sensors", {})
+            voltage = sensors.get("solar_voltage")
+            current = sensors.get("solar_current")
+            if isinstance(voltage, (int, float)) and isinstance(current, (int, float)):
+                return round(voltage * current, 1)
+            return None
+
         value = _resolve_path(
-            self.coordinator.data, self.entity_description.value_path
+            self.coordinator.data, path
         )
         # Filter out sentinel values
         if value is not None and isinstance(value, (int, float)):
