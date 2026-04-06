@@ -5,6 +5,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.2.0] - 2026-04-06
+
+### Added
+
+- **Color temperature slider** — lights with color temp support (Living ambient, Kitchen) now show a warm↔cool slider in the HA UI
+  - Maps SCU 0-100% range to 2700K (warm white) – 6500K (daylight)
+  - Color temp commands sent via `(bus, sid=3, uint=0-100)` write protocol
+- **Uniform light card dashboard** — all 9 lights use `type: light` cards showing on/off toggle, brightness slider, and color temp slider based on each light's capabilities
+
 ## [2.1.0] - 2026-04-06
 
 ### Added

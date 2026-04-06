@@ -234,26 +234,24 @@ views:
           - entity: binary_sensor.hymer_hymer_connect_hymer_3
             name: Turn Signal
 
-  # ── Page 6: Interior Lights (controllable with brightness) ──
+  # ── Page 6: Interior Lights (on/off + brightness + color temp) ──
   - title: Lights
     path: lights
     icon: mdi:lightbulb-group
     cards:
-      # Wohnen group switch
-      - type: entities
-        title: "💡 Wohnen (Living)"
-        entities:
-          - entity: light.hymer_hymer_connect_hymer_wohnen_all_lights
-            name: ⚡ All Wohnen Lights
-      # Wohnen individual lights with brightness sliders
+      # Wohnen group switch (on/off only)
+      - type: light
+        entity: light.hymer_hymer_connect_hymer_wohnen_all_lights
+        name: "⚡ Wohnen All Lights"
+      # Wohnen individual lights — each card shows on/off, brightness, and color temp if supported
       - type: horizontal-stack
         cards:
           - type: light
             entity: light.hymer_hymer_connect_hymer_living_ceiling
-            name: Ceiling
+            name: Living Ceiling
           - type: light
             entity: light.hymer_hymer_connect_hymer_living_ambient
-            name: Ambient
+            name: Living Ambient
       - type: horizontal-stack
         cards:
           - type: light
@@ -261,23 +259,24 @@ views:
             name: Kitchen
           - type: light
             entity: light.hymer_hymer_connect_hymer_seating_overhead
-            name: Seating
-      # Privat lights
-      - type: entities
-        title: "🛏️ Privat (Private)"
-        entities:
-          - entity: light.hymer_hymer_connect_hymer_bedroom_ambient
+            name: Seating Overhead
+      # Privat lights — each card shows its supported controls
+      - type: horizontal-stack
+        cards:
+          - type: light
+            entity: light.hymer_hymer_connect_hymer_bedroom_ambient
             name: Bedroom Ambient
-          - entity: light.hymer_hymer_connect_hymer_night_light
+          - type: light
+            entity: light.hymer_hymer_connect_hymer_night_light
             name: Night Light
       - type: horizontal-stack
         cards:
           - type: light
             entity: light.hymer_hymer_connect_hymer_bathroom_ceiling
-            name: Bathroom
+            name: Bathroom Ceiling
           - type: light
             entity: light.hymer_hymer_connect_hymer_bedroom_overhead
-            name: Bed Overhead
+            name: Bedroom Overhead
 
   # ── Page 7: GPS & Location ──
   - title: GPS

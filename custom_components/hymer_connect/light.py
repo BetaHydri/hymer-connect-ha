@@ -8,6 +8,7 @@ from typing import Any
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
+    ATTR_COLOR_TEMP_KELVIN,
     ColorMode,
     LightEntity,
     LightEntityDescription,
@@ -22,6 +23,10 @@ from .coordinator import HymerConnectCoordinator
 from .sensor import _resolve_path
 
 _LOGGER = logging.getLogger(__name__)
+
+# Color temperature range (Kelvin) for lights with color_temp_path
+MIN_COLOR_TEMP_KELVIN = 2700  # warm white
+MAX_COLOR_TEMP_KELVIN = 6500  # daylight
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -141,12 +146,17 @@ class HymerConnectLight(
             "model": "Smart Interface Unit",
         }
         modes = set()
-        if description.brightness_path:
+        if description.color_temp_path:
+            modes.add(ColorMode.COLOR_TEMP)
+        elif description.brightness_path:
             modes.add(ColorMode.BRIGHTNESS)
         else:
             modes.add(ColorMode.ONOFF)
         self._attr_supported_color_modes = modes
-        self._attr_color_mode = ColorMode.BRIGHTNESS if ColorMode.BRIGHTNESS in modes else ColorMode.ONOFF
+        self._attr_color_mode = next(iter(modes))
+        if description.color_temp_path:
+            self._attr_min_color_temp_kelvin = MIN_COLOR_TEMP_KELVIN
+            self._attr_max_color_temp_kelvin = MAX_COLOR_TEMP_KELVIN
 
     @property
     def is_on(self) -> bool | None:
@@ -170,12 +180,42 @@ class HymerConnectLight(
             return None
         return min(255, max(0, int(val * 255 / 100)))
 
+    @property
+    def color_temp_kelvin(self) -> int | None:
+        if not self.entity_description.color_temp_path:
+            return None
+        if self.coordinator.data is None:
+            return None
+        val = _resolve_path(
+            self.coordinator.data, self.entity_description.color_temp_path
+        )
+        if val is None or not isinstance(val, (int, float)):
+            return None
+        return int(
+            MIN_COLOR_TEMP_KELVIN
+            + val * (MAX_COLOR_TEMP_KELVIN - MIN_COLOR_TEMP_KELVIN) / 100
+        )
+
     async def async_turn_on(self, **kwargs: Any) -> None:
         client = self.coordinator.signalr_client
         if not client or not client.connected:
             _LOGGER.warning("Cannot control light - SignalR not connected")
             return
         bus = self.entity_description.bus_id
+        if ATTR_COLOR_TEMP_KELVIN in kwargs:
+            kelvin = kwargs[ATTR_COLOR_TEMP_KELVIN]
+            pct = min(
+                100,
+                max(
+                    0,
+                    int(
+                        (kelvin - MIN_COLOR_TEMP_KELVIN)
+                        * 100
+                        / (MAX_COLOR_TEMP_KELVIN - MIN_COLOR_TEMP_KELVIN)
+                    ),
+                ),
+            )
+            await client.send_light_command(bus, 3, uint_value=pct)
         if ATTR_BRIGHTNESS in kwargs:
             pct = min(100, max(0, int(kwargs[ATTR_BRIGHTNESS] * 100 / 255)))
             await client.send_light_command(bus, 2, uint_value=pct)
