@@ -35,7 +35,6 @@ class HymerLightEntityDescription(LightEntityDescription):
     on_off_path: str
     brightness_path: str | None = None
     color_temp_path: str | None = None
-    use_brightness_for_on_off: bool = False  # True = sid 1 is a group switch, use brightness to toggle
 
 
 LIGHT_DESCRIPTIONS: tuple[HymerLightEntityDescription, ...] = (
@@ -106,20 +105,6 @@ LIGHT_DESCRIPTIONS: tuple[HymerLightEntityDescription, ...] = (
         brightness_path="signalr_sensors.light_bedroom_overhead_brightness",
         icon="mdi:ceiling-light",
     ),
-    HymerLightEntityDescription(
-        key="light_wohnen_group",
-        translation_key="light_wohnen_group",
-        bus_id=24,
-        on_off_path="signalr_sensors.light_outside",
-        icon="mdi:lightbulb-group",
-    ),
-    HymerLightEntityDescription(
-        key="light_privat_group",
-        translation_key="light_privat_group",
-        bus_id=15,
-        on_off_path="signalr_sensors.light_bedroom_ambient",
-        icon="mdi:lightbulb-group",
-    ),
 )
 
 
@@ -178,14 +163,6 @@ class HymerConnectLight(
             return self._optimistic_on
         if self.coordinator.data is None:
             return None
-        if self.entity_description.use_brightness_for_on_off:
-            # Bus 15: sid=1 is group switch, check brightness for individual state
-            val = _resolve_path(
-                self.coordinator.data, self.entity_description.brightness_path
-            )
-            if val is not None and isinstance(val, (int, float)):
-                return val > 0
-            # Fallback: check on_off_path
         val = _resolve_path(self.coordinator.data, self.entity_description.on_off_path)
         if val is None:
             return None
@@ -230,38 +207,18 @@ class HymerConnectLight(
             _LOGGER.warning("Cannot control light - SignalR not connected")
             return
         bus = self.entity_description.bus_id
-        if self.entity_description.use_brightness_for_on_off:
-            # Don't send sid=1 (group switch) — use brightness to turn on
-            if ATTR_BRIGHTNESS in kwargs:
-                pct = min(100, max(0, int(kwargs[ATTR_BRIGHTNESS] * 100 / 255)))
-            else:
-                pct = int((self.brightness or 255) * 100 / 255)
-                if pct == 0:
-                    pct = 100
-                self._optimistic_on = True  # only for pure toggle
+        await client.send_light_command(bus, 1, bool_value=True)
+        self._optimistic_on = True
+        if ATTR_BRIGHTNESS in kwargs and self.entity_description.brightness_path:
+            pct = min(100, max(0, int(kwargs[ATTR_BRIGHTNESS] * 100 / 255)))
             await client.send_light_command(bus, 2, uint_value=pct)
-            self._optimistic_brightness = min(255, max(1, int(pct * 255 / 100)))
-            if ATTR_COLOR_TEMP_KELVIN in kwargs:
-                kelvin = kwargs[ATTR_COLOR_TEMP_KELVIN]
-                ct_pct = min(100, max(0, int((kelvin - MIN_COLOR_TEMP_KELVIN) * 100 / (MAX_COLOR_TEMP_KELVIN - MIN_COLOR_TEMP_KELVIN))))
-                await client.send_light_command(bus, 3, uint_value=ct_pct)
-                self._optimistic_color_temp = kelvin
-            self.async_write_ha_state()
-            # Don't schedule clear — keep optimistic state until next toggle
-        else:
-            # Normal lights: always send on (sid=1)
-            await client.send_light_command(bus, 1, bool_value=True)
-            self._optimistic_on = True
-            if ATTR_BRIGHTNESS in kwargs and self.entity_description.brightness_path:
-                pct = min(100, max(0, int(kwargs[ATTR_BRIGHTNESS] * 100 / 255)))
-                await client.send_light_command(bus, 2, uint_value=pct)
-                self._optimistic_brightness = kwargs[ATTR_BRIGHTNESS]
-            if ATTR_COLOR_TEMP_KELVIN in kwargs:
-                kelvin = kwargs[ATTR_COLOR_TEMP_KELVIN]
-                pct = min(100, max(0, int((kelvin - MIN_COLOR_TEMP_KELVIN) * 100 / (MAX_COLOR_TEMP_KELVIN - MIN_COLOR_TEMP_KELVIN))))
-                await client.send_light_command(bus, 3, uint_value=pct)
-                self._optimistic_color_temp = kelvin
-            self.async_write_ha_state()
+            self._optimistic_brightness = kwargs[ATTR_BRIGHTNESS]
+        if ATTR_COLOR_TEMP_KELVIN in kwargs:
+            kelvin = kwargs[ATTR_COLOR_TEMP_KELVIN]
+            pct = min(100, max(0, int((kelvin - MIN_COLOR_TEMP_KELVIN) * 100 / (MAX_COLOR_TEMP_KELVIN - MIN_COLOR_TEMP_KELVIN))))
+            await client.send_light_command(bus, 3, uint_value=pct)
+            self._optimistic_color_temp = kelvin
+        self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         client = self.coordinator.signalr_client
@@ -269,17 +226,9 @@ class HymerConnectLight(
             _LOGGER.warning("Cannot control light - SignalR not connected")
             return
         bus = self.entity_description.bus_id
-        if self.entity_description.use_brightness_for_on_off:
-            # Turn off via brightness=0 instead of sid=1 group switch
-            await client.send_light_command(bus, 2, uint_value=0)
-            self._optimistic_brightness = 0
-            self._optimistic_on = False
-            self.async_write_ha_state()
-            # Don't schedule clear — keep optimistic state until next toggle
-        else:
-            await client.send_light_command(bus, 1, bool_value=False)
-            self._optimistic_on = False
-            self.async_write_ha_state()
+        await client.send_light_command(bus, 1, bool_value=False)
+        self._optimistic_on = False
+        self.async_write_ha_state()
 
     def _handle_coordinator_update(self) -> None:
         """Clear optimistic state only when SCU confirms the commanded value."""

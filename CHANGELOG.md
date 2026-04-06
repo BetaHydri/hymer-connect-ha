@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.5.4] - 2026-04-06
+
+### Removed
+
+- **Group switch light entities** — Removed "All Wohnen" (bus 24) and "All Privat" (bus 15) group switch entities. These used hardware group toggles (sid=1) that behaved unpredictably. Use HA light groups instead for reliable group control of individual lights
+
+### Changed
+
+- **Simplified light code** — Removed `use_brightness_for_on_off` flag and all associated branching logic. All 8 lights now use the same simple on/off + brightness + color_temp control path
+
 ## [2.5.3] - 2026-04-06
 
 ### Fixed
