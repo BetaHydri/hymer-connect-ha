@@ -113,8 +113,12 @@ views:
             name: Charger Active
           - entity: binary_sensor.hymer_hymer_connect_hymer_solar_active
             name: Solar Active
+          - entity: sensor.hymer_hymer_connect_hymer_solar_voltage
+            name: Solar Voltage
           - entity: sensor.hymer_hymer_connect_hymer_solar_current
             name: Solar Current
+          - entity: sensor.hymer_hymer_connect_hymer_solar_power
+            name: Solar Power
           - entity: sensor.hymer_hymer_connect_hymer_12
             name: Power Source
           - entity: binary_sensor.hymer_hymer_connect_hymer_solar_panel
@@ -130,10 +134,6 @@ views:
       - type: entities
         title: Temperatures
         entities:
-          - entity: sensor.hymer_hymer_connect_hymer_temperatur_2
-            name: Indoor
-          - entity: sensor.hymer_hymer_connect_hymer_temperatur_3
-            name: Outdoor
           - entity: sensor.hymer_hymer_connect_hymer_temperatur_5
             name: Ambient
       - type: entities
