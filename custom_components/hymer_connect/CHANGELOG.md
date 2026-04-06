@@ -40,154 +40,106 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [2.4.3] - 2026-04-06
 
-### Fixed
+> **Note:** Versions 2.2.1–2.4.3 were iterative development releases for light control stabilisation. The final stable result is captured in v2.5.x above. These entries are preserved for reference.
 
-- **Solar current sensor restored** — `(15, 2)` confirmed as solar current (READ with div10), not bedroom brightness. Light OFF + app showing 3.6A proves it. Restored `solar_current` sensor with `div10` transform
-- **Bedroom ambient brightness removed** — `brightness_path` removed since (15,2) reads solar current not brightness. Write commands (sid=2) still control brightness. Bedroom ambient now has on/off + color temp only
+<details>
+<summary><strong>v2.2.1–v2.4.3 development history</strong> (click to expand)</summary>
+
+### [2.4.3] — Solar current sensor restored
+
+- `(15, 2)` confirmed as solar current (READ with div10), not bedroom brightness. Light OFF + app showing 3.6A proves it. Restored `solar_current` sensor with `div10` transform
+- `brightness_path` removed since (15,2) reads solar current not brightness. Write commands (sid=2) still control brightness. Bedroom ambient now has on/off + color temp only
 - Bus 15 is dual-purpose: READ sid=2 = solar current, WRITE sid=2 = bedroom ambient brightness
 
-## [2.4.2] - 2026-04-06
+### [2.4.2] — Brightness/color temp persist until SCU confirms
 
-### Fixed
+- Optimistic brightness and color temp are no longer cleared on the 5s timer. They persist until the SCU pushes the updated value via SignalR (within ~5% tolerance)
 
-- **Brightness/color temp not reverting to stale SCU values** — optimistic brightness and color temp are no longer cleared on the 5s timer. They persist until the SCU pushes the updated value via SignalR (within ~5% tolerance). This prevents the slider from snapping back to old values after adjustment
+### [2.4.1] — Bedroom ambient on/off restored
 
-## [2.4.1] - 2026-04-06
+- Removed `use_brightness_for_on_off` which was preventing sid=1 from being sent. Bedroom ambient now sends sid=1 for on/off like all other lights
 
-### Fixed
+### [2.4.0] — Optimistic hold reduced to 5s
 
-- **Bedroom ambient on/off restored** — removed `use_brightness_for_on_off` which was preventing sid=1 from being sent. Bedroom ambient now sends sid=1 for on/off like all other lights. Note: sid=1 on bus 15 is the private area group switch (same as the Privat Group light entity) — this is a hardware limitation
+- Normal lights now refresh state after 5 seconds instead of 30. Bedroom ambient uses permanent optimistic (no timer)
 
-## [2.4.0] - 2026-04-06
+### [2.3.9] — Bedroom ambient on/off via brightness
 
-### Changed
+- Re-enabled `use_brightness_for_on_off` for bedroom ambient (bus 15). On/off toggle now sends brightness=100/0 instead of sid=1 (avoiding group switch)
 
-- **Optimistic hold reduced to 5s** — normal lights now refresh state after 5 seconds instead of 30. Bedroom ambient uses permanent optimistic (no timer)
+### [2.3.8] — Lights don't turn on (reverted)
 
-## [2.3.9] - 2026-04-06
+- v2.3.7 broke all lights because HA always includes ATTR_BRIGHTNESS in kwargs for COLOR_TEMP/BRIGHTNESS modes. Reverted: normal lights always send sid=1 on turn_on
 
-### Fixed
+### [2.3.7] — Brightness slider clears optimistic on state
 
-- **Bedroom ambient on/off via brightness** — re-enabled `use_brightness_for_on_off` for bedroom ambient (bus 15). On/off toggle now sends brightness=100/0 instead of sid=1 (avoiding group switch). Optimistic state is permanent (never auto-clears) so the on/off state stays until the next explicit toggle
-- Other lights unchanged — still use sid=1 for on/off
+- Attribute-only changes don't schedule optimistic clear, preserving the on state from the previous toggle
 
-## [2.3.8] - 2026-04-06
+### [2.3.6] — Optimistic hold increased to 30s
 
-### Fixed
+- Bedroom ambient was falling back to off after 10s because bus 15 sid=1 read state doesn't reflect individual on/off
 
-- **Lights don't turn on** — v2.3.7 broke all lights because HA always includes ATTR_BRIGHTNESS in kwargs for COLOR_TEMP/BRIGHTNESS modes, so `has_attrs` was always True and sid=1 was never sent. Reverted: normal lights always send sid=1 on turn_on, regardless of whether brightness/color_temp kwargs are present
+### [2.3.5] — Sliders don't trigger on/off
 
-## [2.3.7] - 2026-04-06
+- `optimistic_on` only set when sid=1 is actually sent (pure on/off toggle). Adjusting brightness/color temp on an off light only stores the value without toggling
 
-### Fixed
+### [2.3.4] — Brightness/color temp slider doesn't send sid=1
 
-- **Brightness slider clears optimistic on state** — adjusting brightness was scheduling a clear that wiped the optimistic_on from the toggle. Now attribute-only changes don't schedule optimistic clear, preserving the on state from the previous toggle
+- For ALL lights, sid=1 (on) is only sent for pure on/off toggle (no attributes). Prevents bus 15 group switch from triggering when adjusting sliders
 
-## [2.3.6] - 2026-04-06
+### [2.3.3] — Bedroom ambient uses normal sid=1 on/off
 
-### Fixed
+- Removed `use_brightness_for_on_off`. Bus 15 sid=1 is the private area group switch — hardware limitation
 
-- **Optimistic hold increased to 30s** — bedroom ambient was falling back to off after 10s because bus 15 sid=1 read state doesn't reflect individual on/off. 30s hold gives enough time for normal use without bounce-back
-- Note: brightness slider showing 0 when light is off is normal HA behavior — the stored value on the SCU is preserved
+### [2.3.2] — Bedroom ambient is_on uses brightness
 
-## [2.3.5] - 2026-04-06
+- For `use_brightness_for_on_off` lights only, `is_on` checks brightness > 0
 
-### Fixed
+### [2.3.1] — Private area group switch
 
-- **Sliders don't turn light on anymore** — optimistic_on was always set to True in async_turn_on, causing HA to briefly show the light as on when just moving a slider. Now optimistic_on is only set when sid=1 is actually sent (pure on/off toggle). Adjusting brightness/color temp on an off light only stores the value without toggling the light state
+- Bus 15 sid=1 controls all private area lights. Added as 10th light entity "Privat all lights"
 
-## [2.3.4] - 2026-04-06
+### [2.3.0] — Bedroom ambient always shows on (fixed)
 
-### Fixed
+- Brightness-based is_on was reading non-zero brightness even when light is off. Reverted is_on to always use on_off_path
 
-- **Brightness/color temp slider doesn't send sid=1 anymore** — for ALL lights, sid=1 (on) is only sent for pure on/off toggle (no attributes). When adjusting brightness or color temp sliders, only sid=2/sid=3 are sent. This prevents bus 15 group switch from being triggered when just adjusting bedroom ambient brightness/color temp
+### [2.2.9] — All lights bouncing off (reverted)
 
-## [2.3.3] - 2026-04-06
+- v2.2.7 changed `is_on` for ALL lights with brightness_path — broke lights where brightness reads 0 when off. Reverted to on_off_path
 
-### Changed
+### [2.2.8] — Bedroom ambient sid 1 is group switch
 
-- **Bedroom ambient uses normal sid=1 on/off** — removed `use_brightness_for_on_off`. The app confirms brightness doesn't control on/off (min 1%, separate toggle). Bus 15 sid=1 is the private area group switch, but that's how the hardware works. Toggling bedroom ambient on/off will also toggle other private lights. Use the "Privat all lights" entity for intentional group control, or use brightness/color temp sliders for individual adjustment without toggling
+- Added `use_brightness_for_on_off` flag for bus 15 to avoid triggering the private area group switch
 
-## [2.3.2] - 2026-04-06
+### [2.2.7] — Bedroom ambient on/off state
 
-### Fixed
+- For lights with brightness_path, `is_on` derives from brightness > 0 instead of on_off_path
 
-- **Bedroom ambient is_on** — for `use_brightness_for_on_off` lights only, `is_on` now checks brightness > 0 (since sid=1 is the group switch and doesn't reflect individual state). All other lights still use on_off_path
+### [2.2.6] — Bedroom ambient brightness restored
 
-## [2.3.1] - 2026-04-06
+- App screenshot confirms bus 15 has brightness (26%) + color temp (100). The `div10` transform was the bug
 
-### Added
+### [2.2.5] — Bedroom ambient bounce-off root cause
 
-- **Private area group switch** — bus 15 sid=1 controls all private area lights (bedroom ambient, nightlight, bathroom, bedroom overhead). Added as 10th light entity "Privat all lights"
-- Dashboard: Master Switches section now shows both "All Wohnen" and "All Privat" side by side
+- Bus 15 sid 2 is NOT brightness, it's solar current. Removed brightness_path from bedroom ambient
 
-## [2.3.0] - 2026-04-06
+### [2.2.4] — Bedroom ambient still bouncing off
 
-### Fixed
+- Reordered command sequence: send on (sid=1) first, then brightness, then color temp. Increased optimistic hold to 10s
 
-- **Bedroom ambient always shows on** — brightness-based is_on was reading non-zero brightness even when light is off (residual value). Reverted is_on to always use on_off_path for ALL lights (reading works correctly). The `use_brightness_for_on_off` flag now only affects the WRITE path (commands), not the READ path (state detection)
+### [2.2.3] — Light turns off immediately after on
 
-## [2.2.9] - 2026-04-06
+- Immediate `async_request_refresh()` was reading stale SCU state. Added optimistic state with 5s hold
 
-### Fixed
+### [2.2.2] — Bedroom ambient brightness + color temp
 
-- **Regression: all lights bouncing off** — v2.2.7 changed `is_on` to use brightness > 0 for ALL lights with brightness_path, but this broke lights where brightness reads 0 when off even though on_off_path reads True. Reverted: only bedroom ambient (use_brightness_for_on_off=True) uses brightness-based detection, all other lights use on_off_path as before
+- `(15, 2)` mapped to brightness, `(15, 3)` to color temp
 
-## [2.2.8] - 2026-04-06
+### [2.2.1] — Night light brightness confirmed
 
-### Fixed
+- `(16, 2)` remapped from `water_pump_status` to `light_nightlight_brightness`
 
-- **Bedroom ambient sid 1 is a private area group switch** — sending on/off via sid 1 on bus 15 toggles ALL private area lights (bath, bedroom). Now uses brightness to control on/off instead:
-  - Turn on: sets brightness > 0 (skips sid=1)
-  - Turn off: sets brightness = 0 (skips sid=1)
-  - Added `use_brightness_for_on_off` flag to entity description for bus 15
-
-## [2.2.7] - 2026-04-06
-
-### Fixed
-
-- **Bedroom ambient on/off state** — bus 15 sid 1 doesn't reliably report on/off state. For lights with brightness_path, `is_on` now derives from brightness > 0 instead of the on_off_path. This prevents the bounce-off after the optimistic window expires
-
-## [2.2.6] - 2026-04-06
-
-### Fixed
-
-- **Bedroom ambient brightness restored** — app screenshot confirms bus 15 has brightness (Helligkeit 26%) + color temp (Lichttemperatur 100). The `div10` transform was the bug: raw brightness value 26 was stored as 2.6 (looked like solar amps). Removed `div10` transform from `(15, 2)` and restored as `light_bedroom_ambient_brightness`
-- Note: `solar_current` sensor is removed again — bus 15 sid 2 is confirmed as brightness, not solar
-
-## [2.2.5] - 2026-04-06
-
-### Fixed
-
-- **Bedroom ambient bounce-off root cause** — bus 15 sid 2 is NOT brightness, it's solar current. Sending brightness commands to sid 2 was confusing the SCU and turning the light off
-  - Reverted `(15, 2)` back to `solar_current` (restoring solar current + solar_active sensors)
-  - Removed `brightness_path` from bedroom ambient — this light has on/off + color temp only
-  - Brightness commands now gated on `brightness_path` existing (won't send sid=2 to lights without it)
-
-## [2.2.4] - 2026-04-06
-
-### Fixed
-
-- **Bedroom ambient still bouncing off** — reordered command sequence: send `on` (sid=1) first, then brightness (sid=2), then color temp (sid=3). SCU needs the light on before accepting attribute changes
-- Increased optimistic hold time from 5s to 10s to give SCU more time to process and reflect state
-
-## [2.2.3] - 2026-04-06
-
-### Fixed
-
-- **Light turns off immediately after turning on** — immediate `async_request_refresh()` was reading stale SCU state before the command was processed. Now uses optimistic state: UI stays in the commanded state for 5 seconds while the SCU processes, then refreshes to confirm
-
-## [2.2.2] - 2026-04-06
-
-### Fixed
-
-- **Bedroom ambient brightness + color temp** — `(15, 2)` remapped from `solar_current` to `light_bedroom_ambient_brightness`, `(15, 3)` from `solar_panel_temp` to `light_bedroom_ambient_color_temp`. Bedroom ambient now has brightness slider and warm↔cool color temp slider
-
-## [2.2.1] - 2026-04-06
-
-### Fixed
-
-- **Night light brightness confirmed** — `(16, 2)` remapped from `water_pump_status` to `light_nightlight_brightness`. Night light now has a working brightness slider (confirmed by live test)
+</details>
 
 ## [2.2.0] - 2026-04-06
 

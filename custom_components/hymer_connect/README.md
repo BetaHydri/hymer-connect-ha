@@ -12,6 +12,8 @@ Custom integration to connect your HYMER / Erwin Hymer Group motorhome or carava
 
 > **⚠️ Important:** Real-time sensor data (70+ entities: GPS, battery, doors, heater, fridge, etc.) requires an **EHG Remote Access Refresh Token**. This token must be captured **once** from your phone using mitmproxy during the initial setup. Without it, only basic vehicle metadata (model, VIN, year) is available. See [Obtaining the EHG Refresh Token](#obtaining-the-ehg-refresh-token) for the step-by-step guide.
 
+> **v2.5** — **Solar monitoring + light control fixes!** Real-time solar voltage, current & power from the Voltronic MPP260CI MPPT charger. Protobuf decoder overhaul: 129 sensors decoded per push (was 20). Light controls stabilised with optimistic state management.
+
 > **v2.0** — **Light controls!** Turn on/off 8 interior lights from Home Assistant. Real-time sensor data via SignalR. 140+ sensors including odometer, GPS, battery, temperatures, door/lock status, Truma heater, fridge, and more.
 
 ![HYMER Connect Integration in Home Assistant](https://raw.githubusercontent.com/BetaHydri/hymer-connect-ha/master/images/ha-screenshot.png)
@@ -32,7 +34,7 @@ All Erwin Hymer Group brands equipped with a **Smart Interface Unit (SIU)**:
 
 ## Features
 
-### 💡 Light Controls (NEW in v2.0)
+### 💡 Light Controls (v2.0+, stabilised in v2.5)
 
 Control your motorhome's interior lights directly from Home Assistant:
 
@@ -40,17 +42,33 @@ Control your motorhome's interior lights directly from Home Assistant:
 |-------|--------|
 | **Wohnen** (Living) | Ceiling Light, Ambient Light, Kitchen, Seating Overhead |
 | **Privat** (Private) | Bedroom Ambient, Night Light, Bathroom Ceiling, Bedroom Overhead |
+| **Group Switches** | All Wohnen, All Privat |
 
 - **On/Off toggle** for each light via the HA dashboard
+- **Brightness slider** (0–100%) for lights with dimmer support
+- **Color temperature** (2700 K warm – 6500 K daylight) for Living Ambient, Kitchen, and Bedroom Ambient
 - Commands sent in real-time via SignalR WebSocket to the SCU
+- **Optimistic state** — dashboard reflects the commanded state immediately; actual SCU state confirms via the next SignalR push
 - Works remotely — control lights from anywhere with internet access
+
+### ☀️ Solar Monitoring (NEW in v2.5)
+
+Real-time data from the **Voltronic MPP260CI** MPPT solar charger:
+
+| Sensor | Unit | Description |
+|--------|------|-------------|
+| Solar voltage | V | Panel voltage (bus 8, sid 2) |
+| Solar current | A | Charge current (bus 8, sid 3) |
+| Solar power | W | Computed voltage × current |
+| Solar active | on/off | Binary sensor — true when current > 0 |
+| Solar charger status | — | MPPT charger state |
 
 ### Real-Time Sensors (via SignalR, requires EHG Refresh Token)
 
 - **Vehicle** — odometer, speed, RPM, AdBlue level, fuel range, engine hours, coolant temp, gear
 - **Battery** — voltage, current, SOC (%), chassis battery voltage, charge phase, charger status, battery type
-- **Solar** — panel voltage (V), charge current (A), computed power (W), charger status, solar active (from Voltronic MPP260CI)
-- **Water** — grey water level (%), grey water sensor
+- **Solar** — panel voltage (V), charge current (A), computed power (W), charger status, solar active (binary) — from Voltronic MPP260CI MPPT charger
+- **Water** — fresh water level (%), grey water level (%), grey water sensor
 - **Temperature** — ambient, AdBlue
 - **GPS** — coordinates, altitude, heading, satellites, signal quality, UTC time
 - **Doors** — driver, passenger, sliding, rear (open/closed)
