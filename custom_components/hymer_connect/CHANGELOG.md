@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.3.0] - 2026-04-06
+
+### Fixed
+
+- **Bedroom ambient always shows on** — brightness-based is_on was reading non-zero brightness even when light is off (residual value). Reverted is_on to always use on_off_path for ALL lights (reading works correctly). The `use_brightness_for_on_off` flag now only affects the WRITE path (commands), not the READ path (state detection)
+
 ## [2.2.9] - 2026-04-06
 
 ### Fixed

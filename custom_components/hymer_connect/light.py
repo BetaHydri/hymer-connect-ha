@@ -173,13 +173,6 @@ class HymerConnectLight(
             return self._optimistic_on
         if self.coordinator.data is None:
             return None
-        # For brightness-controlled lights (bus 15), derive on/off from brightness > 0
-        if self.entity_description.use_brightness_for_on_off:
-            val = _resolve_path(
-                self.coordinator.data, self.entity_description.brightness_path
-            )
-            if val is not None and isinstance(val, (int, float)):
-                return val > 0
         val = _resolve_path(self.coordinator.data, self.entity_description.on_off_path)
         if val is None:
             return None
