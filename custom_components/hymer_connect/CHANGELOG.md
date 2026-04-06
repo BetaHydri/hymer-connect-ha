@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.3.1] - 2026-04-06
+
+### Added
+
+- **Private area group switch** — bus 15 sid=1 controls all private area lights (bedroom ambient, nightlight, bathroom, bedroom overhead). Added as 10th light entity "Privat all lights"
+- Dashboard: Master Switches section now shows both "All Wohnen" and "All Privat" side by side
+
 ## [2.3.0] - 2026-04-06
 
 ### Fixed

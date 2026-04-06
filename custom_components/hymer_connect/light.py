@@ -115,6 +115,13 @@ LIGHT_DESCRIPTIONS: tuple[HymerLightEntityDescription, ...] = (
         on_off_path="signalr_sensors.light_outside",
         icon="mdi:lightbulb-group",
     ),
+    HymerLightEntityDescription(
+        key="light_privat_group",
+        translation_key="light_privat_group",
+        bus_id=15,
+        on_off_path="signalr_sensors.light_bedroom_ambient",
+        icon="mdi:lightbulb-group",
+    ),
 )
 
 

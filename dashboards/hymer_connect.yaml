@@ -239,17 +239,24 @@ views:
     path: lights
     icon: mdi:lightbulb-group
     cards:
-      # ─── Master Switch ───
+      # ─── Master Switches ───
       - type: vertical-stack
         cards:
           - type: markdown
-            content: "## ⚡ Master"
+            content: "## ⚡ Master Switches"
             card_mod:
               style: |
                 ha-card { background: none; box-shadow: none; padding: 0 0 0 4px; }
-          - type: light
-            entity: light.hymer_hymer_connect_hymer_wohnen_all_lights
-            name: All Wohnen Lights
+          - type: grid
+            columns: 2
+            square: false
+            cards:
+              - type: light
+                entity: light.hymer_hymer_connect_hymer_wohnen_all_lights
+                name: All Wohnen
+              - type: light
+                entity: light.hymer_hymer_connect_hymer_privat_all_lights
+                name: All Privat
 
       # ─── Living Area ───
       - type: vertical-stack
