@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.2.7] - 2026-04-06
+
+### Fixed
+
+- **Bedroom ambient on/off state** — bus 15 sid 1 doesn't reliably report on/off state. For lights with brightness_path, `is_on` now derives from brightness > 0 instead of the on_off_path. This prevents the bounce-off after the optimistic window expires
+
 ## [2.2.6] - 2026-04-06
 
 ### Fixed
