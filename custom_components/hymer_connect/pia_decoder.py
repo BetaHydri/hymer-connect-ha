@@ -239,12 +239,9 @@ _PIA_REQUESTS = (
     "EhcItPYkEgd2MC4zMi4wGNv5ws4GYgIKAA==",
     "EhcIjI8GEgd2MC4zMi4wGNv5ws4GSgIKAA==",
     "EhUIjekiEgd2MC4zMi4wGNz5ws4GegA=",
-    "Eh8I29wPEgd2MC4zMi4wGOn5ws4GIgoSCAoGCAEQDygB",
-    "Eh8IibUiEgd2MC4zMi4wGO75ws4GIgoSCAoGCAEQDygA",
-    "Ei4I9vYmEgd2MC4zMi4wGPb5ws4GIhkSFwoJCAUQOiIDRUNPCgoIBBA6IgRCb3Ro",
-    "Ei4I+qQIEgd2MC4zMi4wGPz5ws4GIhkSFwoJCAUQOiIDT0ZGCgoIBBA6IgRCb3Ro",
-    "Eh8I9v8UEgd2MC4zMi4wGIH6ws4GIgoSCAoGCAIQIigB",
-    "Eh8IveYQEgd2MC4zMi4wGIL6ws4GIgoSCAoGCAIQIigA",
+    # Entries 7-12 removed: were device COMMANDS (light ON/OFF, fridge ECO/OFF,
+    # water valve ON/OFF) captured during an app session, NOT subscriptions.
+    # Re-sending them on every resubscribe would toggle devices every 60 seconds.
 )
 
 
@@ -252,9 +249,8 @@ def build_subscription_requests() -> list[str]:
     """Build PiaRequest payloads for sensor data subscription.
 
     Returns a list of Base64-encoded protobuf payloads ready to send
-    as PiaRequest arguments.  All 13 requests are needed — the first
-    ones initialise different sensor groups before the big subscription
-    triggers the full data flow.
+    as PiaRequest arguments.  The 7 requests initialise different
+    sensor groups and trigger the full data flow from the SCU.
     """
     return list(_PIA_REQUESTS)
 
@@ -314,7 +310,6 @@ def build_light_command(
     # Nest: sensor_data inside field1 of sub2, inside field2 of inner
     sub2 = _encode_bytes_field(1, sensor_data)
     inner = _encode_bytes_field(2, sub2)
-    command = _encode_bytes_field(2, inner)  # field 4 placeholder → using field 2
 
     # Build wrapper: msg_id, version, timestamp, command
     import random

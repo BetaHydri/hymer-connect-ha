@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.5.1] - 2026-04-06
+
+### Fixed
+
+- **Light controls broken — commands replayed on every resubscribe** — `_PIA_REQUESTS` contained 6 device command payloads (light ON/OFF on bus 15, fridge ECO/OFF on bus 58, water valve ON/OFF on bus 34) that were accidentally captured from an app session alongside the 7 legitimate subscription payloads. Every 60-second resubscribe cycle re-sent these commands, causing lights to toggle ON then immediately OFF. Removed the 6 command payloads, keeping only the 7 subscription/init requests
+- **Dead variable in `build_light_command`** — Removed unused `command` variable
+
 ## [2.5.0] - 2026-04-06
 
 ### Fixed
