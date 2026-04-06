@@ -65,11 +65,9 @@ SENSOR_MAP: dict[tuple[int, int], tuple[str, str | None, str | None]] = {
     (3, 21): ("solar_charger_status", None, None),
     (3, 22): ("switch_22", None, None),
     # Light: Schlafzimmer Ambientebeleuchtung / Bedroom ambient (bus 15)
-    # NOTE: Bus 15 is shared - read values show solar charger data,
-    # write commands control the bedroom ambient light
     (15, 1): ("light_bedroom_ambient", None, None),
-    (15, 2): ("solar_current", "A", "div10"),
-    (15, 3): ("solar_panel_temp", None, None),
+    (15, 2): ("light_bedroom_ambient_brightness", "%", None),
+    (15, 3): ("light_bedroom_ambient_color_temp", None, None),
     # Light: Badezimmer Deckenbeleuchtung / Bathroom ceiling (bus 19)
     (19, 1): ("light_bathroom_ceiling", None, None),
     (19, 2): ("light_bathroom_ceiling_brightness", "%", None),

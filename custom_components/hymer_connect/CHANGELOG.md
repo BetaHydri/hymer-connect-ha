@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.2.2] - 2026-04-06
+
+### Fixed
+
+- **Bedroom ambient brightness + color temp** — `(15, 2)` remapped from `solar_current` to `light_bedroom_ambient_brightness`, `(15, 3)` from `solar_panel_temp` to `light_bedroom_ambient_color_temp`. Bedroom ambient now has brightness slider and warm↔cool color temp slider
+
 ## [2.2.1] - 2026-04-06
 
 ### Fixed

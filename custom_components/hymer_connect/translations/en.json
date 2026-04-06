@@ -220,6 +220,12 @@
       },
       "light_nightlight_brightness": {
         "name": "Night light brightness"
+      },
+      "light_bedroom_ambient_brightness": {
+        "name": "Bedroom ambient brightness"
+      },
+      "light_bedroom_ambient_color_temp": {
+        "name": "Bedroom ambient color temp"
       }
     },
     "binary_sensor": {

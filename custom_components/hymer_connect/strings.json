@@ -84,6 +84,8 @@
       "light_bathroom_ceiling_brightness": { "name": "Bathroom ceiling brightness" },
       "light_bedroom_overhead_brightness": { "name": "Bedroom overhead brightness" },
       "light_nightlight_brightness": { "name": "Night light brightness" },
+      "light_bedroom_ambient_brightness": { "name": "Bedroom ambient brightness" },
+      "light_bedroom_ambient_color_temp": { "name": "Bedroom ambient color temp" },
       "tire_pressure": { "name": "Tyre pressure" },
       "alarm_battery": { "name": "Alarm battery" },
       "scu_firmware": { "name": "SCU firmware" },
