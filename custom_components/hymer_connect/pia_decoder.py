@@ -112,9 +112,8 @@ SENSOR_MAP: dict[tuple[int, int], tuple[str, str | None, str | None]] = {
     (34, 6): ("heat_ctrl_6", None, None),
     (34, 7): ("heat_setpoint_raw", None, "div1000"),
     # Light: Nachtlicht / Night light (bus 16)
-    # NOTE: Bus 16 is shared - sid 1 also controls Nachtlicht
     (16, 1): ("light_nightlight", None, None),
-    (16, 2): ("water_pump_status", None, None),
+    (16, 2): ("light_nightlight_brightness", "%", None),
     # Light: Küchenbeleuchtung / Kitchen (bus 21)
     (21, 1): ("light_kitchen", None, None),
     (21, 2): ("light_kitchen_brightness", "%", None),

@@ -84,6 +84,7 @@ LIGHT_DESCRIPTIONS: tuple[HymerLightEntityDescription, ...] = (
         translation_key="light_nightlight",
         bus_id=16,
         on_off_path="signalr_sensors.light_nightlight",
+        brightness_path="signalr_sensors.light_nightlight_brightness",
         icon="mdi:lightbulb-night",
     ),
     HymerLightEntityDescription(

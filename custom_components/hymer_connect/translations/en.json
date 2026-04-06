@@ -217,6 +217,9 @@
       },
       "light_bedroom_overhead_brightness": {
         "name": "Bedroom overhead brightness"
+      },
+      "light_nightlight_brightness": {
+        "name": "Night light brightness"
       }
     },
     "binary_sensor": {
