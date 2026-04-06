@@ -79,6 +79,7 @@ LIGHT_DESCRIPTIONS: tuple[HymerLightEntityDescription, ...] = (
         translation_key="light_bedroom_ambient",
         bus_id=15,
         on_off_path="signalr_sensors.light_bedroom_ambient",
+        brightness_path="signalr_sensors.light_bedroom_ambient_brightness",
         color_temp_path="signalr_sensors.light_bedroom_ambient_color_temp",
         icon="mdi:wall-sconce-flat",
     ),
@@ -306,12 +307,17 @@ class HymerConnectLight(
         super()._handle_coordinator_update()
 
     def _schedule_clear_optimistic(self) -> None:
-        """Clear optimistic on/off state after delay and refresh from SCU."""
+        """Clear optimistic on/off state after delay.
+
+        Only clears the optimistic flag — does NOT trigger a coordinator
+        refresh.  The next regular poll (60 s) or the next SignalR push
+        will update the entity with the real SCU state.  Triggering an
+        immediate refresh caused a resubscribe that returned stale cached
+        data from the SCU, making the light appear to turn off again.
+        """
         async def _clear() -> None:
-            await asyncio.sleep(5)
+            await asyncio.sleep(10)
             self._optimistic_on = None
-            # Don't clear brightness/color_temp — let coordinator update naturally
-            # to avoid reverting to stale SCU values
-            await self.coordinator.async_request_refresh()
+            self.async_write_ha_state()
 
         asyncio.ensure_future(_clear())
