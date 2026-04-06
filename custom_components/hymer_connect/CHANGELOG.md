@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.3.3] - 2026-04-06
+
+### Changed
+
+- **Bedroom ambient uses normal sid=1 on/off** — removed `use_brightness_for_on_off`. The app confirms brightness doesn't control on/off (min 1%, separate toggle). Bus 15 sid=1 is the private area group switch, but that's how the hardware works. Toggling bedroom ambient on/off will also toggle other private lights. Use the "Privat all lights" entity for intentional group control, or use brightness/color temp sliders for individual adjustment without toggling
+
 ## [2.3.2] - 2026-04-06
 
 ### Fixed
