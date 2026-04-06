@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.4.3] - 2026-04-06
+
+### Fixed
+
+- **Solar current sensor restored** — `(15, 2)` confirmed as solar current (READ with div10), not bedroom brightness. Light OFF + app showing 3.6A proves it. Restored `solar_current` sensor with `div10` transform
+- **Bedroom ambient brightness removed** — `brightness_path` removed since (15,2) reads solar current not brightness. Write commands (sid=2) still control brightness. Bedroom ambient now has on/off + color temp only
+- Bus 15 is dual-purpose: READ sid=2 = solar current, WRITE sid=2 = bedroom ambient brightness
+
 ## [2.4.2] - 2026-04-06
 
 ### Fixed

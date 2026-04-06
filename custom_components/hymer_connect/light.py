@@ -79,7 +79,6 @@ LIGHT_DESCRIPTIONS: tuple[HymerLightEntityDescription, ...] = (
         translation_key="light_bedroom_ambient",
         bus_id=15,
         on_off_path="signalr_sensors.light_bedroom_ambient",
-        brightness_path="signalr_sensors.light_bedroom_ambient_brightness",
         color_temp_path="signalr_sensors.light_bedroom_ambient_color_temp",
         icon="mdi:wall-sconce-flat",
     ),
