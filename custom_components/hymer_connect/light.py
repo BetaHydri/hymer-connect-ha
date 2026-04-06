@@ -215,6 +215,13 @@ class HymerConnectLight(
             _LOGGER.warning("Cannot control light - SignalR not connected")
             return
         bus = self.entity_description.bus_id
+        # Send on command first, then brightness/color_temp
+        # (SCU needs the light on before accepting attribute changes)
+        await client.send_light_command(bus, 1, bool_value=True)
+        if ATTR_BRIGHTNESS in kwargs:
+            pct = min(100, max(0, int(kwargs[ATTR_BRIGHTNESS] * 100 / 255)))
+            await client.send_light_command(bus, 2, uint_value=pct)
+            self._optimistic_brightness = kwargs[ATTR_BRIGHTNESS]
         if ATTR_COLOR_TEMP_KELVIN in kwargs:
             kelvin = kwargs[ATTR_COLOR_TEMP_KELVIN]
             pct = min(
@@ -230,11 +237,6 @@ class HymerConnectLight(
             )
             await client.send_light_command(bus, 3, uint_value=pct)
             self._optimistic_color_temp = kelvin
-        if ATTR_BRIGHTNESS in kwargs:
-            pct = min(100, max(0, int(kwargs[ATTR_BRIGHTNESS] * 100 / 255)))
-            await client.send_light_command(bus, 2, uint_value=pct)
-            self._optimistic_brightness = kwargs[ATTR_BRIGHTNESS]
-        await client.send_light_command(bus, 1, bool_value=True)
         self._optimistic_on = True
         self.async_write_ha_state()
         self._schedule_clear_optimistic()
@@ -253,7 +255,7 @@ class HymerConnectLight(
     def _schedule_clear_optimistic(self) -> None:
         """Clear optimistic state after delay and refresh from SCU."""
         async def _clear() -> None:
-            await asyncio.sleep(5)
+            await asyncio.sleep(10)
             self._optimistic_on = None
             self._optimistic_brightness = None
             self._optimistic_color_temp = None

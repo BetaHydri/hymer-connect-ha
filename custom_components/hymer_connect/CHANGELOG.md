@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.2.4] - 2026-04-06
+
+### Fixed
+
+- **Bedroom ambient still bouncing off** — reordered command sequence: send `on` (sid=1) first, then brightness (sid=2), then color temp (sid=3). SCU needs the light on before accepting attribute changes
+- Increased optimistic hold time from 5s to 10s to give SCU more time to process and reflect state
+
 ## [2.2.3] - 2026-04-06
 
 ### Fixed
