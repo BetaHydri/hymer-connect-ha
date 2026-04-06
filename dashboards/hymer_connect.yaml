@@ -1,14 +1,17 @@
 # HYMER Connect Dashboard for Home Assistant
-# Updated to match actual HA entity IDs (v1.8.0, German locale)
+# Updated for v2.5.4 — matches actual HA entity IDs (German locale)
 #
 # Usage:
 #   1. Go to Settings > Dashboards > + Add Dashboard
 #   2. Open the dashboard > Edit > three dots > Raw configuration editor
 #   3. Paste this content and save
+#
+# Note: The "Master Switches" (All Wohnen / All Privat) require HA light groups.
+# Create them via Settings > Helpers > Light group before using this dashboard.
+# See dashboards/README.md for setup instructions.
 
 title: HYMER Connect
 views:
-  # ── Page 1: Vehicle Overview ──
   - title: Vehicle
     path: vehicle
     icon: mdi:rv-truck
@@ -61,12 +64,6 @@ views:
             name: Handbrake
           - entity: binary_sensor.hymer_hymer_connect_hymer_2
             name: Cruise Control
-          - entity: binary_sensor.hymer_hymer_connect_hymer_sicherheit
-            name: Alarm Armed
-          - entity: sensor.hymer_hymer_connect_hymer_batterie
-            name: Alarm Battery
-
-  # ── Page 2: Power & Battery ──
   - title: Power
     path: power
     icon: mdi:battery-charging
@@ -89,7 +86,7 @@ views:
         severity:
           green: 12.4
           yellow: 11.8
-          red: 11.0
+          red: 11
         needle: true
       - type: entities
         title: Habitation Battery
@@ -113,7 +110,7 @@ views:
             name: Charger Active
           - entity: binary_sensor.hymer_hymer_connect_hymer_solar_active
             name: Solar Active
-          - entity: sensor.hymer_hymer_connect_hymer_solar_voltage
+          - entity: sensor.hymer_hymer_connect_hymer_spannung
             name: Solar Voltage
           - entity: sensor.hymer_hymer_connect_hymer_solar_current
             name: Solar Current
@@ -125,8 +122,6 @@ views:
             name: Solar Panel Connected
           - entity: binary_sensor.hymer_hymer_connect_hymer_main_switch
             name: Main Switch
-
-  # ── Page 3: Climate & Heater ──
   - title: Climate
     path: climate
     icon: mdi:thermometer
@@ -162,8 +157,6 @@ views:
             name: Fridge Mode
           - entity: sensor.hymer_hymer_connect_hymer_22
             name: Fridge Status
-
-  # ── Page 4: Water ──
   - title: Water
     path: water
     icon: mdi:water
@@ -197,8 +190,6 @@ views:
             name: Grey Water Level
           - entity: binary_sensor.hymer_hymer_connect_hymer_water_pump
             name: Water Pump
-
-  # ── Page 5: Doors & Lights ──
   - title: Doors
     path: doors
     icon: mdi:car-door
@@ -216,8 +207,6 @@ views:
             name: Rear Door
           - entity: binary_sensor.hymer_hymer_connect_hymer_lock
             name: Lock Status
-          - entity: binary_sensor.hymer_hymer_connect_hymer_4
-            name: Step Retracted
       - type: entities
         title: Vehicle Lights
         entities:
@@ -233,39 +222,36 @@ views:
             name: Fog Rear
           - entity: binary_sensor.hymer_hymer_connect_hymer_3
             name: Turn Signal
-
-  # ── Page 6: Interior Lights (on/off + brightness + color temp) ──
   - title: Lights
     path: lights
     icon: mdi:lightbulb-group
     cards:
-      # ─── Master Switches ───
       - type: vertical-stack
         cards:
           - type: markdown
-            content: "## ⚡ Master Switches"
+            content: '## ⚡ Master Switches'
             card_mod:
-              style: |
-                ha-card { background: none; box-shadow: none; padding: 0 0 0 4px; }
+              style: >
+                ha-card { background: none; box-shadow: none; padding: 0 0 0
+                4px; }
           - type: grid
             columns: 2
             square: false
             cards:
               - type: light
-                entity: light.hymer_hymer_connect_hymer_wohnen_all_lights
+                entity: light.all_wohnen
                 name: All Wohnen
               - type: light
-                entity: light.hymer_hymer_connect_hymer_privat_all_lights
+                entity: light.all_privat
                 name: All Privat
-
-      # ─── Living Area ───
       - type: vertical-stack
         cards:
           - type: markdown
-            content: "## 🛋️ Living Area"
+            content: '## 🛋️ Living Area'
             card_mod:
-              style: |
-                ha-card { background: none; box-shadow: none; padding: 0 0 0 4px; }
+              style: >
+                ha-card { background: none; box-shadow: none; padding: 0 0 0
+                4px; }
           - type: grid
             columns: 2
             square: false
@@ -282,15 +268,14 @@ views:
               - type: light
                 entity: light.hymer_hymer_connect_hymer_seating_overhead
                 name: Seating
-
-      # ─── Bedroom & Bath ───
       - type: vertical-stack
         cards:
           - type: markdown
-            content: "## 🛏️ Bedroom & Bath"
+            content: '## 🛏️ Bedroom & Bath'
             card_mod:
-              style: |
-                ha-card { background: none; box-shadow: none; padding: 0 0 0 4px; }
+              style: >
+                ha-card { background: none; box-shadow: none; padding: 0 0 0
+                4px; }
           - type: grid
             columns: 2
             square: false
@@ -307,8 +292,6 @@ views:
               - type: light
                 entity: light.hymer_hymer_connect_hymer_bedroom_overhead
                 name: Bed Overhead
-
-  # ── Page 7: GPS & Location ──
   - title: GPS
     path: gps
     icon: mdi:map-marker
@@ -335,8 +318,6 @@ views:
             name: Signal Quality
           - entity: binary_sensor.hymer_hymer_connect_hymer_konnektivitat
             name: GPS Fix
-
-  # ── Page 8: System ──
   - title: System
     path: system
     icon: mdi:chip
