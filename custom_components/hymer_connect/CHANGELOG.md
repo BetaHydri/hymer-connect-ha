@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.3.6] - 2026-04-06
+
+### Fixed
+
+- **Optimistic hold increased to 30s** — bedroom ambient was falling back to off after 10s because bus 15 sid=1 read state doesn't reflect individual on/off. 30s hold gives enough time for normal use without bounce-back
+- Note: brightness slider showing 0 when light is off is normal HA behavior — the stored value on the SCU is preserved
+
 ## [2.3.5] - 2026-04-06
 
 ### Fixed
