@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.3.2] - 2026-04-06
+
+### Fixed
+
+- **Bedroom ambient is_on** — for `use_brightness_for_on_off` lights only, `is_on` now checks brightness > 0 (since sid=1 is the group switch and doesn't reflect individual state). All other lights still use on_off_path
+
 ## [2.3.1] - 2026-04-06
 
 ### Added
