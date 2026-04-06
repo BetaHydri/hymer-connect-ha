@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.2.6] - 2026-04-06
+
+### Fixed
+
+- **Bedroom ambient brightness restored** — app screenshot confirms bus 15 has brightness (Helligkeit 26%) + color temp (Lichttemperatur 100). The `div10` transform was the bug: raw brightness value 26 was stored as 2.6 (looked like solar amps). Removed `div10` transform from `(15, 2)` and restored as `light_bedroom_ambient_brightness`
+- Note: `solar_current` sensor is removed again — bus 15 sid 2 is confirmed as brightness, not solar
+
 ## [2.2.5] - 2026-04-06
 
 ### Fixed
