@@ -292,7 +292,7 @@ views:
                 entity: light.hymer_hymer_connect_hymer_bedroom_ambient
                 name: Bed Ambient
               - type: light
-                entity: light.hymer_hymer_connect_hymer_nightlight
+                entity: light.hymer_hymer_connect_hymer_night_light
                 name: Night Light
               - type: light
                 entity: light.hymer_hymer_connect_hymer_bathroom_ceiling
