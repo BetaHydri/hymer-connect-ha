@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.3.4] - 2026-04-06
+
+### Fixed
+
+- **Brightness/color temp slider doesn't send sid=1 anymore** — for ALL lights, sid=1 (on) is only sent for pure on/off toggle (no attributes). When adjusting brightness or color temp sliders, only sid=2/sid=3 are sent. This prevents bus 15 group switch from being triggered when just adjusting bedroom ambient brightness/color temp
+
 ## [2.3.3] - 2026-04-06
 
 ### Changed
