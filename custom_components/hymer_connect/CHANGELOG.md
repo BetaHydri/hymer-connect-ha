@@ -5,13 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.6.1] - 2026-04-07
+
+### Fixed
+
+- **Solar/sensor data going stale** — Reverted resubscription throttle from 5min back to every poll (60s). The SCU only pushes fresh sensor data in response to subscription requests — throttling resubscriptions caused sensors like solar voltage/current to show outdated values
+
 ## [2.6.0] - 2026-04-07
 
 ### Fixed
 
 - **Stale data / silent disconnection** — SignalR WebSocket connections silently died when the Azure token expired (~1h) and reconnection could fail indefinitely without backoff, leaving the dashboard stuck on stale data until HA reboot
 - **Excessive API calls** — REST metadata (VIN, model, URNs) was re-fetched on every 60s poll despite being static; now cached and refreshed every 10 minutes
-- **Aggressive resubscription** — PIA sensor subscriptions were re-sent every 60s even on healthy connections; now every 5 minutes to reduce SCU/API load
 
 ### Added
 

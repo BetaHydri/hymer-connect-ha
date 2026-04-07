@@ -27,7 +27,6 @@ _LOGGER = logging.getLogger(__name__)
 # Reconnection backoff constants
 _INITIAL_BACKOFF = 60  # 1 minute
 _MAX_BACKOFF = 900  # 15 minutes
-_RESUBSCRIBE_INTERVAL = 300  # 5 minutes between resubscriptions
 _REST_METADATA_INTERVAL = 600  # 10 minutes between full REST metadata refreshes
 
 
@@ -56,7 +55,6 @@ class HymerConnectCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self._signalr_data: dict[str, Any] = {}
         self._reconnect_backoff: int = _INITIAL_BACKOFF
         self._last_reconnect_attempt: float = 0.0
-        self._last_resubscribe: float = 0.0
         self._last_rest_metadata_refresh: float = 0.0
         self._cached_rest_data: dict[str, Any] = {}
         super().__init__(
@@ -216,14 +214,13 @@ class HymerConnectCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                     "SignalR reconnect backoff: %.0fs remaining", remaining
                 )
         else:
-            # Re-send PIA subscriptions periodically (not every poll)
-            since_last_resub = now - self._last_resubscribe
-            if since_last_resub >= _RESUBSCRIBE_INTERVAL:
-                try:
-                    await self._signalr.resubscribe()
-                    self._last_resubscribe = now
-                except Exception:
-                    _LOGGER.debug("PIA re-subscription failed", exc_info=True)
+            # Re-send PIA subscriptions on every poll to get fresh sensor data.
+            # The SCU only pushes updated values in response to subscription
+            # requests — without re-subscribing, data goes stale.
+            try:
+                await self._signalr.resubscribe()
+            except Exception:
+                _LOGGER.debug("PIA re-subscription failed", exc_info=True)
 
         # Merge REST + SignalR data
         signalr_ok = self._signalr.connected if self._signalr else False
