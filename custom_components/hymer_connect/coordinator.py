@@ -8,6 +8,7 @@ from __future__ import annotations
 
 from datetime import timedelta
 import logging
+import time
 from typing import Any
 
 import aiohttp
@@ -22,6 +23,12 @@ from .const import DEFAULT_SCAN_INTERVAL, DOMAIN
 from .signalr_client import HymerSignalRClient
 
 _LOGGER = logging.getLogger(__name__)
+
+# Reconnection backoff constants
+_INITIAL_BACKOFF = 60  # 1 minute
+_MAX_BACKOFF = 900  # 15 minutes
+_RESUBSCRIBE_INTERVAL = 300  # 5 minutes between resubscriptions
+_REST_METADATA_INTERVAL = 600  # 10 minutes between full REST metadata refreshes
 
 
 class HymerConnectCoordinator(DataUpdateCoordinator[dict[str, Any]]):
@@ -47,6 +54,11 @@ class HymerConnectCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self._ehg_refresh_token = ehg_refresh_token  # BLE-derived refresh token
         self._signalr: HymerSignalRClient | None = None
         self._signalr_data: dict[str, Any] = {}
+        self._reconnect_backoff: int = _INITIAL_BACKOFF
+        self._last_reconnect_attempt: float = 0.0
+        self._last_resubscribe: float = 0.0
+        self._last_rest_metadata_refresh: float = 0.0
+        self._cached_rest_data: dict[str, Any] = {}
         super().__init__(
             hass,
             _LOGGER,
@@ -78,11 +90,11 @@ class HymerConnectCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             _LOGGER.warning("No SCU URN — skipping SignalR")
             return
 
-        if self._signalr and self._signalr.connected:
+        if self._signalr and self._signalr.connected and not self._signalr.needs_reconnect:
             _LOGGER.debug("SignalR already connected")
             return
 
-        # Stop any existing dead connection first
+        # Stop any existing dead/stale connection first
         if self._signalr:
             _LOGGER.info("Stopping stale SignalR client before reconnect")
             await self.stop_signalr()
@@ -99,9 +111,18 @@ class HymerConnectCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         try:
             await self._signalr.start()
             _LOGGER.info("SignalR connected for %s", self._vehicle_urn)
+            # Reset backoff on successful connection
+            self._reconnect_backoff = _INITIAL_BACKOFF
         except HymerConnectApiError as err:
             _LOGGER.warning("SignalR connection failed: %s", err)
             self._signalr = None
+            # Increase backoff (exponential, capped)
+            self._reconnect_backoff = min(
+                self._reconnect_backoff * 2, _MAX_BACKOFF
+            )
+            _LOGGER.info(
+                "Next SignalR reconnect attempt in %ds", self._reconnect_backoff
+            )
 
     async def stop_signalr(self) -> None:
         """Stop the SignalR WebSocket connection."""
@@ -111,16 +132,29 @@ class HymerConnectCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
     async def _async_update_data(self) -> dict[str, Any]:
         """Fetch data from the REST API and merge with SignalR data."""
-        try:
-            rest_data = await self.api.get_vehicle_status()
-        except HymerConnectAuthError as err:
-            raise ConfigEntryAuthFailed(
-                f"Authentication error: {err}"
-            ) from err
-        except HymerConnectApiError as err:
-            raise UpdateFailed(
-                f"Error communicating with API: {err}"
-            ) from err
+        now = time.monotonic()
+
+        # Only refresh full REST metadata periodically (URNs, VIN, model are static)
+        needs_metadata_refresh = (
+            not self._cached_rest_data
+            or (now - self._last_rest_metadata_refresh) > _REST_METADATA_INTERVAL
+        )
+
+        if needs_metadata_refresh:
+            try:
+                rest_data = await self.api.get_vehicle_status()
+                self._cached_rest_data = rest_data
+                self._last_rest_metadata_refresh = now
+            except HymerConnectAuthError as err:
+                raise ConfigEntryAuthFailed(
+                    f"Authentication error: {err}"
+                ) from err
+            except HymerConnectApiError as err:
+                raise UpdateFailed(
+                    f"Error communicating with API: {err}"
+                ) from err
+        else:
+            rest_data = dict(self._cached_rest_data)
 
         # Store URNs from REST data if not set yet
         if not self._scu_urn and rest_data.get("vehicle"):
@@ -152,28 +186,44 @@ class HymerConnectCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         if not self._scu_urn and self._vehicle_urn:
             self._scu_urn = self._vehicle_urn
 
-        # Try to start/reconnect SignalR if not connected
+        # --- SignalR connection management ---
         signalr_connected = (
             self._signalr is not None and self._signalr.connected
         )
-        if not signalr_connected:
-            _LOGGER.info(
-                "SignalR not connected (obj=%s, connected=%s), attempting start",
-                self._signalr is not None,
-                self._signalr.connected if self._signalr else "N/A",
-            )
-            try:
-                await self.start_signalr()
-            except Exception:
-                _LOGGER.warning("SignalR connect attempt failed", exc_info=True)
+        needs_reconnect = (
+            self._signalr is not None and self._signalr.needs_reconnect
+        )
+
+        if not signalr_connected or needs_reconnect:
+            # Apply exponential backoff between reconnection attempts
+            since_last_attempt = now - self._last_reconnect_attempt
+            if since_last_attempt >= self._reconnect_backoff:
+                _LOGGER.info(
+                    "SignalR %s (obj=%s, connected=%s, needs_reconnect=%s), attempting start",
+                    "needs reconnect" if needs_reconnect else "not connected",
+                    self._signalr is not None,
+                    self._signalr.connected if self._signalr else "N/A",
+                    needs_reconnect,
+                )
+                self._last_reconnect_attempt = now
+                try:
+                    await self.start_signalr()
+                except Exception:
+                    _LOGGER.warning("SignalR connect attempt failed", exc_info=True)
+            else:
+                remaining = self._reconnect_backoff - since_last_attempt
+                _LOGGER.debug(
+                    "SignalR reconnect backoff: %.0fs remaining", remaining
+                )
         else:
-            # Re-send PIA subscriptions on each poll to get fresh sensor data.
-            # The SCU only sends updated values in response to subscription
-            # requests — without periodic re-subscribing, data goes stale.
-            try:
-                await self._signalr.resubscribe()
-            except Exception:
-                _LOGGER.debug("PIA re-subscription failed", exc_info=True)
+            # Re-send PIA subscriptions periodically (not every poll)
+            since_last_resub = now - self._last_resubscribe
+            if since_last_resub >= _RESUBSCRIBE_INTERVAL:
+                try:
+                    await self._signalr.resubscribe()
+                    self._last_resubscribe = now
+                except Exception:
+                    _LOGGER.debug("PIA re-subscription failed", exc_info=True)
 
         # Merge REST + SignalR data
         signalr_ok = self._signalr.connected if self._signalr else False

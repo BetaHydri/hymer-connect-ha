@@ -5,6 +5,21 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.6.0] - 2026-04-07
+
+### Fixed
+
+- **Stale data / silent disconnection** — SignalR WebSocket connections silently died when the Azure token expired (~1h) and reconnection could fail indefinitely without backoff, leaving the dashboard stuck on stale data until HA reboot
+- **Excessive API calls** — REST metadata (VIN, model, URNs) was re-fetched on every 60s poll despite being static; now cached and refreshed every 10 minutes
+- **Aggressive resubscription** — PIA sensor subscriptions were re-sent every 60s even on healthy connections; now every 5 minutes to reduce SCU/API load
+
+### Added
+
+- **Proactive connection recycling** — SignalR connection is proactively recycled after 50 minutes (before Azure token expiry at ~1h)
+- **Dead connection detection** — If no sensor data arrives for 10 minutes on a "connected" WebSocket, the connection is flagged as dead and recycled
+- **Exponential reconnection backoff** — Failed reconnection attempts use exponential backoff (60s → 120s → … → 15min cap) to avoid hammering the API when the server is unavailable
+- **Improved `connected` property** — Now checks actual WebSocket state (`ws.closed`) in addition to the internal flag
+
 ## [2.5.4] - 2026-04-06
 
 ### Removed

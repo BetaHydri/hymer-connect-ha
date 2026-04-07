@@ -9,6 +9,7 @@ from __future__ import annotations
 import asyncio
 import json
 import logging
+import time
 from typing import Any, Callable
 
 import aiohttp
@@ -24,6 +25,10 @@ SIGNALR_RECORD_SEPARATOR = "\x1e"
 MSG_TYPE_INVOCATION = 1
 MSG_TYPE_COMPLETION = 3
 MSG_TYPE_PING = 6
+
+# Connection health constants
+MAX_CONNECTION_AGE = 50 * 60  # 50 min — reconnect before Azure token expires (~1h)
+STALE_DATA_TIMEOUT = 10 * 60  # 10 min — no data = connection is likely dead
 
 
 class HymerSignalRClient:
@@ -51,11 +56,40 @@ class HymerSignalRClient:
         self._sensor_data: dict[str, Any] = {}
         self._connected = False
         self._signalr_token: str = ""
+        self._connected_at: float = 0.0  # monotonic timestamp of connection
+        self._last_data_received: float = 0.0  # monotonic timestamp of last data
 
     @property
     def connected(self) -> bool:
-        """Return True if the WebSocket is connected."""
-        return self._connected
+        """Return True if the WebSocket is connected and healthy."""
+        if not self._connected or not self._ws or self._ws.closed:
+            return False
+        return True
+
+    @property
+    def needs_reconnect(self) -> bool:
+        """Return True if the connection should be proactively recycled."""
+        if not self._connected:
+            return False
+        now = time.monotonic()
+        # Reconnect before Azure SignalR token expires
+        age = now - self._connected_at
+        if age > MAX_CONNECTION_AGE:
+            _LOGGER.info(
+                "SignalR connection age %.0fs exceeds max %ds — reconnect needed",
+                age, MAX_CONNECTION_AGE,
+            )
+            return True
+        # Detect dead connection (no data received for a long time)
+        if self._last_data_received > 0:
+            silent = now - self._last_data_received
+            if silent > STALE_DATA_TIMEOUT:
+                _LOGGER.warning(
+                    "No SignalR data for %.0fs — connection likely dead",
+                    silent,
+                )
+                return True
+        return False
 
     @property
     def sensor_data(self) -> dict[str, Any]:
@@ -153,6 +187,8 @@ class HymerSignalRClient:
             _LOGGER.warning("UpdateTokens failed, continuing without it")
 
         self._connected = True
+        self._connected_at = time.monotonic()
+        self._last_data_received = time.monotonic()
         _LOGGER.info("SignalR connected to datahub for %s", self._vehicle_urn)
 
         # Step 6: Send PiaRequest subscription to start receiving sensor data
@@ -313,6 +349,7 @@ class HymerSignalRClient:
             if b64_payload:
                 sensor_data = decode_pia_payload(b64_payload)
                 self._sensor_data.update(sensor_data)
+                self._last_data_received = time.monotonic()
                 _LOGGER.debug(
                     "PiaResponse: %d fields updated, keys=%s",
                     len(sensor_data),
