@@ -229,7 +229,7 @@ views:
       - type: vertical-stack
         cards:
           - type: markdown
-            content: '## ⚡ Master Switches'
+            content: "## ⚡ Master Switches"
             card_mod:
               style: >
                 ha-card { background: none; box-shadow: none; padding: 0 0 0
@@ -247,7 +247,7 @@ views:
       - type: vertical-stack
         cards:
           - type: markdown
-            content: '## 🛋️ Living Area'
+            content: "## 🛋️ Living Area"
             card_mod:
               style: >
                 ha-card { background: none; box-shadow: none; padding: 0 0 0
@@ -271,7 +271,7 @@ views:
       - type: vertical-stack
         cards:
           - type: markdown
-            content: '## 🛏️ Bedroom & Bath'
+            content: "## 🛏️ Bedroom & Bath"
             card_mod:
               style: >
                 ha-card { background: none; box-shadow: none; padding: 0 0 0
