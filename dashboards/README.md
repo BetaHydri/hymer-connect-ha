@@ -200,5 +200,5 @@ when the engine is off:
 
 | Sensor | Why no override |
 |--------|-----------------|
-| **DPF Status** | Soot load level persists after engine shutdown. The cached value may be outdated (for example, `0%` while the Mercedes service menu shows ~33%), but forcing it to `0` would not be correct either. This value only updates while the engine is running. The unit has been corrected to `%` in the integration (v2.6+). |
+| **DPF Status** | A binary status flag (`Normal` / `Regeneration`), not a soot load percentage. The value `0` ("Normal") is correct most of the time — it only changes to `1` ("Regeneration") during an active DPF regeneration cycle. The Mercedes service menu shows the actual soot load percentage, which is a different CAN signal not exposed by the Hymer SCU. |
 | **Coolant Temperature** | Temperature drops gradually; the cached value becomes stale over time but a hard override is not appropriate. |

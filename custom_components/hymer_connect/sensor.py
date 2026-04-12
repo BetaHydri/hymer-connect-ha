@@ -326,8 +326,6 @@ SIGNALR_SENSORS: tuple[HymerSensorEntityDescription, ...] = (
     HymerSensorEntityDescription(
         key="dpf_status",
         translation_key="dpf_status",
-        native_unit_of_measurement=PERCENTAGE,
-        state_class=SensorStateClass.MEASUREMENT,
         value_path="signalr_sensors.dpf_status",
         icon="mdi:car-exhaust",
     ),

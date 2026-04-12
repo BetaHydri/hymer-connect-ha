@@ -171,7 +171,7 @@ SENSOR_MAP: dict[tuple[int, int], tuple[str, str | None, str | None]] = {
     (99, 7): ("total_fuel_used", None, None),
     (99, 8): ("lithium_soc_2", "%", None),
     (99, 9): ("cruise_control", None, None),
-    (99, 10): ("dpf_status", "%", None),
+    (99, 10): ("dpf_status", None, None),
 }
 
 # Human-readable mappings for raw SCU string values
@@ -204,6 +204,7 @@ _VALUE_LABELS: dict[str, dict[str, str]] = {
 
 # Integer-to-string label maps for sensors that report numeric codes.
 _INT_LABELS: dict[str, dict[int, str]] = {
+    "dpf_status": {0: "Normal", 1: "Regeneration"},
     "fridge_mode": {0: "On", 1: "Eco", 2: "Boost", 8: "Off"},
     "fridge_status": {0: "Running", 1: "Off", 2: "Standby"},
 }
