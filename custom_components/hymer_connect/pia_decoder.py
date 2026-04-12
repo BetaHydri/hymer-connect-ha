@@ -171,7 +171,7 @@ SENSOR_MAP: dict[tuple[int, int], tuple[str, str | None, str | None]] = {
     (99, 7): ("total_fuel_used", None, None),
     (99, 8): ("lithium_soc_2", "%", None),
     (99, 9): ("cruise_control", None, None),
-    (99, 10): ("dpf_status", None, None),
+    (99, 10): ("dpf_status", "%", None),
 }
 
 # Human-readable mappings for raw SCU string values

@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.6.2] - 2026-04-12
+
+### Fixed
+
+- **DPF status missing unit** — Added `%` unit to DPF status sensor in PIA decoder and sensor definition. The Mercedes CAN bus reports DPF soot load as a percentage of maximum capacity
+
+### Added
+
+- **Stale CAN sensor workaround documentation** — Added dashboard README section with HA template sensor workarounds for stale cached CAN values (engine running, speed, RPM, engine torque) and known limitations (DPF status, coolant temperature)
+
 ## [2.5.4] - 2026-04-06
 
 ### Removed
