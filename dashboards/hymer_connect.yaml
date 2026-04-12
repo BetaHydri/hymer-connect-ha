@@ -28,7 +28,7 @@ views:
       - type: entities
         title: Driving
         entities:
-          - entity: sensor.hymer_hymer_connect_hymer_strecke
+          - entity: sensor.hymer_odometer
             name: Odometer
           - entity: sensor.hymer_speed_corrected
             name: Speed
@@ -36,7 +36,7 @@ views:
             name: RPM
           - entity: sensor.hymer_current_gear
             name: Current Gear
-          - entity: sensor.hymer_hymer_connect_hymer_temperatur
+          - entity: sensor.hymer_coolant_temp
             name: Coolant Temperature
           - entity: sensor.hymer_engine_hours
             name: Engine Hours
@@ -45,16 +45,16 @@ views:
       - type: entities
         title: Fuel & AdBlue
         entities:
-          - entity: sensor.hymer_hymer_connect_hymer_adblue_level
+          - entity: sensor.hymer_adblue_level
             name: AdBlue Level
-          - entity: sensor.hymer_hymer_connect_hymer_temperatur_6
+          - entity: sensor.hymer_adblue_temp
             name: AdBlue Temperature
           - entity: sensor.hymer_dpf_status
             name: DPF Status
       - type: entities
         title: Security
         entities:
-          - entity: binary_sensor.hymer_hymer_connect_hymer_lock
+          - entity: binary_sensor.hymer_lock_status
             name: Lock Status
           - entity: sensor.hymer_ignition
             name: Ignition
@@ -69,7 +69,7 @@ views:
     icon: mdi:battery-charging
     cards:
       - type: gauge
-        entity: sensor.hymer_hymer_connect_hymer_battery_level
+        entity: sensor.hymer_battery_soc
         name: Battery SOC
         min: 0
         max: 100
@@ -79,7 +79,7 @@ views:
           red: 10
         needle: true
       - type: gauge
-        entity: sensor.hymer_hymer_connect_hymer_battery_voltage
+        entity: sensor.hymer_battery_voltage
         name: Battery Voltage
         min: 10
         max: 15
@@ -91,36 +91,36 @@ views:
       - type: entities
         title: Habitation Battery
         entities:
-          - entity: sensor.hymer_hymer_connect_hymer_battery_voltage
+          - entity: sensor.hymer_battery_voltage
             name: Battery Voltage
-          - entity: sensor.hymer_hymer_connect_hymer_stromstarke
+          - entity: sensor.hymer_battery_current
             name: Battery Current
-          - entity: sensor.hymer_hymer_connect_hymer_battery_level
+          - entity: sensor.hymer_battery_soc
             name: State of Charge
           - entity: sensor.hymer_battery_type
             name: Battery Type
-          - entity: sensor.hymer_hymer_connect_hymer_chassis_battery_voltage
+          - entity: sensor.hymer_chassis_battery
             name: Chassis Battery
       - type: entities
         title: Charging / Solar
         entities:
           - entity: sensor.hymer_charge_phase
             name: Charge Phase
-          - entity: binary_sensor.hymer_hymer_connect_hymer_ladestatus
+          - entity: binary_sensor.hymer_charger_active
             name: Charger Active
-          - entity: binary_sensor.hymer_hymer_connect_hymer_solar_active
+          - entity: binary_sensor.hymer_solar_active
             name: Solar Active
-          - entity: sensor.hymer_hymer_connect_hymer_spannung
+          - entity: sensor.hymer_solar_voltage
             name: Solar Voltage
-          - entity: sensor.hymer_hymer_connect_hymer_solar_current
+          - entity: sensor.hymer_solar_current
             name: Solar Current
-          - entity: sensor.hymer_hymer_connect_hymer_solar_power
+          - entity: sensor.hymer_solar_power
             name: Solar Power
           - entity: sensor.hymer_power_source
             name: Power Source
-          - entity: binary_sensor.hymer_hymer_connect_hymer_solar_panel
+          - entity: binary_sensor.hymer_solar_panel
             name: Solar Panel Connected
-          - entity: binary_sensor.hymer_hymer_connect_hymer_main_switch
+          - entity: binary_sensor.hymer_main_switch
             name: Main Switch
   - title: Climate
     path: climate
@@ -129,24 +129,24 @@ views:
       - type: entities
         title: Temperatures
         entities:
-          - entity: sensor.hymer_hymer_connect_hymer_temperatur_5
+          - entity: sensor.hymer_ambient_temp
             name: Ambient
       - type: entities
         title: Truma Heater
         entities:
           - entity: sensor.hymer_heater_state
             name: Heater State
-          - entity: sensor.hymer_hymer_connect_hymer_heater_fan_speed
+          - entity: sensor.hymer_heater_fan_speed
             name: Fan Speed
-          - entity: sensor.hymer_hymer_connect_hymer_temperatur_4
+          - entity: sensor.hymer_heater_setpoint
             name: Setpoint
           - entity: sensor.hymer_heater_fuel_type
             name: Fuel Type
-          - entity: sensor.hymer_hymer_connect_hymer_leistung
+          - entity: sensor.hymer_heater_electric_power
             name: Electric Power
           - entity: sensor.hymer_heater_operating_mode
             name: Operating Mode
-          - entity: binary_sensor.hymer_hymer_connect_hymer_konnektivitat_3
+          - entity: binary_sensor.hymer_truma_connected
             name: Truma Connected
           - entity: sensor.hymer_truma_status
             name: Truma Status
@@ -162,7 +162,7 @@ views:
     icon: mdi:water
     cards:
       - type: gauge
-        entity: sensor.hymer_hymer_connect_hymer_fresh_water_level
+        entity: sensor.hymer_fresh_water_level
         name: Fresh Water
         min: 0
         max: 100
@@ -184,11 +184,11 @@ views:
       - type: entities
         title: Water System
         entities:
-          - entity: sensor.hymer_hymer_connect_hymer_fresh_water_level
+          - entity: sensor.hymer_fresh_water_level
             name: Fresh Water Level
           - entity: sensor.hymer_gray_water_level
             name: Grey Water Level
-          - entity: binary_sensor.hymer_hymer_connect_hymer_water_pump
+          - entity: binary_sensor.hymer_water_pump
             name: Water Pump
   - title: Doors
     path: doors
@@ -197,28 +197,28 @@ views:
       - type: entities
         title: Doors
         entities:
-          - entity: binary_sensor.hymer_hymer_connect_hymer_driver_door
+          - entity: binary_sensor.hymer_driver_door
             name: Driver Door
-          - entity: binary_sensor.hymer_hymer_connect_hymer_passenger_door
+          - entity: binary_sensor.hymer_passenger_door
             name: Passenger Door
-          - entity: binary_sensor.hymer_hymer_connect_hymer_sliding_door
+          - entity: binary_sensor.hymer_sliding_door
             name: Sliding Door
-          - entity: binary_sensor.hymer_hymer_connect_hymer_tur
+          - entity: binary_sensor.hymer_rear_door
             name: Rear Door
-          - entity: binary_sensor.hymer_hymer_connect_hymer_lock
+          - entity: binary_sensor.hymer_lock_status
             name: Lock Status
       - type: entities
         title: Vehicle Lights
         entities:
-          - entity: binary_sensor.hymer_hymer_connect_hymer_licht
+          - entity: binary_sensor.hymer_headlamp
             name: Headlamp
-          - entity: binary_sensor.hymer_hymer_connect_hymer_licht_2
+          - entity: binary_sensor.hymer_high_beam
             name: High Beam
-          - entity: binary_sensor.hymer_hymer_connect_hymer_licht_3
+          - entity: binary_sensor.hymer_parking_light
             name: Parking Light
-          - entity: binary_sensor.hymer_hymer_connect_hymer_licht_4
+          - entity: binary_sensor.hymer_fog_front
             name: Fog Front
-          - entity: binary_sensor.hymer_hymer_connect_hymer_licht_5
+          - entity: binary_sensor.hymer_fog_rear
             name: Fog Rear
           - entity: binary_sensor.hymer_turn_signal
             name: Turn Signal
@@ -257,16 +257,16 @@ views:
             square: false
             cards:
               - type: light
-                entity: light.hymer_hymer_connect_hymer_living_ceiling
+                entity: light.hymer_living_ceiling
                 name: Ceiling
               - type: light
-                entity: light.hymer_hymer_connect_hymer_living_ambient
+                entity: light.hymer_living_ambient
                 name: Ambient
               - type: light
-                entity: light.hymer_hymer_connect_hymer_kitchen
+                entity: light.hymer_kitchen
                 name: Kitchen
               - type: light
-                entity: light.hymer_hymer_connect_hymer_seating_overhead
+                entity: light.hymer_seating_overhead
                 name: Seating
       - type: vertical-stack
         cards:
@@ -281,16 +281,16 @@ views:
             square: false
             cards:
               - type: light
-                entity: light.hymer_hymer_connect_hymer_bedroom_ambient
+                entity: light.hymer_bedroom_ambient
                 name: Bed Ambient
               - type: light
-                entity: light.hymer_hymer_connect_hymer_night_light
+                entity: light.hymer_night_light
                 name: Night Light
               - type: light
-                entity: light.hymer_hymer_connect_hymer_bathroom_ceiling
+                entity: light.hymer_bathroom_ceiling
                 name: Bathroom
               - type: light
-                entity: light.hymer_hymer_connect_hymer_bedroom_overhead
+                entity: light.hymer_bedroom_overhead
                 name: Bed Overhead
   - title: GPS
     path: gps
@@ -298,13 +298,13 @@ views:
     cards:
       - type: map
         entities:
-          - entity: device_tracker.hymer_hymer_connect_hymer_location
+          - entity: device_tracker.hymer_location
         default_zoom: 15
         hours_to_show: 24
       - type: entities
         title: GPS Details
         entities:
-          - entity: device_tracker.hymer_hymer_connect_hymer_location
+          - entity: device_tracker.hymer_location
             name: Location
           - entity: sensor.hymer_gps_coordinates
             name: Coordinates
@@ -316,7 +316,7 @@ views:
             name: Satellites
           - entity: sensor.hymer_gps_signal
             name: Signal Quality
-          - entity: binary_sensor.hymer_hymer_connect_hymer_konnektivitat
+          - entity: binary_sensor.hymer_gps_fix
             name: GPS Fix
   - title: System
     path: system
@@ -325,7 +325,7 @@ views:
       - type: entities
         title: Connectivity
         entities:
-          - entity: binary_sensor.hymer_hymer_connect_hymer_konnektivitat_2
+          - entity: binary_sensor.hymer_scu_connected
             name: SCU Connected
           - entity: sensor.hymer_scu_firmware
             name: SCU Firmware
@@ -334,5 +334,5 @@ views:
       - type: entities
         title: Tires
         entities:
-          - entity: sensor.hymer_hymer_connect_hymer_druck
+          - entity: sensor.hymer_tire_pressure
             name: Tire Pressure
