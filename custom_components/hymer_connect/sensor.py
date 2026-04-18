@@ -534,6 +534,19 @@ class HymerConnectSensor(
                 return round(voltage * current, 1)
             return None
 
+        # The EBL always reports its last charge phase (typically "Bulk")
+        # even when no charging is happening.  Override to "Idle" when
+        # neither solar nor mains charger is active.
+        if path == "signalr_sensors.charge_phase":
+            sensors = self.coordinator.data.get("signalr_sensors", {})
+            solar_current = sensors.get("solar_current")
+            charger_active = sensors.get("charger_active")
+            solar_charging = isinstance(solar_current, (int, float)) and solar_current > 0
+            mains_charging = charger_active is True or charger_active == 1
+            if not solar_charging and not mains_charging:
+                return "Idle"
+            # Fall through to return the real phase value (Bulk/Absorption/Float)
+
         value = _resolve_path(
             self.coordinator.data, path
         )
