@@ -157,10 +157,10 @@ views:
           - entity: sensor.hymer_truma_status
             name: Truma Status
       - type: entities
-        title: Boiler (Hot Water)
+        title: Warmwasser Boiler
         entities:
           - entity: select.hymer_boiler_mode
-            name: Boiler Mode
+            name: "Boiler (Off / ECO / Turbo)"
       - type: entities
         title: Fridge (Kühlschrank)
         entities:
