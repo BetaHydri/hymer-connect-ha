@@ -131,15 +131,16 @@ views:
         entities:
           - entity: sensor.hymer_ambient_temp
             name: Ambient
+      - type: thermostat
+        entity: climate.hymer_truma_heater
+        name: Truma Heater
       - type: entities
-        title: Truma Heater
+        title: Truma Heater Details
         entities:
-          - entity: sensor.hymer_heater_state
-            name: Heater State
+          - entity: climate.hymer_truma_heater
+            name: Heater Control
           - entity: sensor.hymer_heater_fan_speed
             name: Fan Speed
-          - entity: sensor.hymer_heater_setpoint
-            name: Setpoint
           - entity: sensor.hymer_heater_fuel_type
             name: Fuel Type
           - entity: sensor.hymer_heater_electric_power
@@ -151,10 +152,17 @@ views:
           - entity: sensor.hymer_truma_status
             name: Truma Status
       - type: entities
+        title: Boiler (Hot Water)
+        entities:
+          - entity: select.hymer_boiler_mode_ctrl
+            name: Boiler Mode
+      - type: entities
         title: Fridge
         entities:
-          - entity: sensor.hymer_fridge_mode
+          - entity: select.hymer_fridge_mode_ctrl
             name: Fridge Mode
+          - entity: sensor.hymer_fridge_mode
+            name: Fridge Status (raw)
           - entity: sensor.hymer_fridge_status
             name: Fridge Status
   - title: Water
@@ -292,6 +300,35 @@ views:
               - type: light
                 entity: light.hymer_bedroom_overhead
                 name: Bed Overhead
+      - type: vertical-stack
+        cards:
+          - type: markdown
+            content: "## 🏕️ Outside"
+            card_mod:
+              style: >
+                ha-card { background: none; box-shadow: none; padding: 0 0 0
+                4px; }
+          - type: grid
+            columns: 2
+            square: false
+            cards:
+              - type: button
+                entity: switch.hymer_outside_light_ctrl
+                name: Outside Light
+                icon: mdi:outdoor-lamp
+  - title: Controls
+    path: controls
+    icon: mdi:toggle-switch
+    cards:
+      - type: entities
+        title: Switches
+        entities:
+          - entity: switch.hymer_12v_main_switch
+            name: 12V Main Switch
+          - entity: switch.hymer_water_pump_ctrl
+            name: Water Pump
+          - entity: switch.hymer_outside_light_ctrl
+            name: Outside Light
   - title: GPS
     path: gps
     icon: mdi:map-marker

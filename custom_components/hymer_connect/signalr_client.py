@@ -16,7 +16,7 @@ import aiohttp
 
 from .api import HymerConnectApi, HymerConnectApiError
 from .const import USER_AGENT
-from .pia_decoder import build_subscription_requests, decode_pia_payload, build_light_command
+from .pia_decoder import build_subscription_requests, decode_pia_payload, build_light_command, build_multi_sensor_command
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -454,6 +454,22 @@ class HymerSignalRClient:
         _LOGGER.info(
             "Sending light command: bus=%d sid=%d bool=%s uint=%s",
             bus_id, sensor_id, bool_value, uint_value,
+        )
+        await self.send_pia_request(payload)
+
+    async def send_multi_sensor_command(
+        self,
+        sensors: list[dict],
+    ) -> None:
+        """Send a multi-sensor command to the SCU.
+
+        Args:
+            sensors: List of sensor dicts with bus_id, sensor_id, and value.
+        """
+        payload = build_multi_sensor_command(sensors)
+        _LOGGER.info(
+            "Sending multi-sensor command: %s",
+            [(s.get("bus_id"), s.get("sensor_id")) for s in sensors],
         )
         await self.send_pia_request(payload)
 

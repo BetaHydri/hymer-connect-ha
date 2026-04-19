@@ -150,7 +150,14 @@
     "switch": {
       "main_switch_ctrl": { "name": "12V Main switch" },
       "water_pump_ctrl": { "name": "Water pump" },
-      "heater_ctrl": { "name": "Heater" }
+      "outside_light_ctrl": { "name": "Outside light" }
+    },
+    "climate": {
+      "truma_heater": { "name": "Truma heater" }
+    },
+    "select": {
+      "fridge_mode_ctrl": { "name": "Fridge mode" },
+      "boiler_mode_ctrl": { "name": "Boiler mode" }
     }
   }
 }

@@ -74,4 +74,4 @@ CONF_EHG_TOKEN = "ehg_access_token"
 CONF_EHG_REFRESH_TOKEN = "ehg_refresh_token"
 
 # Platforms
-PLATFORMS = ["sensor", "binary_sensor", "device_tracker", "light", "switch"]
+PLATFORMS = ["sensor", "binary_sensor", "device_tracker", "light", "switch", "climate", "select"]

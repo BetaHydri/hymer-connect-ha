@@ -5,6 +5,31 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.8.0] - 2026-04-19
+
+### Added
+
+- **Climate entity for Truma heater** — `climate.truma_heater` with ON/OFF and target temperature (5-30°C). Sends multi-sensor PIA commands (setpoint + fuel type) matching the official EHG app protocol
+- **Select entity for fridge mode** — `select.fridge_mode_ctrl` with options: Off, 1-5 (cooling steps), ECO. Controls bus 34 sensors (sid 1=power, sid 2=ECO, sid 3=cooling step)
+- **Select entity for boiler mode** — `select.boiler_mode_ctrl` with options: Off, ECO, Turbo. Sends bus 58 sid 5 with values OFF/ECO/HOT + fuel type
+- **Outside light switch** — `switch.outside_light_ctrl` on bus 25, sid 1
+- **Multi-sensor PIA command builder** — `build_multi_sensor_command()` in pia_decoder.py supports string and float protobuf fields for heater/boiler commands
+- **New Controls view** in dashboard with all switches
+
+### Fixed
+
+- **Water pump switch** — Corrected from bus 22/sid 1 to bus 3/sid 3 (confirmed via mitmproxy capture)
+- **Sensor map** — Bus 34 correctly mapped as fridge control (sid 1=power, 2=ECO, 3=cooling step), bus 25 as outside light
+- **Heater fan speed labels** — Added "HOT" → "Hot" mapping for boiler turbo mode
+
+### Removed
+
+- **Heater switch** — Replaced by the new climate entity which provides proper thermostat controls
+
+### Changed
+
+- **Dashboard Climate view** — Replaced sensor-only heater display with thermostat card, boiler select, and fridge select controls
+
 ## [2.7.0] - 2026-04-19
 
 ### Added

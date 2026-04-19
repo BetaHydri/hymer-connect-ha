@@ -104,10 +104,12 @@ SENSOR_MAP: dict[tuple[int, int], tuple[str, str | None, str | None]] = {
     (30, 12): ("gps_sensor_12", None, None),
     (30, 13): ("gps_sensor_13", None, None),
     (30, 14): ("gps_sensor_14", None, None),
-    # Heating control (34)
-    (34, 1): ("heat_switch_1", None, None),
-    (34, 2): ("heat_switch_2", None, None),
-    (34, 3): ("heat_mode", None, None),
+    # Heating / Fridge control (34)
+    # sid=1: fridge power (bool), sid=2: fridge ECO mode (bool),
+    # sid=3: fridge cooling step (uint 1-5)
+    (34, 1): ("fridge_power", None, None),
+    (34, 2): ("fridge_eco", None, None),
+    (34, 3): ("fridge_cooling_step", None, None),
     (34, 4): ("heat_ctrl_4", None, None),
     (34, 5): ("heat_ctrl_5", None, None),
     (34, 6): ("heat_ctrl_6", None, None),
@@ -126,8 +128,8 @@ SENSOR_MAP: dict[tuple[int, int], tuple[str, str | None, str | None]] = {
     (24, 1): ("light_outside", None, None),
     (24, 2): ("light_outside_brightness", "%", None),
     (24, 3): ("light_outside_color_temp", None, None),
-    # Grey water / inverter (25)
-    (25, 1): ("gray_water_sensor_ext", None, None),
+    # Outside light / grey water (25)
+    (25, 1): ("outside_light", None, None),
     (25, 2): ("gray_water_level", "%", None),
     # Fridge (37)
     (37, 1): ("fridge_mode", None, None),
@@ -198,7 +200,7 @@ _VALUE_LABELS: dict[str, dict[str, str]] = {
     "high_beam": {"OFF": "Off", "ON": "On"},
     "parking_light": {"OFF": "Off", "ON": "On"},
     "turn_signal": {"OFF": "Off", "ON": "On"},
-    "heater_fan_speed": {"OFF": "Off", "ECO": "Eco", "HIGH": "High"},
+    "heater_fan_speed": {"OFF": "Off", "ECO": "Eco", "HOT": "Hot", "HIGH": "High"},
     "heater_state": {"False": "Off", "True": "On"},
 }
 
@@ -282,6 +284,17 @@ def _encode_bytes_field(field_number: int, data: bytes) -> bytes:
     return _encode_field(field_number, 2, _encode_varint(len(data)) + data)
 
 
+def _encode_str_field(field_number: int, value: str) -> bytes:
+    """Encode a string as a length-delimited field."""
+    data = value.encode("utf-8")
+    return _encode_bytes_field(field_number, data)
+
+
+def _encode_float_field(field_number: int, value: float) -> bytes:
+    """Encode a 32-bit float field (wire type 5)."""
+    return _encode_field(field_number, 5, struct.pack("<f", value))
+
+
 def build_light_command(
     bus_id: int,
     sensor_id: int,
@@ -326,6 +339,52 @@ def build_light_command(
     # Top-level: field 2 = wrapper
     payload = _encode_bytes_field(2, wrapper)
 
+    return base64.b64encode(payload).decode("ascii")
+
+
+def build_multi_sensor_command(
+    sensors: list[dict],
+) -> str:
+    """Build a PiaRequest payload with multiple sensor entries.
+
+    Each sensor dict must have:
+        bus_id: int
+        sensor_id: int
+    And one of:
+        bool_value: bool
+        uint_value: int
+        str_value: str
+        float_value: float
+
+    Used for heater setpoint (temp + fuel type) and boiler mode commands.
+    """
+    import random
+
+    entries = b""
+    for s in sensors:
+        sensor_data = _encode_varint_field(1, s["sensor_id"])
+        sensor_data += _encode_varint_field(2, s["bus_id"])
+        if "bool_value" in s:
+            sensor_data += _encode_varint_field(5, 1 if s["bool_value"] else 0)
+        elif "uint_value" in s:
+            sensor_data += _encode_varint_field(3, s["uint_value"])
+        elif "str_value" in s:
+            sensor_data += _encode_str_field(4, s["str_value"])
+        elif "float_value" in s:
+            sensor_data += _encode_float_field(6, s["float_value"])
+        entries += _encode_bytes_field(1, sensor_data)
+
+    inner = _encode_bytes_field(2, entries)
+
+    msg_id = random.randint(1, 10_000_000)
+    ts = int(time.time())
+
+    wrapper = _encode_varint_field(1, msg_id)
+    wrapper += _encode_bytes_field(2, b"v0.32.0")
+    wrapper += _encode_varint_field(3, ts)
+    wrapper += _encode_bytes_field(4, inner)
+
+    payload = _encode_bytes_field(2, wrapper)
     return base64.b64encode(payload).decode("ascii")
 
 
