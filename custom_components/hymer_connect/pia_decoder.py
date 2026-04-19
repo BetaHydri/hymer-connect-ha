@@ -616,9 +616,24 @@ def _extract_sensors_recursive(
                     # Map gear integer to readable position
                     if name == "current_gear" and isinstance(val, int):
                         val = _GEAR_MAP.get(val, str(val))
+                    # Debug: trace fresh_water_level writes
+                    if name == "fresh_water_level":
+                        _LOGGER.warning(
+                            "WATER_DEBUG: writing fresh_water_level=%s "
+                            "(raw=%s, bus=%s, sid=%s, transform=%s, depth=%d)",
+                            val, entry["value"], entry["bus_id"],
+                            entry["sensor_id"], transform, depth,
+                        )
                     sensors[name] = val
                 else:
                     fallback = f"bus{entry['bus_id']}_s{entry['sensor_id']}"
+                    # Debug: check if fallback overwrites fresh_water_level
+                    if fallback == "fresh_water_level" or entry["value"] == 100:
+                        _LOGGER.warning(
+                            "WATER_DEBUG: fallback write %s=%s (bus=%s, sid=%s, depth=%d)",
+                            fallback, entry["value"], entry["bus_id"],
+                            entry["sensor_id"], depth,
+                        )
                     sensors[fallback] = entry["value"]
             return
 
