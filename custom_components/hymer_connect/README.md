@@ -113,6 +113,12 @@ A ready-to-use Lovelace dashboard is included in `dashboards/hymer_connect.yaml`
 
 > **Without the refresh token**, the integration provides only REST API data (vehicle model, VIN, year). **With the refresh token**, you get 130+ real-time sensors via SignalR.
 
+> **⏳ Sensors show "unknown" until the vehicle connects.** The SCU (Smart Interface Unit) in your vehicle must establish a SignalR WebSocket connection to the cloud before sensor data flows. This happens automatically when:
+> - The vehicle's 12V main switch is ON, and
+> - The SCU has cellular connectivity (built-in SIM card).
+>
+> After a fresh installation or HA restart, allow 1–2 minutes for the connection to establish. Dashboard gauge cards will show "Entity is not numeric" errors until the first data arrives — this is normal and resolves automatically once connected. If sensors remain "unknown" for more than 5 minutes, check that the 12V main switch is enabled and the vehicle has cellular coverage.
+
 ---
 
 ## Obtaining the EHG Refresh Token
