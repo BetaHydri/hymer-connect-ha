@@ -12,9 +12,9 @@ Custom integration to connect your HYMER / Erwin Hymer Group motorhome or carava
 
 > **⚠️ Important:** Real-time sensor data (70+ entities: GPS, battery, doors, heater, fridge, etc.) requires an **EHG Remote Access Refresh Token**. This token must be captured **once** from your phone using mitmproxy during the initial setup. Without it, only basic vehicle metadata (model, VIN, year) is available. See [Obtaining the EHG Refresh Token](#obtaining-the-ehg-refresh-token) for the step-by-step guide.
 
-> **v2.5** — **Solar monitoring + light control fixes!** Real-time solar voltage, current & power from the Voltronic MPP260CI MPPT charger. Protobuf decoder overhaul: 129 sensors decoded per push (was 20). Light controls stabilised with optimistic state management.
+> **v2.9.8** — **Dashboard redesign with clear visual hierarchy!** Controls vs. status info visually distinct. Heater energy source, 12V switch fix, fridge door labels, water level inversion fix. All controls (switches, selects, climate, lights) now work reliably.
 
-> **v2.0** — **Light controls!** Turn on/off 8 interior lights from Home Assistant. Real-time sensor data via SignalR. 140+ sensors including odometer, GPS, battery, temperatures, door/lock status, Truma heater, fridge, and more.
+> **v2.8** — **Full climate/appliance controls!** Truma heater thermostat, fridge cooling steps + ECO switch, boiler mode, energy source select. SignalR refresh command forces SCU to re-report states.
 
 ![HYMER Connect Integration in Home Assistant](https://raw.githubusercontent.com/BetaHydri/hymer-connect-ha/master/images/ha-screenshot.png)
 
@@ -34,24 +34,40 @@ All Erwin Hymer Group brands equipped with a **Smart Interface Unit (SIU)**:
 
 ## Features
 
-### 💡 Light Controls (v2.0+, stabilised in v2.5)
+### � Switch Controls
 
-Control your motorhome's interior lights directly from Home Assistant:
+Control your vehicle's electrical systems from Home Assistant:
 
-| Group | Lights |
-|-------|--------|
-| **Wohnen** (Living) | Ceiling Light, Ambient Light, Kitchen, Seating Overhead |
-| **Privat** (Private) | Bedroom Ambient, Night Light, Bathroom Ceiling, Bedroom Overhead |
-| **Group Switches** | All Wohnen, All Privat |
+| Switch | Description | Protocol |
+|--------|-------------|----------|
+| **12V Main Switch** | Master 12V power on/off | bus 3, sid 1 — `str "On"/"Off"` |
+| **Water Pump** | Water pump on/off | bus 3, sid 3 — `bool` |
+| **Fridge ECO (Leise)** | Quiet mode overlay | bus 34, sid 2 — `bool` |
 
-- **On/Off toggle** for each light via the HA dashboard
-- **Brightness slider** (0–100%) for lights with dimmer support
-- **Color temperature** (2700 K warm – 6500 K daylight) for Living Ambient, Kitchen, and Bedroom Ambient
-- Commands sent in real-time via SignalR WebSocket to the SCU
-- **Optimistic state** — dashboard reflects the commanded state immediately; actual SCU state confirms via the next SignalR push
-- Works remotely — control lights from anywhere with internet access
+### 💡 Light Controls
 
-### ☀️ Solar Monitoring (NEW in v2.5)
+Control 8 interior lights + 1 outside light with on/off, brightness, and color temperature:
+
+| Group | Lights | Features |
+|-------|--------|----------|
+| **Wohnen** (Living) | Ceiling, Ambient, Kitchen, Seating Overhead | On/Off, Brightness, Color Temp* |
+| **Privat** (Private) | Bedroom Ambient, Night Light, Bathroom Ceiling, Bedroom Overhead | On/Off, Brightness, Color Temp* |
+| **Outside** | Outside Light | On/Off, Brightness |
+
+*Color temperature supported on Ambient and Kitchen lights.
+
+### 🌡️ Climate Controls
+
+| Entity | Type | Description |
+|--------|------|-------------|
+| **Truma Heater** | Climate | Set target temperature, Heat/Off mode |
+| **Heater Energy Source** | Select | Diesel / Both 900W / Both 1800W / Electric* |
+| **Boiler Mode** | Select | Off / ECO / Turbo (HOT) |
+| **Fridge Cooling Step** | Select | Off / 1 / 2 / 3 / 4 / 5 |
+
+*Electric mode requires shore power (Landstrom). Without it, only Diesel and Both are available.
+
+### ☀️ Solar Monitoring
 
 Real-time data from the **Voltronic MPP260CI** MPPT solar charger:
 
@@ -63,30 +79,23 @@ Real-time data from the **Voltronic MPP260CI** MPPT solar charger:
 | Solar active | on/off | Binary sensor — true when current > 0 |
 | Solar charger status | — | MPPT charger state |
 
-### Real-Time Sensors (via SignalR, requires EHG Refresh Token)
+### 📊 Real-Time Sensors (via SignalR, requires EHG Refresh Token)
 
-- **Vehicle** — odometer, speed, RPM, AdBlue level, fuel range, engine hours, coolant temp, gear
-- **Battery** — voltage, current, SOC (%), chassis battery voltage, charge phase, charger status, battery type
-- **Solar** — panel voltage (V), charge current (A), computed power (W), charger status, solar active (binary) — from Voltronic MPP260CI MPPT charger
-- **Water** — fresh water level (%), grey water level (%), grey water sensor
-- **Temperature** — ambient, AdBlue
-- **GPS** — coordinates, altitude, heading, satellites, signal quality, UTC time
-- **Doors** — driver, passenger, sliding, rear (open/closed)
-- **Status** — lock status, ignition, handbrake, engine running, headlamp, cruise control
-- **Heating** — Truma heater fan speed (Off/Eco/High), setpoint, electric power (0/900/1800W), fuel type, operating mode
-- **Fridge** — mode, status
-- **Alarm** — armed status, battery level
-- **SCU** — firmware version, connectivity
-- **And more** — 130+ sensors total from CAN bus, LIN bus, GPS, and connected components
-
-### REST API Sensors
-
-- Vehicle model, VIN, model year
-- SIU online status, mains power, door/window state
-
-### Dashboard
-
-A ready-to-use Lovelace dashboard is included in `dashboards/hymer_connect.yaml`.
+| Category | Sensors |
+|----------|--------|
+| **Vehicle** | Odometer, speed, RPM, AdBlue level/temp, fuel range, engine hours, coolant temp, gear, engine torque, DPF status |
+| **Battery** | Voltage, current, SOC (%), chassis battery, charge phase, charger status, battery type, power source |
+| **Solar** | Voltage, current, power (W), panel connected, charger active |
+| **Water** | Fresh water level (%), grey water level (%), water pump status |
+| **Temperature** | Ambient, AdBlue |
+| **GPS** | Coordinates, altitude, heading, satellites, signal quality, fix status |
+| **Doors** | Driver, passenger, sliding, rear (open/closed) |
+| **Security** | Lock status, ignition, handbrake, engine running, cruise control |
+| **Lights** | Headlamp, high beam, parking, fog front/rear, turn signal |
+| **Heating** | Truma connected/status/firmware, fan speed, fuel type, electric power (0/900/1800W), setpoint, operating mode |
+| **Fridge** | Mode (cooling step), door status (Open/Closed), ECO/Quiet mode |
+| **System** | SCU connected/firmware, Truma firmware, tyre pressure |
+| **Total** | **140+ sensors** from CAN bus, LIN bus, GPS, and connected components |
 
 ## Installation
 
@@ -369,7 +378,7 @@ graph TD
 
 ## Compatibility with Other Vehicles
 
-> **⚠️ This integration was developed and tested on a HYMER Grand Canyon S 600 CrossOver (2025)** on a Mercedes Sprinter base with Truma Combi D6E heater, Dometic fridge, and Voltronic MPP260CI solar charger. The sensor mapping, light configuration, and bus IDs are based on this specific vehicle.
+> **⚠️ This integration was developed and tested on a HYMER Grand Canyon S 600 CrossOver (2025)** on a Mercedes Sprinter base with Truma Combi D6E heater, Thetford N4112A fridge, and Voltronic MPP260CI solar charger. The sensor mapping, light configuration, and bus IDs are based on this specific vehicle.
 
 ### Will it work on my vehicle?
 
@@ -381,9 +390,9 @@ The integration should work on **any EHG vehicle with an SCU**, but with some li
 | **REST API** (model, VIN, year) | ✅ Yes | These endpoints are brand-agnostic |
 | **Core sensors** (GPS, odometer, doors, locks, ignition, battery) | ✅ Likely | CAN bus sensors on bus 1 (can0) and bus 30 (GPS) are standard across Sprinter/Ducato/Transit bases |
 | **Habitation sensors** (water, power source, charge phase) | ✅ Likely | LIN bus sensors on bus 3 (lin1) are part of the standard SCU wiring |
-| **Lights** | ⚠️ Partial | Light bus IDs (11, 12, 15, 16, 19, 21, 43, 44) and their capabilities (brightness, color temp) are specific to the Grand Canyon S layout. Your vehicle may have different lights on different buses, or fewer/more lights |
+| **Lights** | ⚠️ Partial | Light bus IDs (11, 12, 15, 16, 19, 21, 24, 43, 44) and their capabilities (brightness, color temp) are specific to the Grand Canyon S layout. Your vehicle may have different lights on different buses, or fewer/more lights |
 | **Truma heater** (bus 58) | ⚠️ Depends | Only if your vehicle has a Truma heater connected via the SCU. Vehicles with Alde or other heating systems may use different bus IDs |
-| **Fridge** (bus 37) | ⚠️ Depends | Only if your vehicle has a Dometic fridge connected via the SCU |
+| **Fridge** (bus 34) | ⚠️ Depends | Only if your vehicle has a Dometic/Thetford fridge connected via the SCU |
 | **Solar** (bus 8) | ⚠️ Depends | Specific to the Voltronic MPP260CI MPPT charger. Other solar setups may report on different bus IDs or not at all |
 | **Extended CAN** (bus 99) | ⚠️ Depends | Mercedes Sprinter-specific sensors (AdBlue, ambient temp, fuel range, gear). Fiat Ducato or Ford Transit bases may use different CAN mappings |
 

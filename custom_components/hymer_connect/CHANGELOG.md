@@ -5,6 +5,21 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.9.8] - 2026-04-19
+
+### Changed
+
+- **Dashboard redesigned with clear visual hierarchy** — Section headers, controls, and status tiles are now visually distinct
+
+## [2.9.7] - 2026-04-19
+
+### Fixed
+
+- **Fridge status shows door state** — Labels changed to Open/Closed matching EHG app
+- **Energy Source dashboard tile** — Corrected entity ID to `select.hymer`
+- **Fresh water level inverted** — 100% when empty fixed (fixes #43)
+- **Grey water level inverted** — Same inversion fix (fixes #41)
+
 ## [2.9.0] - 2026-04-19
 
 ### Fixed

@@ -12,7 +12,7 @@ Custom integration to connect your HYMER / Erwin Hymer Group motorhome or carava
 
 > **⚠️ Important:** Real-time sensor data (70+ entities: GPS, battery, doors, heater, fridge, etc.) requires an **EHG Remote Access Refresh Token**. This token must be captured **once** from your phone using mitmproxy during the initial setup. Without it, only basic vehicle metadata (model, VIN, year) is available. See [Obtaining the EHG Refresh Token](#obtaining-the-ehg-refresh-token) for the step-by-step guide.
 
-> **v2.9** — **Heater energy source control + 12V switch fix!** Choose between Diesel, Both 900W/1800W, or Electric heating. 12V main switch now works correctly. Modern tile-based dashboard. 140+ sensors including odometer, GPS, battery, temperatures, door/lock status, Truma heater, fridge, and more.
+> **v2.9.8** — **Dashboard redesign with clear visual hierarchy!** Section headers, controls (switches/selects), and status info are now visually distinct on mobile. Heater energy source control, 12V switch fix, fridge door labels, water level inversion fix. 140+ sensors including odometer, GPS, battery, temperatures, door/lock status, Truma heater, fridge, and more.
 
 ![HYMER Connect Integration in Home Assistant](https://raw.githubusercontent.com/BetaHydri/hymer-connect-ha/master/images/ha-screenshot.png)
 
@@ -73,13 +73,13 @@ Control 8 interior lights + 1 outside light with on/off, brightness, and color t
 | **Battery** | Voltage, current, SOC (%), chassis battery, charge phase, charger status, battery type, power source |
 | **Solar** | Voltage, current, power (W), panel connected, charger active |
 | **Water** | Fresh water level (%), grey water level (%), water pump status |
-| **Temperature** | Indoor, outdoor, ambient |
+| **Temperature** | Ambient, AdBlue |
 | **GPS** | Coordinates, altitude, heading, satellites, signal quality, fix status |
 | **Doors** | Driver, passenger, sliding, rear (open/closed) |
 | **Security** | Lock status, ignition, handbrake, engine running, cruise control |
 | **Lights** | Headlamp, high beam, parking, fog front/rear, turn signal |
 | **Heating** | Truma connected/status/firmware, fan speed, fuel type, electric power (0/900/1800W), setpoint, operating mode |
-| **Fridge** | Mode (cooling step), door status |
+| **Fridge** | Mode (cooling step), door status (Open/Closed), ECO/Quiet mode |
 | **System** | SCU connected/firmware, Truma firmware, tyre pressure, alarm status/battery |
 | **Total** | **140+ sensors** from CAN bus, LIN bus, GPS, and connected components |
 
@@ -386,7 +386,7 @@ graph TD
 
 ## Compatibility with Other Vehicles
 
-> **⚠️ This integration was developed and tested on a HYMER Grand Canyon S 600 CrossOver (2025)** on a Mercedes Sprinter base with Truma Combi D6E heater, Dometic fridge, and Voltronic MPP260CI solar charger. The sensor mapping, light configuration, and bus IDs are based on this specific vehicle.
+> **⚠️ This integration was developed and tested on a HYMER Grand Canyon S 600 CrossOver (2025)** on a Mercedes Sprinter base with Truma Combi D6E heater, Thetford N4112A fridge, and Voltronic MPP260CI solar charger. The sensor mapping, light configuration, and bus IDs are based on this specific vehicle.
 
 ### Will it work on my vehicle?
 
@@ -398,9 +398,9 @@ The integration should work on **any EHG vehicle with an SCU**, but with some li
 | **REST API** (model, VIN, year) | ✅ Yes | These endpoints are brand-agnostic |
 | **Core sensors** (GPS, odometer, doors, locks, ignition, battery) | ✅ Likely | CAN bus sensors on bus 1 (can0) and bus 30 (GPS) are standard across Sprinter/Ducato/Transit bases |
 | **Habitation sensors** (water, power source, charge phase) | ✅ Likely | LIN bus sensors on bus 3 (lin1) are part of the standard SCU wiring |
-| **Lights** | ⚠️ Partial | Light bus IDs (11, 12, 15, 16, 19, 21, 43, 44) and their capabilities (brightness, color temp) are specific to the Grand Canyon S layout. Your vehicle may have different lights on different buses, or fewer/more lights |
+| **Lights** | ⚠️ Partial | Light bus IDs (11, 12, 15, 16, 19, 21, 24, 43, 44) and their capabilities (brightness, color temp) are specific to the Grand Canyon S layout. Your vehicle may have different lights on different buses, or fewer/more lights |
 | **Truma heater** (bus 58) | ⚠️ Depends | Only if your vehicle has a Truma heater connected via the SCU. Vehicles with Alde or other heating systems may use different bus IDs |
-| **Fridge** (bus 37) | ⚠️ Depends | Only if your vehicle has a Dometic fridge connected via the SCU |
+| **Fridge** (bus 34) | ⚠️ Depends | Only if your vehicle has a Dometic/Thetford fridge connected via the SCU |
 | **Solar** (bus 8) | ⚠️ Depends | Specific to the Voltronic MPP260CI MPPT charger. Other solar setups may report on different bus IDs or not at all |
 | **Extended CAN** (bus 99) | ⚠️ Depends | Mercedes Sprinter-specific sensors (AdBlue, ambient temp, fuel range, gear). Fiat Ducato or Ford Transit bases may use different CAN mappings |
 

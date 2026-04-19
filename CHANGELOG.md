@@ -5,6 +5,21 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.9.8] - 2026-04-19
+
+### Changed
+
+- **Dashboard redesigned with clear visual hierarchy** — Section headers now use styled markdown banners (colored emoji + bold titles) that are visually distinct from actionable controls and read-only status tiles. Controls (switches, selects, climate) are grouped under "Controls" sub-headers; status-only sensors under "Status" sub-headers. Every view follows the same pattern: header → controls → status. Fixes the problem where headers, buttons, and info tiles all looked identical on mobile
+
+## [2.9.7] - 2026-04-19
+
+### Fixed
+
+- **Fridge status shows door state** — Changed labels from Running/Off/Standby to Open/Closed matching EHG app's Geschlossen/Offen
+- **Energy Source tile shows 'entity not found'** — Dashboard corrected from `select.hymer_heater_energy_source` to `select.hymer` (HA truncated the entity ID)
+- **Fresh water level inverted** — Tank showing 100% when empty, 0% when full (fixes #43)
+- **Grey water level inverted** — Same inversion issue as fresh water (fixes #41)
+
 ## [2.9.0] - 2026-04-19
 
 ### Fixed

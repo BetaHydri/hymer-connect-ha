@@ -1,5 +1,11 @@
 # HYMER Connect Dashboard for Home Assistant
-# Updated for v2.6.3 — Modern tile-based design, mobile-friendly
+# Updated for v2.9.8 — Clear visual hierarchy on mobile
+#
+# Design:
+#   - Section headers  = markdown banners (── TITLE ──) — clearly labels
+#   - Tile cards       = interactive controls (switches, selects, lights)
+#   - Entities cards   = read-only status info (compact rows)
+#   - Gauge cards      = visual level indicators
 #
 # Prerequisites:
 #   - Home Assistant 2022.11+ (tile cards)
@@ -14,11 +20,14 @@
 
 title: HYMER Connect
 views:
-  # ── Overview (at-a-glance) ────────────────────────────────
+  # ══════════════════════════════════════════════════════════
+  # Overview (at-a-glance)
+  # ══════════════════════════════════════════════════════════
   - title: Overview
     path: overview
     icon: mdi:rv-truck
     cards:
+      # ── Gauges ──
       - type: horizontal-stack
         cards:
           - type: gauge
@@ -41,6 +50,10 @@ views:
               yellow: 25
               red: 10
             needle: true
+
+      # ── Controls ──
+      - type: markdown
+        content: "## ⚡ Controls"
       - type: grid
         columns: 2
         square: false
@@ -55,16 +68,23 @@ views:
             name: Water Pump
             icon: mdi:water-pump
             color: cyan
-          - type: tile
-            entity: binary_sensor.hymer_lock
+
+      # ── Status ──
+      - type: entities
+        title: "Status"
+        show_header_toggle: false
+        entities:
+          - entity: binary_sensor.hymer_lock
             name: Lock
             icon: mdi:lock
-            color: green
-          - type: tile
-            entity: binary_sensor.hymer_scu_connected
+          - entity: binary_sensor.hymer_scu_connected
             name: SCU Online
             icon: mdi:access-point
-            color: green
+          - entity: sensor.hymer_ambient_temperature
+            name: Ambient Temp
+            icon: mdi:thermometer
+
+      # ── Heater ──
       - type: thermostat
         entity: climate.hymer_truma_heater
         name: Truma Heater
@@ -73,6 +93,8 @@ views:
             hvac_modes:
               - heat
               - "off"
+
+      # ── Location ──
       - type: map
         entities:
           - entity: device_tracker.hymer_location
@@ -80,11 +102,14 @@ views:
         hours_to_show: 24
         aspect_ratio: "16:9"
 
-  # ── Power & Electric ──────────────────────────────────────
+  # ══════════════════════════════════════════════════════════
+  # Power & Electric
+  # ══════════════════════════════════════════════════════════
   - title: Power
     path: power
     icon: mdi:battery-charging
     cards:
+      # ── Gauges ──
       - type: horizontal-stack
         cards:
           - type: gauge
@@ -107,114 +132,87 @@ views:
               yellow: 11.8
               red: 11
             needle: true
-      - type: grid
-        columns: 2
-        square: false
-        cards:
-          - type: tile
-            entity: switch.hymer_12v_main_switch
-            name: 12V Main Switch
-            icon: mdi:flash
-            color: amber
-          - type: tile
-            entity: binary_sensor.hymer_main_switch
-            name: Main Switch
-            icon: mdi:power
-            color: red
-      - type: vertical-stack
-        cards:
-          - type: markdown
-            content: "### 🔋 Habitation Battery"
-          - type: grid
-            columns: 2
-            square: false
-            cards:
-              - type: tile
-                entity: sensor.hymer_battery_voltage
-                name: Voltage
-                icon: mdi:sine-wave
-                color: deep-purple
-              - type: tile
-                entity: sensor.hymer_battery_current
-                name: Current
-                icon: mdi:current-dc
-                color: deep-purple
-              - type: tile
-                entity: sensor.hymer_battery_level
-                name: SOC
-                icon: mdi:battery
-                color: green
-              - type: tile
-                entity: sensor.hymer_chassis_battery_voltage
-                name: Chassis
-                icon: mdi:car-battery
-                color: orange
-          - type: tile
-            entity: sensor.hymer_battery_type
+
+      # ── Controls ──
+      - type: markdown
+        content: "## ⚡ Controls"
+      - type: tile
+        entity: switch.hymer_12v_main_switch
+        name: 12V Main Switch
+        icon: mdi:flash
+        color: amber
+
+      # ── Habitation Battery ──
+      - type: entities
+        title: "🔋 Habitation Battery"
+        show_header_toggle: false
+        entities:
+          - entity: sensor.hymer_battery_voltage
+            name: Voltage
+            icon: mdi:sine-wave
+          - entity: sensor.hymer_battery_current
+            name: Current
+            icon: mdi:current-dc
+          - entity: sensor.hymer_battery_level
+            name: SOC
+            icon: mdi:battery
+          - entity: sensor.hymer_chassis_battery_voltage
+            name: Chassis Battery
+            icon: mdi:car-battery
+          - entity: sensor.hymer_battery_type
             name: Battery Type
             icon: mdi:battery-heart-variant
-      - type: vertical-stack
-        cards:
-          - type: markdown
-            content: "### ☀️ Solar & Charging"
-          - type: grid
-            columns: 2
-            square: false
-            cards:
-              - type: tile
-                entity: binary_sensor.hymer_charger
-                name: Charger
-                icon: mdi:ev-plug-type2
-                color: green
-              - type: tile
-                entity: binary_sensor.hymer_solar_active
-                name: Solar
-                icon: mdi:solar-power
-                color: amber
-              - type: tile
-                entity: sensor.hymer_solar_voltage
-                name: Solar V
-                icon: mdi:solar-panel
-                color: amber
-              - type: tile
-                entity: sensor.hymer_solar_current
-                name: Solar A
-                icon: mdi:current-dc
-                color: amber
-              - type: tile
-                entity: sensor.hymer_solar_power
-                name: Solar W
-                icon: mdi:flash
-                color: amber
-              - type: tile
-                entity: sensor.hymer_charge_phase
-                name: Phase
-                icon: mdi:sine-wave
-                color: deep-purple
-          - type: grid
-            columns: 2
-            square: false
-            cards:
-              - type: tile
-                entity: sensor.hymer_power_source
-                name: Source
-                icon: mdi:power-plug
-              - type: tile
-                entity: binary_sensor.hymer_solar_panel
-                name: Panel
-                icon: mdi:solar-panel-large
-                color: amber
+          - entity: binary_sensor.hymer_main_switch
+            name: Main Switch
+            icon: mdi:power
+          - entity: sensor.hymer_power_source
+            name: Power Source
+            icon: mdi:power-plug
 
-  # ── Climate & Appliances ──────────────────────────────────
+      # ── Solar & Charging ──
+      - type: entities
+        title: "☀️ Solar & Charging"
+        show_header_toggle: false
+        entities:
+          - entity: binary_sensor.hymer_solar_active
+            name: Solar Active
+            icon: mdi:solar-power
+          - entity: sensor.hymer_solar_voltage
+            name: Solar Voltage
+            icon: mdi:solar-panel
+          - entity: sensor.hymer_solar_current
+            name: Solar Current
+            icon: mdi:current-dc
+          - entity: sensor.hymer_solar_power
+            name: Solar Power
+            icon: mdi:flash
+          - entity: binary_sensor.hymer_solar_panel
+            name: Panel Connected
+            icon: mdi:solar-panel-large
+          - entity: binary_sensor.hymer_charger
+            name: Shore Charger
+            icon: mdi:ev-plug-type2
+          - entity: sensor.hymer_charge_phase
+            name: Charge Phase
+            icon: mdi:sine-wave
+
+  # ══════════════════════════════════════════════════════════
+  # Climate & Appliances
+  # ══════════════════════════════════════════════════════════
   - title: Climate
     path: climate
     icon: mdi:thermometer
     cards:
-      - type: tile
-        entity: sensor.hymer_ambient_temperature
-        name: Ambient Temperature
-        icon: mdi:thermometer
-        color: light-blue
+      # ── Ambient ──
+      - type: entities
+        title: "🌡️ Temperature"
+        show_header_toggle: false
+        entities:
+          - entity: sensor.hymer_ambient_temperature
+            name: Ambient
+            icon: mdi:thermometer
+
+      # ── Heater Control ──
       - type: thermostat
         entity: climate.hymer_truma_heater
         name: Truma Heater
@@ -223,89 +221,76 @@ views:
             hvac_modes:
               - heat
               - "off"
-      - type: vertical-stack
-        cards:
-          - type: markdown
-            content: "### 🔥 Heater Details"
-          - type: grid
-            columns: 2
-            square: false
-            cards:
-              - type: tile
-                entity: sensor.hymer_heater_fan_speed
-                name: Fan
-                icon: mdi:fan
-                color: cyan
-              - type: tile
-                entity: sensor.hymer_heater_fuel_type
-                name: Fuel
-                icon: mdi:gas-station
-                color: orange
-              - type: tile
-                entity: sensor.hymer_heater_electric_power
-                name: Electric
-                icon: mdi:flash
-                color: amber
-              - type: tile
-                entity: sensor.hymer_heater_operating_mode
-                name: Mode
-                icon: mdi:cog
-              - type: tile
-                entity: binary_sensor.hymer_truma_connected
-                name: Truma
-                icon: mdi:connection
-                color: green
-              - type: tile
-                entity: sensor.hymer_truma_status
-                name: Status
-                icon: mdi:information
-      - type: vertical-stack
-        cards:
-          - type: markdown
-            content: "### ⚡ Energy Source"
-          - type: tile
-            entity: select.hymer
-            name: Energy Source
-            icon: mdi:gas-station
-            color: orange
-      - type: vertical-stack
-        cards:
-          - type: markdown
-            content: "### 🚿 Hot Water"
-          - type: tile
-            entity: select.hymer_boiler_mode
-            name: Boiler Mode
-            icon: mdi:water-boiler
-            color: red
-      - type: vertical-stack
-        cards:
-          - type: markdown
-            content: "### ❄️ Fridge"
-          - type: grid
-            columns: 2
-            square: false
-            cards:
-              - type: tile
-                entity: select.hymer_fridge_mode
-                name: Cooling Step
-                icon: mdi:fridge
-                color: light-blue
-              - type: tile
-                entity: switch.hymer_fridge_eco_leise
-                name: Quiet Mode
-                icon: mdi:volume-off
-                color: teal
-          - type: tile
-            entity: sensor.hymer_fridge_status
-            name: Fridge Door
-            icon: mdi:fridge-alert
-            color: orange
 
-  # ── Water ─────────────────────────────────────────────────
+      # ── Controls ──
+      - type: markdown
+        content: "## ⚡ Controls"
+      - type: tile
+        entity: select.hymer
+        name: Energy Source
+        icon: mdi:gas-station
+        color: orange
+      - type: tile
+        entity: select.hymer_boiler_mode
+        name: Boiler Mode
+        icon: mdi:water-boiler
+        color: red
+      - type: grid
+        columns: 2
+        square: false
+        cards:
+          - type: tile
+            entity: select.hymer_fridge_mode
+            name: Fridge Cooling
+            icon: mdi:fridge
+            color: light-blue
+          - type: tile
+            entity: switch.hymer_fridge_eco_leise
+            name: Fridge Quiet
+            icon: mdi:volume-off
+            color: teal
+
+      # ── Heater Status ──
+      - type: entities
+        title: "🔥 Heater Status"
+        show_header_toggle: false
+        entities:
+          - entity: sensor.hymer_heater_fan_speed
+            name: Fan Speed
+            icon: mdi:fan
+          - entity: sensor.hymer_heater_fuel_type
+            name: Fuel Type
+            icon: mdi:gas-station
+          - entity: sensor.hymer_heater_electric_power
+            name: Electric Power
+            icon: mdi:flash
+          - entity: sensor.hymer_heater_operating_mode
+            name: Operating Mode
+            icon: mdi:cog
+          - entity: binary_sensor.hymer_truma_connected
+            name: Truma Connected
+            icon: mdi:connection
+          - entity: sensor.hymer_truma_status
+            name: Truma Status
+            icon: mdi:information
+
+      # ── Fridge Status ──
+      - type: entities
+        title: "❄️ Fridge Status"
+        show_header_toggle: false
+        entities:
+          - entity: sensor.hymer_fridge_status
+            name: Door
+            icon: mdi:fridge-alert
+
+  # ══════════════════════════════════════════════════════════
+  # Water
+  # ══════════════════════════════════════════════════════════
   - title: Water
     path: water
     icon: mdi:water
     cards:
+      # ── Gauges ──
       - type: horizontal-stack
         cards:
           - type: gauge
@@ -328,317 +313,261 @@ views:
               yellow: 60
               red: 80
             needle: true
+
+      # ── Controls ──
+      - type: markdown
+        content: "## ⚡ Controls"
       - type: tile
         entity: switch.hymer_water_pump
         name: Water Pump
         icon: mdi:water-pump
         color: cyan
+
+      # ── Tank Status ──
+      - type: entities
+        title: "💧 Tank Levels"
+        show_header_toggle: false
+        entities:
+          - entity: sensor.hymer_fresh_water_level
+            name: Fresh Water
+            icon: mdi:water
+          - entity: sensor.hymer_grey_water_level
+            name: Grey Water
+            icon: mdi:water-off
+          - entity: binary_sensor.hymer_water_pump
+            name: Pump Active
+            icon: mdi:water-pump
+
+  # ══════════════════════════════════════════════════════════
+  # Vehicle
+  # ══════════════════════════════════════════════════════════
+  - title: Vehicle
+    path: vehicle
+    icon: mdi:car-info
+    cards:
+      # ── Vehicle Info ──
+      - type: entities
+        title: "🚐 Vehicle Info"
+        show_header_toggle: false
+        entities:
+          - entity: sensor.hymer_model
+            name: Model
+            icon: mdi:rv-truck
+          - entity: sensor.hymer_model_year
+            name: Year
+            icon: mdi:calendar
+          - entity: sensor.hymer_vin
+            name: VIN
+            icon: mdi:identifier
+
+      # ── Driving ──
+      - type: entities
+        title: "🏎️ Driving"
+        show_header_toggle: false
+        entities:
+          - entity: sensor.hymer_odometer
+            name: Odometer
+            icon: mdi:counter
+          - entity: sensor.hymer_speed_corrected
+            name: Speed
+            icon: mdi:speedometer
+          - entity: sensor.hymer_rpm_corrected
+            name: RPM
+            icon: mdi:engine
+          - entity: sensor.hymer_current_gear
+            name: Gear
+            icon: mdi:car-shift-pattern
+          - entity: sensor.hymer_coolant_temperature
+            name: Coolant
+            icon: mdi:coolant-temperature
+          - entity: sensor.hymer_engine_hours
+            name: Engine Hours
+            icon: mdi:clock-outline
+          - entity: sensor.hymer_engine_torque_corrected
+            name: Engine Torque
+            icon: mdi:dumbbell
+
+      # ── Fuel & AdBlue ──
+      - type: entities
+        title: "⛽ Fuel & AdBlue"
+        show_header_toggle: false
+        entities:
+          - entity: sensor.hymer_adblue_level
+            name: AdBlue Level
+            icon: mdi:car-turbocharger
+          - entity: sensor.hymer_adblue_temperature
+            name: AdBlue Temp
+            icon: mdi:thermometer
+          - entity: sensor.hymer_dpf_status
+            name: DPF Status
+            icon: mdi:air-filter
+
+      # ── Security ──
+      - type: entities
+        title: "🔒 Security"
+        show_header_toggle: false
+        entities:
+          - entity: binary_sensor.hymer_lock
+            name: Lock
+            icon: mdi:lock
+          - entity: sensor.hymer_ignition
+            name: Ignition
+            icon: mdi:key
+          - entity: binary_sensor.hymer_engine_running_corrected
+            name: Engine Running
+            icon: mdi:engine
+          - entity: binary_sensor.hymer_handbrake
+            name: Handbrake
+            icon: mdi:car-brake-parking
+          - entity: binary_sensor.hymer_cruise_control
+            name: Cruise Control
+            icon: mdi:car-cruise-control
+
+  # ══════════════════════════════════════════════════════════
+  # Doors & Vehicle Lights
+  # ══════════════════════════════════════════════════════════
+  - title: Doors
+    path: doors
+    icon: mdi:car-door
+    cards:
+      # ── Doors ──
+      - type: entities
+        title: "🚪 Doors"
+        show_header_toggle: false
+        entities:
+          - entity: binary_sensor.hymer_driver_door
+            name: Driver
+            icon: mdi:car-door
+          - entity: binary_sensor.hymer_passenger_door
+            name: Passenger
+            icon: mdi:car-door
+          - entity: binary_sensor.hymer_sliding_door
+            name: Sliding
+            icon: mdi:door-sliding-open
+          - entity: binary_sensor.hymer_rear_door
+            name: Rear
+            icon: mdi:tailgate
+          - entity: binary_sensor.hymer_lock
+            name: Lock
+            icon: mdi:lock
+
+      # ── Vehicle Lights ──
+      - type: entities
+        title: "💡 Vehicle Lights"
+        show_header_toggle: false
+        entities:
+          - entity: binary_sensor.hymer_headlamp
+            name: Headlamp
+            icon: mdi:car-light-high
+          - entity: binary_sensor.hymer_high_beam
+            name: High Beam
+            icon: mdi:car-light-high
+          - entity: binary_sensor.hymer_parking_light
+            name: Parking Light
+            icon: mdi:car-parking-lights
+          - entity: binary_sensor.hymer_front_fog_light
+            name: Fog Front
+            icon: mdi:car-light-fog
+          - entity: binary_sensor.hymer_rear_fog_light
+            name: Fog Rear
+            icon: mdi:car-light-fog
+          - entity: binary_sensor.hymer_turn_signal
+            name: Turn Signal
+            icon: mdi:arrow-left-right
+
+  # ══════════════════════════════════════════════════════════
+  # Interior Lights
+  # ══════════════════════════════════════════════════════════
+  - title: Lights
+    path: lights
+    icon: mdi:lightbulb-group
+    cards:
+      # ── Master Groups ──
+      - type: markdown
+        content: "## 💡 Master Groups"
       - type: grid
         columns: 2
         square: false
         cards:
           - type: tile
-            entity: sensor.hymer_fresh_water_level
-            name: Fresh Water
-            icon: mdi:water
-            color: blue
+            entity: light.all_wohnen
+            name: All Wohnen
+            icon: mdi:lightbulb-group
+            color: amber
           - type: tile
-            entity: sensor.hymer_grey_water_level
-            name: Grey Water
-            icon: mdi:water-off
-            color: brown
-          - type: tile
-            entity: binary_sensor.hymer_water_pump
-            name: Pump Status
-            icon: mdi:water-pump
-            color: cyan
-
-  # ── Vehicle ───────────────────────────────────────────────
-  - title: Vehicle
-    path: vehicle
-    icon: mdi:car-info
-    cards:
-      - type: vertical-stack
-        cards:
-          - type: markdown
-            content: "### 🚐 Vehicle Info"
-          - type: grid
-            columns: 2
-            square: false
-            cards:
-              - type: tile
-                entity: sensor.hymer_model
-                name: Model
-                icon: mdi:rv-truck
-              - type: tile
-                entity: sensor.hymer_model_year
-                name: Year
-                icon: mdi:calendar
-          - type: tile
-            entity: sensor.hymer_vin
-            name: VIN
-            icon: mdi:identifier
-      - type: vertical-stack
-        cards:
-          - type: markdown
-            content: "### 🏎️ Driving"
-          - type: grid
-            columns: 2
-            square: false
-            cards:
-              - type: tile
-                entity: sensor.hymer_odometer
-                name: Odometer
-                icon: mdi:counter
-              - type: tile
-                entity: sensor.hymer_speed_corrected
-                name: Speed
-                icon: mdi:speedometer
-                color: blue
-              - type: tile
-                entity: sensor.hymer_rpm_corrected
-                name: RPM
-                icon: mdi:engine
-                color: orange
-              - type: tile
-                entity: sensor.hymer_current_gear
-                name: Gear
-                icon: mdi:car-shift-pattern
-              - type: tile
-                entity: sensor.hymer_coolant_temperature
-                name: Coolant
-                icon: mdi:coolant-temperature
-                color: red
-              - type: tile
-                entity: sensor.hymer_engine_hours
-                name: Hours
-                icon: mdi:clock-outline
-          - type: tile
-            entity: sensor.hymer_engine_torque_corrected
-            name: Engine Torque
-            icon: mdi:dumbbell
-      - type: vertical-stack
-        cards:
-          - type: markdown
-            content: "### ⛽ Fuel & AdBlue"
-          - type: grid
-            columns: 2
-            square: false
-            cards:
-              - type: tile
-                entity: sensor.hymer_adblue_level
-                name: AdBlue Level
-                icon: mdi:car-turbocharger
-                color: blue
-              - type: tile
-                entity: sensor.hymer_adblue_temperature
-                name: AdBlue Temp
-                icon: mdi:thermometer
-          - type: tile
-            entity: sensor.hymer_dpf_status
-            name: DPF Status
-            icon: mdi:air-filter
-      - type: vertical-stack
-        cards:
-          - type: markdown
-            content: "### 🔒 Security"
-          - type: grid
-            columns: 2
-            square: false
-            cards:
-              - type: tile
-                entity: binary_sensor.hymer_lock
-                name: Lock
-                icon: mdi:lock
-                color: green
-              - type: tile
-                entity: sensor.hymer_ignition
-                name: Ignition
-                icon: mdi:key
-                color: amber
-              - type: tile
-                entity: binary_sensor.hymer_engine_running_corrected
-                name: Engine
-                icon: mdi:engine
-                color: red
-              - type: tile
-                entity: binary_sensor.hymer_handbrake
-                name: Handbrake
-                icon: mdi:car-brake-parking
-                color: red
-          - type: tile
-            entity: binary_sensor.hymer_cruise_control
-            name: Cruise Control
-            icon: mdi:car-cruise-control
-            color: blue
-
-  # ── Doors & Vehicle Lights ────────────────────────────────
-  - title: Doors
-    path: doors
-    icon: mdi:car-door
-    cards:
-      - type: vertical-stack
-        cards:
-          - type: markdown
-            content: "### 🚪 Doors"
-          - type: grid
-            columns: 2
-            square: false
-            cards:
-              - type: tile
-                entity: binary_sensor.hymer_driver_door
-                name: Driver
-                icon: mdi:car-door
-                color: blue
-              - type: tile
-                entity: binary_sensor.hymer_passenger_door
-                name: Passenger
-                icon: mdi:car-door
-                color: blue
-              - type: tile
-                entity: binary_sensor.hymer_sliding_door
-                name: Sliding
-                icon: mdi:door-sliding-open
-                color: teal
-              - type: tile
-                entity: binary_sensor.hymer_rear_door
-                name: Rear
-                icon: mdi:tailgate
-                color: teal
-          - type: tile
-            entity: binary_sensor.hymer_lock
-            name: Lock Status
-            icon: mdi:lock
-            color: green
-      - type: vertical-stack
-        cards:
-          - type: markdown
-            content: "### 💡 Vehicle Lights"
-          - type: grid
-            columns: 2
-            square: false
-            cards:
-              - type: tile
-                entity: binary_sensor.hymer_headlamp
-                name: Headlamp
-                icon: mdi:car-light-high
-                color: amber
-              - type: tile
-                entity: binary_sensor.hymer_high_beam
-                name: High Beam
-                icon: mdi:car-light-high
-                color: amber
-              - type: tile
-                entity: binary_sensor.hymer_parking_light
-                name: Parking
-                icon: mdi:car-parking-lights
-                color: amber
-              - type: tile
-                entity: binary_sensor.hymer_front_fog_light
-                name: Fog Front
-                icon: mdi:car-light-fog
-                color: amber
-              - type: tile
-                entity: binary_sensor.hymer_rear_fog_light
-                name: Fog Rear
-                icon: mdi:car-light-fog
-                color: red
-              - type: tile
-                entity: binary_sensor.hymer_turn_signal
-                name: Turn Signal
-                icon: mdi:arrow-left-right
-                color: amber
-
-  # ── Interior Lights ───────────────────────────────────────
-  - title: Lights
-    path: lights
-    icon: mdi:lightbulb-group
-    cards:
-      - type: vertical-stack
-        cards:
-          - type: markdown
-            content: "### ⚡ Master"
-          - type: grid
-            columns: 2
-            square: false
-            cards:
-              - type: tile
-                entity: light.all_wohnen
-                name: All Wohnen
-                icon: mdi:lightbulb-group
-                color: amber
-              - type: tile
-                entity: light.all_privat
-                name: All Privat
-                icon: mdi:lightbulb-group-outline
-                color: amber
-      - type: vertical-stack
-        cards:
-          - type: markdown
-            content: "### 🛋️ Living Area"
-          - type: grid
-            columns: 2
-            square: false
-            cards:
-              - type: tile
-                entity: light.hymer_living_ceiling
-                name: Ceiling
-                icon: mdi:ceiling-light
-                color: amber
-              - type: tile
-                entity: light.hymer_living_ambient
-                name: Ambient
-                icon: mdi:wall-sconce-flat
-                color: amber
-              - type: tile
-                entity: light.hymer_kitchen
-                name: Kitchen
-                icon: mdi:countertop
-                color: amber
-              - type: tile
-                entity: light.hymer_seating_overhead
-                name: Seating
-                icon: mdi:ceiling-light-outline
-                color: amber
-      - type: vertical-stack
-        cards:
-          - type: markdown
-            content: "### 🛏️ Bedroom & Bath"
-          - type: grid
-            columns: 2
-            square: false
-            cards:
-              - type: tile
-                entity: light.hymer_bedroom_ambient
-                name: Bed Ambient
-                icon: mdi:lamp
-                color: amber
-              - type: tile
-                entity: light.hymer_night_light
-                name: Night Light
-                icon: mdi:weather-night
-                color: deep-purple
-              - type: tile
-                entity: light.hymer_bathroom_ceiling
-                name: Bathroom
-                icon: mdi:shower-head
-                color: amber
-              - type: tile
-                entity: light.hymer_bedroom_overhead
-                name: Bed Overhead
-                icon: mdi:ceiling-light
-                color: amber
-      - type: vertical-stack
-        cards:
-          - type: markdown
-            content: "### 🏕️ Outside"
-          - type: tile
-            entity: light.hymer_outside_light
-            name: Outside Light
-            icon: mdi:outdoor-lamp
+            entity: light.all_privat
+            name: All Privat
+            icon: mdi:lightbulb-group-outline
             color: amber
 
-  # ── GPS ───────────────────────────────────────────────────
+      # ── Living Area ──
+      - type: markdown
+        content: "## 🛋️ Living Area"
+      - type: grid
+        columns: 2
+        square: false
+        cards:
+          - type: tile
+            entity: light.hymer_living_ceiling
+            name: Ceiling
+            icon: mdi:ceiling-light
+            color: amber
+          - type: tile
+            entity: light.hymer_living_ambient
+            name: Ambient
+            icon: mdi:wall-sconce-flat
+            color: amber
+          - type: tile
+            entity: light.hymer_kitchen
+            name: Kitchen
+            icon: mdi:countertop
+            color: amber
+          - type: tile
+            entity: light.hymer_seating_overhead
+            name: Seating
+            icon: mdi:ceiling-light-outline
+            color: amber
+
+      # ── Bedroom & Bath ──
+      - type: markdown
+        content: "## 🛏️ Bedroom & Bath"
+      - type: grid
+        columns: 2
+        square: false
+        cards:
+          - type: tile
+            entity: light.hymer_bedroom_ambient
+            name: Bed Ambient
+            icon: mdi:lamp
+            color: amber
+          - type: tile
+            entity: light.hymer_night_light
+            name: Night Light
+            icon: mdi:weather-night
+            color: deep-purple
+          - type: tile
+            entity: light.hymer_bathroom_ceiling
+            name: Bathroom
+            icon: mdi:shower-head
+            color: amber
+          - type: tile
+            entity: light.hymer_bedroom_overhead
+            name: Bed Overhead
+            icon: mdi:ceiling-light
+            color: amber
+
+      # ── Outside ──
+      - type: markdown
+        content: "## 🏕️ Outside"
+      - type: tile
+        entity: light.hymer_outside_light
+        name: Outside Light
+        icon: mdi:outdoor-lamp
+        color: amber
+
+  # ══════════════════════════════════════════════════════════
+  # GPS
+  # ══════════════════════════════════════════════════════════
   - title: GPS
     path: gps
     icon: mdi:map-marker
@@ -649,67 +578,64 @@ views:
         default_zoom: 15
         hours_to_show: 24
         aspect_ratio: "16:9"
-      - type: grid
-        columns: 2
-        square: false
-        cards:
-          - type: tile
-            entity: device_tracker.hymer_location
+
+      - type: entities
+        title: "📍 Position"
+        show_header_toggle: false
+        entities:
+          - entity: device_tracker.hymer_location
             name: Location
             icon: mdi:map-marker
-            color: red
-          - type: tile
-            entity: sensor.hymer_gps_coordinates
+          - entity: sensor.hymer_gps_coordinates
             name: Coordinates
             icon: mdi:crosshairs-gps
-          - type: tile
-            entity: sensor.hymer_altitude
+          - entity: sensor.hymer_altitude
             name: Altitude
             icon: mdi:image-filter-hdr
-            color: green
-          - type: tile
-            entity: sensor.hymer_gps_heading
+          - entity: sensor.hymer_gps_heading
             name: Heading
             icon: mdi:compass
-          - type: tile
-            entity: sensor.hymer_gps_satellites
+
+      - type: entities
+        title: "📡 Signal"
+        show_header_toggle: false
+        entities:
+          - entity: sensor.hymer_gps_satellites
             name: Satellites
             icon: mdi:satellite-variant
-            color: blue
-          - type: tile
-            entity: sensor.hymer_gps_signal
-            name: Signal
+          - entity: sensor.hymer_gps_signal
+            name: Signal Quality
             icon: mdi:signal
-            color: green
-      - type: tile
-        entity: binary_sensor.hymer_gps_fix
-        name: GPS Fix
-        icon: mdi:crosshairs-gps
-        color: green
+          - entity: binary_sensor.hymer_gps_fix
+            name: GPS Fix
+            icon: mdi:crosshairs-gps
 
-  # ── System ────────────────────────────────────────────────
+  # ══════════════════════════════════════════════════════════
+  # System
+  # ══════════════════════════════════════════════════════════
   - title: System
     path: system
     icon: mdi:chip
     cards:
-      - type: grid
-        columns: 2
-        square: false
-        cards:
-          - type: tile
-            entity: binary_sensor.hymer_scu_connected
-            name: SCU
+      - type: entities
+        title: "🔧 System Info"
+        show_header_toggle: false
+        entities:
+          - entity: binary_sensor.hymer_scu_connected
+            name: SCU Connected
             icon: mdi:access-point
-            color: green
-          - type: tile
-            entity: sensor.hymer_scu_firmware
+          - entity: sensor.hymer_scu_firmware
             name: SCU Firmware
             icon: mdi:chip
-          - type: tile
-            entity: sensor.hymer_truma_firmware
+          - entity: binary_sensor.hymer_truma_connected
+            name: Truma Connected
+            icon: mdi:connection
+          - entity: sensor.hymer_truma_firmware
             name: Truma Firmware
             icon: mdi:chip
-          - type: tile
-            entity: sensor.hymer_tyre_pressure
+          - entity: sensor.hymer_tyre_pressure
             name: Tire Pressure
             icon: mdi:tire
+          - entity: update.hymer_connect_update
+            name: Integration Update
+            icon: mdi:update
