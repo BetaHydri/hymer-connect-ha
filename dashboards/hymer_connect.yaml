@@ -166,7 +166,7 @@ views:
         entities:
           - entity: select.hymer_fridge_mode
             name: Cooling Step (Kühlstufe)
-          - entity: switch.hymer_fridge_eco_ctrl
+          - entity: switch.hymer_fridge_eco_leise
             name: Quiet Mode (Leise)
           - entity: sensor.hymer_fridge_status
             name: Door (Tür)
