@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.8.2] - 2026-04-19
+
+### Fixed
+
+- **Fridge select auto-powers on** — Selecting a cooling step (1-5) or ECO now automatically powers on the fridge first (bus 34, sid 1). Selecting Off disables ECO and powers off. Previously the fridge stayed off because only the cooling step was sent without the power-on command
+
 ## [2.8.1] - 2026-04-19
 
 ### Fixed
