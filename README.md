@@ -412,13 +412,14 @@ The integration should work on **any EHG vehicle with an SCU**, but with some li
 |------|--------|---------|
 | **Login & SignalR connection** | ✅ Yes | OAuth2 and the SignalR protocol are the same across all EHG brands |
 | **REST API** (model, VIN, year) | ✅ Yes | These endpoints are brand-agnostic |
-| **Core sensors** (GPS, odometer, doors, locks, ignition, battery) | ✅ Likely | CAN bus sensors on bus 1 (can0) and bus 30 (GPS) are standard across Sprinter/Ducato/Transit bases |
-| **Habitation sensors** (water, power source, charge phase) | ✅ Likely | LIN bus sensors on bus 3 (lin1) are part of the standard SCU wiring |
-| **Lights** | ⚠️ Partial | Light bus IDs (11, 12, 15, 16, 19, 21, 24, 43, 44) and their capabilities (brightness, color temp) are specific to the Grand Canyon S layout. Your vehicle may have different lights on different buses, or fewer/more lights |
+| **GPS** (bus 30) | ✅ Likely | Slots (30,1) and (30,2) carry GPS coordinates on both S600 and S700. Other slots on bus 30 are LTE/SCU/BT telemetry, not GPS |
+| **Habitation sensors** (bus 3 — water, power source, charge phase) | ✅ Likely | LIN bus sensors on bus 3 (lin1) are part of the standard SCU wiring |
+| **CAN bus sensors** (bus 1 — speed, RPM, doors, locks) | ⚠️ Partial | Bus 1 sensor **slots differ between models**. The S600 maps (1,2) as speed; the S700 maps it as fuel level. A mitmproxy capture on your vehicle is needed to verify |
+| **Lights** | ⚠️ Partial | Light bus IDs (11, 12, 15, 16, 19, 21, 24, 43, 44) and their capabilities (brightness, color temp) are specific to the Grand Canyon S layout. Your vehicle may have different lights on different buses |
 | **Truma heater** (bus 58) | ⚠️ Depends | Only if your vehicle has a Truma heater connected via the SCU. Vehicles with Alde or other heating systems may use different bus IDs |
 | **Fridge** (bus 34) | ⚠️ Depends | Only if your vehicle has a Dometic/Thetford fridge connected via the SCU |
-| **Solar** (bus 8) | ⚠️ Depends | Specific to the Voltronic MPP260CI MPPT charger. Other solar setups may report on different bus IDs or not at all |
-| **Extended CAN** (bus 99) | ⚠️ Depends | Mercedes Sprinter-specific sensors (AdBlue, ambient temp, fuel range, gear). Fiat Ducato or Ford Transit bases may use different CAN mappings |
+| **Solar** (bus 8) | ⚠️ Depends | Mapped for the Voltronic MPP260CI (S600) / MPP250Duo (S700) MPPT charger. Other solar setups may report on different bus IDs |
+| **Extended CAN** (bus 99) | ⚠️ Depends | On the S600: AdBlue, ambient temp, fuel range, gear. On the S700: lithium BMS (voltage, current, SoC, SoH). Slot meanings vary by vehicle configuration |
 
 ### What happens with missing sensors?
 
