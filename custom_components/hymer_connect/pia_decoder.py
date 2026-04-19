@@ -122,9 +122,10 @@ SENSOR_MAP: dict[tuple[int, int], tuple[str, str | None, str | None]] = {
     (21, 2): ("light_kitchen_brightness", "%", None),
     (21, 3): ("light_kitchen_color_temp", None, None),
     # Water tanks — bus 22 = fresh water, bus 25 = grey water
-    # Raw uint is inverted: 100 = empty (0%), 0 = full (100%)
+    # Grey water raw uint is inverted: 100 = empty (0%), 0 = full (100%)
+    # Fresh water: raw value appears to be direct percentage (needs verification with filled tank)
     (22, 1): ("fresh_water_sensor", None, None),
-    (22, 2): ("fresh_water_level", "%", "invert100"),
+    (22, 2): ("fresh_water_level", "%", None),
     # Light: Außenbeleuchtung / Outside light (bus 24)
     (24, 1): ("light_outside", None, None),
     (24, 2): ("light_outside_brightness", "%", None),
