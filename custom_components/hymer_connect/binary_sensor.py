@@ -37,10 +37,10 @@ BINARY_SENSOR_DESCRIPTIONS: tuple[HymerBinarySensorEntityDescription, ...] = (
         icon="mdi:engine",
     ),
     HymerBinarySensorEntityDescription(
-        key="handbrake",
-        translation_key="handbrake",
-        value_path="signalr_sensors.handbrake",
-        on_value=1,
+        key="parking_brake_engaged",
+        translation_key="parking_brake_engaged",
+        value_path="signalr_sensors.parking_brake_engaged",
+        on_value="ON",
         icon="mdi:car-brake-parking",
     ),
     HymerBinarySensorEntityDescription(
@@ -85,7 +85,14 @@ BINARY_SENSOR_DESCRIPTIONS: tuple[HymerBinarySensorEntityDescription, ...] = (
         value_path="signalr_sensors.light_living_ceiling",
         icon="mdi:ceiling-light",
     ),
-    # --- Doors (HA auto-translates: Offen/Geschlossen) ---
+    # --- Doors ---
+    # The chassis CAN (bus 1) on Sprinter-based vehicles only surfaces one
+    # door state and one habitation-entrance state. Previous "passenger",
+    # "sliding" and "rear" entities read slots that actually reported
+    # washer-fluid, oil-warning and wiping-water flags; removed to avoid
+    # misleading values. Fiat Ducato-based vehicles expose all four doors
+    # on a different component (VehicleFiatChassis) that this integration
+    # does not yet wire up.
     HymerBinarySensorEntityDescription(
         key="door_driver",
         translation_key="door_driver",
@@ -95,18 +102,10 @@ BINARY_SENSOR_DESCRIPTIONS: tuple[HymerBinarySensorEntityDescription, ...] = (
         icon="mdi:car-door",
     ),
     HymerBinarySensorEntityDescription(
-        key="door_passenger",
-        translation_key="door_passenger",
+        key="door_entrance",
+        translation_key="door_entrance",
         device_class=BinarySensorDeviceClass.DOOR,
-        value_path="signalr_sensors.door_passenger",
-        on_value="Open",
-        icon="mdi:car-door",
-    ),
-    HymerBinarySensorEntityDescription(
-        key="door_sliding",
-        translation_key="door_sliding",
-        device_class=BinarySensorDeviceClass.DOOR,
-        value_path="signalr_sensors.door_sliding",
+        value_path="signalr_sensors.door_entrance",
         on_value="Open",
         icon="mdi:door-sliding",
     ),
@@ -128,62 +127,73 @@ BINARY_SENSOR_DESCRIPTIONS: tuple[HymerBinarySensorEntityDescription, ...] = (
         on_value="On",
         icon="mdi:power",
     ),
-    # --- Rear door ---
+    # --- Chassis state (bus 1) ---
+    # Slots (1, 18-22) previously exposed headlamp / high-beam / parking /
+    # fog-front / fog-rear / turn-signal binary sensors. Their values on
+    # a 2025 S700 don't track those functions — the same slots carry
+    # ParkingBrakeEngaged / StandheizungAvailable / Standheizung /
+    # CruiseControlActive / DownhillAssistActive instead. The vehicle
+    # lamp-state signals likely live on a different component that this
+    # integration does not yet wire up. Replacing the lamp entities with
+    # the driver-assist / night-heater flags they actually report.
     HymerBinarySensorEntityDescription(
-        key="door_rear",
-        translation_key="door_rear",
-        device_class=BinarySensorDeviceClass.DOOR,
-        value_path="signalr_sensors.door_rear",
-        on_value="Open",
-        icon="mdi:car-door",
-    ),
-    # --- Vehicle lights ---
-    HymerBinarySensorEntityDescription(
-        key="headlamp",
-        translation_key="headlamp",
-        device_class=BinarySensorDeviceClass.LIGHT,
-        value_path="signalr_sensors.headlamp",
-        on_value="On",
-        icon="mdi:car-light-high",
+        key="standheizung_available",
+        translation_key="standheizung_available",
+        value_path="signalr_sensors.standheizung_available",
+        on_value="ON",
+        icon="mdi:radiator",
     ),
     HymerBinarySensorEntityDescription(
-        key="high_beam",
-        translation_key="high_beam",
-        device_class=BinarySensorDeviceClass.LIGHT,
-        value_path="signalr_sensors.high_beam",
-        on_value="On",
-        icon="mdi:car-light-high",
+        key="standheizung_state",
+        translation_key="standheizung_state",
+        device_class=BinarySensorDeviceClass.HEAT,
+        value_path="signalr_sensors.standheizung_state",
+        on_value="ON",
+        icon="mdi:radiator",
     ),
     HymerBinarySensorEntityDescription(
-        key="parking_light",
-        translation_key="parking_light",
-        device_class=BinarySensorDeviceClass.LIGHT,
-        value_path="signalr_sensors.parking_light",
-        on_value="On",
-        icon="mdi:car-parking-lights",
+        key="cruise_control_active",
+        translation_key="cruise_control_active",
+        value_path="signalr_sensors.cruise_control_active",
+        on_value="ON",
+        icon="mdi:car-cruise-control",
     ),
     HymerBinarySensorEntityDescription(
-        key="fog_front",
-        translation_key="fog_front",
-        device_class=BinarySensorDeviceClass.LIGHT,
-        value_path="signalr_sensors.fog_front",
-        on_value="On",
-        icon="mdi:car-light-fog",
+        key="downhill_assist_active",
+        translation_key="downhill_assist_active",
+        value_path="signalr_sensors.downhill_assist_active",
+        on_value="ON",
+        icon="mdi:arrow-down-bold",
     ),
     HymerBinarySensorEntityDescription(
-        key="fog_rear",
-        translation_key="fog_rear",
-        device_class=BinarySensorDeviceClass.LIGHT,
-        value_path="signalr_sensors.fog_rear",
-        on_value="On",
-        icon="mdi:car-light-fog",
+        key="wiping_water_empty",
+        translation_key="wiping_water_empty",
+        device_class=BinarySensorDeviceClass.PROBLEM,
+        value_path="signalr_sensors.wiping_water_empty",
+        on_value="ON",
+        icon="mdi:car-wash",
     ),
     HymerBinarySensorEntityDescription(
-        key="turn_signal",
-        translation_key="turn_signal",
-        value_path="signalr_sensors.turn_signal",
-        on_value="On",
-        icon="mdi:car-turn-signal",
+        key="cooling_water_empty",
+        translation_key="cooling_water_empty",
+        device_class=BinarySensorDeviceClass.PROBLEM,
+        value_path="signalr_sensors.cooling_water_empty",
+        on_value="ON",
+        icon="mdi:coolant-temperature",
+    ),
+    HymerBinarySensorEntityDescription(
+        key="motor_oil_warning",
+        translation_key="motor_oil_warning",
+        device_class=BinarySensorDeviceClass.PROBLEM,
+        value_path="signalr_sensors.motor_oil_warning",
+        on_value="ON",
+        icon="mdi:oil-level",
+    ),
+    HymerBinarySensorEntityDescription(
+        key="lightsense_night",
+        translation_key="lightsense_night",
+        value_path="signalr_sensors.lightsense_night",
+        icon="mdi:weather-night",
     ),
     # --- Truma ---
     HymerBinarySensorEntityDescription(

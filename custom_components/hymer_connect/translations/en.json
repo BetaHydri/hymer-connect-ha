@@ -47,14 +47,14 @@
       "odometer": {
         "name": "Odometer"
       },
-      "speed": {
-        "name": "Speed"
+      "fuel_level": {
+        "name": "Fuel level"
       },
       "adblue_level": {
         "name": "AdBlue level"
       },
-      "coolant_temp": {
-        "name": "Coolant temperature"
+      "outside_temperature": {
+        "name": "Outside temperature"
       },
       "lock_status": {
         "name": "Lock status"
@@ -65,11 +65,8 @@
       "door_driver": {
         "name": "Driver door"
       },
-      "door_passenger": {
-        "name": "Passenger door"
-      },
-      "door_sliding": {
-        "name": "Sliding door"
+      "door_entrance": {
+        "name": "Entrance door"
       },
       "battery_voltage": {
         "name": "Battery voltage"
@@ -128,11 +125,11 @@
       "current_gear": {
         "name": "Current gear"
       },
-      "rpm": {
-        "name": "Engine RPM"
+      "distance_to_service": {
+        "name": "Distance to service"
       },
-      "engine_hours": {
-        "name": "Engine hours"
+      "adblue_remaining_distance": {
+        "name": "AdBlue remaining distance"
       },
       "fuel_range": {
         "name": "Fuel range"
@@ -232,8 +229,8 @@
       "engine_running": {
         "name": "Engine"
       },
-      "handbrake": {
-        "name": "Handbrake"
+      "parking_brake_engaged": {
+        "name": "Parking brake"
       },
       "charger_active": {
         "name": "Charger"
@@ -259,11 +256,8 @@
       "door_driver": {
         "name": "Driver door"
       },
-      "door_passenger": {
-        "name": "Passenger door"
-      },
-      "door_sliding": {
-        "name": "Sliding door"
+      "door_entrance": {
+        "name": "Entrance door"
       },
       "lock_status": {
         "name": "Lock"
@@ -271,26 +265,29 @@
       "main_switch": {
         "name": "Main switch"
       },
-      "door_rear": {
-        "name": "Rear door"
+      "standheizung_available": {
+        "name": "Night heater available"
       },
-      "headlamp": {
-        "name": "Headlamp"
+      "standheizung_state": {
+        "name": "Night heater running"
       },
-      "high_beam": {
-        "name": "High beam"
+      "cruise_control_active": {
+        "name": "Cruise control"
       },
-      "parking_light": {
-        "name": "Parking light"
+      "downhill_assist_active": {
+        "name": "Downhill assist"
       },
-      "fog_front": {
-        "name": "Front fog light"
+      "wiping_water_empty": {
+        "name": "Washer fluid low"
       },
-      "fog_rear": {
-        "name": "Rear fog light"
+      "cooling_water_empty": {
+        "name": "Coolant low"
       },
-      "turn_signal": {
-        "name": "Turn signal"
+      "motor_oil_warning": {
+        "name": "Engine oil warning"
+      },
+      "lightsense_night": {
+        "name": "Daylight sensor dark"
       },
       "truma_connected": {
         "name": "Truma connected"

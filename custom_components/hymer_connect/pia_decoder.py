@@ -17,30 +17,36 @@ _LOGGER = logging.getLogger(__name__)
 # Sensor key map: (bus_id, sensor_id) → (name, unit, value_transform)
 # value_transform: None=raw, "div10"=divide by 10, "div100"=divide by 100, "div1000"=divide by 1000, "div3600"=seconds to hours
 SENSOR_MAP: dict[tuple[int, int], tuple[str, str | None, str | None]] = {
-    # can0 — Vehicle CAN bus
+    # Bus 1 — chassis CAN (Mercedes Sprinter / Fiat Ducato base). Sensor
+    # IDs on this bus are stable across vehicles but several slots were
+    # mislabelled in earlier versions of this map — values reported on a
+    # 2025 Grand Canyon S700 don't match what the previous names implied.
+    # Corrections below reflect what each slot actually reports; previous
+    # label kept in a trailing comment so readers of this file can trace
+    # the rename.
     (1, 1): ("odometer", "km", "div1000"),
-    (1, 2): ("speed", "km/h", None),
+    (1, 2): ("fuel_level", "%", None),                 # was speed (km/h); value ~6% when parked, not 6 km/h
     (1, 3): ("lock_status", None, None),
-    (1, 4): ("handbrake", None, None),
-    (1, 5): ("rpm", "rpm", "div100"),
+    (1, 4): ("test_signal_write", None, None),         # was handbrake; writable slot, not a brake state
+    (1, 5): ("distance_to_service", "km", "div100"),   # was rpm (rpm ÷ 100); value doesn't scale with engine speed
     (1, 6): ("adblue_level", "%", None),
-    (1, 7): ("engine_hours", "h", "div3600"),
+    (1, 7): ("adblue_remaining_distance", "km", "div100"),  # was engine_hours (÷ 3600); reading doesn't match drive time
     (1, 8): ("vin_text", None, None),
-    (1, 9): ("coolant_temp", "\u00b0C", None),
-    (1, 10): ("engine_running", None, None),
-    (1, 11): ("door_driver", None, None),
-    (1, 12): ("door_passenger", None, None),
-    (1, 13): ("door_sliding", None, None),
-    (1, 14): ("door_rear", None, None),
+    (1, 9): ("outside_temperature", "°C", None),       # was coolant_temp; value tracks weather, not engine
+    (1, 10): ("lightsense_night", None, None),         # was engine_running; boolean matching dusk/night
+    (1, 11): ("wiping_water_empty", None, None),       # was door_driver; reports OFF when washer fluid is OK
+    (1, 12): ("door_driver", None, None),              # was door_passenger; matches driver door when opened
+    (1, 13): ("door_entrance", None, None),            # was door_sliding; habitation entrance door
+    (1, 14): ("motor_oil_warning", None, None),        # was door_rear; reports SNA = sensor not available
     (1, 15): ("ignition_state", None, None),
-    (1, 16): ("seatbelt_warning", None, None),
-    (1, 17): ("turn_signal", None, None),
-    (1, 18): ("headlamp", None, None),
-    (1, 19): ("parking_light", None, None),
-    (1, 20): ("fog_front", None, None),
-    (1, 21): ("fog_rear", None, None),
-    (1, 22): ("high_beam", None, None),
-    (1, 23): ("language", None, None),
+    (1, 16): ("engine_running", None, None),           # was seatbelt_warning
+    (1, 17): ("cooling_water_empty", None, None),      # was turn_signal
+    (1, 18): ("parking_brake_engaged", None, None),    # was headlamp; reads ON when vehicle parked with handbrake
+    (1, 19): ("standheizung_available", None, None),   # was parking_light; capability flag for night heater
+    (1, 20): ("standheizung_state", None, None),       # was fog_front; on/off of the night heater itself
+    (1, 21): ("cruise_control_active", None, None),    # was fog_rear
+    (1, 22): ("downhill_assist_active", None, None),   # was high_beam
+    (1, 23): ("language_setting", None, None),         # was language (same meaning, renamed for consistency)
     # lin1 — Habitation electrics
     (3, 1): ("main_switch", None, None),
     (3, 2): ("power_source", None, None),
