@@ -16,9 +16,19 @@ Custom integration to connect your HYMER / Erwin Hymer Group motorhome or carava
 
 > **v2.8** — **Full climate/appliance controls!** Truma heater thermostat, fridge cooling steps + ECO switch, boiler mode, energy source select. SignalR refresh command forces SCU to re-report states.
 
-![HYMER Connect Integration in Home Assistant](https://raw.githubusercontent.com/BetaHydri/hymer-connect-ha/master/images/ha-screenshot.png)
+### Screenshots
 
-![HYMER Connect Sensors continued](https://raw.githubusercontent.com/BetaHydri/hymer-connect-ha/master/images/ha-screenshot_2.png)
+<p align="center">
+  <img src="https://raw.githubusercontent.com/BetaHydri/hymer-connect-ha/master/images/ha-screenshot_1.png" alt="HYMER Connect — Entities" width="45%">
+  <img src="https://raw.githubusercontent.com/BetaHydri/hymer-connect-ha/master/images/ha-screenshot_2.png" alt="HYMER Connect — Sensors" width="45%">
+</p>
+<p align="center">
+  <img src="https://raw.githubusercontent.com/BetaHydri/hymer-connect-ha/master/images/ha-screenshot_3.png" alt="HYMER Connect — Controls" width="45%">
+  <img src="https://raw.githubusercontent.com/BetaHydri/hymer-connect-ha/master/images/ha-screenshot_4.png" alt="HYMER Connect — Climate" width="45%">
+</p>
+<p align="center">
+  <img src="https://raw.githubusercontent.com/BetaHydri/hymer-connect-ha/master/images/ha-screenshot_5.png" alt="HYMER Connect — Device" width="45%">
+</p>
 
 ## Supported Brands
 
@@ -360,19 +370,25 @@ graph TD
 <details>
 <summary><strong>Dashboard Screenshots</strong> (click to expand)</summary>
 
-![Dashboard - Vehicle Overview](https://raw.githubusercontent.com/BetaHydri/hymer-connect-ha/master/images/Dash1.png)
+| Overview | Power |
+|:---:|:---:|
+| ![Overview](https://raw.githubusercontent.com/BetaHydri/hymer-connect-ha/master/images/Dash1.png) | ![Power](https://raw.githubusercontent.com/BetaHydri/hymer-connect-ha/master/images/Dash2.png) |
 
-![Dashboard - Power & Battery](https://raw.githubusercontent.com/BetaHydri/hymer-connect-ha/master/images/Dash2.png)
+| Climate | Water |
+|:---:|:---:|
+| ![Climate](https://raw.githubusercontent.com/BetaHydri/hymer-connect-ha/master/images/Dash3.png) | ![Water](https://raw.githubusercontent.com/BetaHydri/hymer-connect-ha/master/images/Dash4.png) |
 
-![Dashboard - Climate & Heater](https://raw.githubusercontent.com/BetaHydri/hymer-connect-ha/master/images/Dash3.png)
+| Vehicle | Doors & Lights |
+|:---:|:---:|
+| ![Vehicle](https://raw.githubusercontent.com/BetaHydri/hymer-connect-ha/master/images/Dash5.png) | ![Doors](https://raw.githubusercontent.com/BetaHydri/hymer-connect-ha/master/images/Dash6.png) |
 
-![Dashboard - Water](https://raw.githubusercontent.com/BetaHydri/hymer-connect-ha/master/images/Dash4.png)
+| Interior Lights | GPS |
+|:---:|:---:|
+| ![Lights](https://raw.githubusercontent.com/BetaHydri/hymer-connect-ha/master/images/Dash7.png) | ![GPS](https://raw.githubusercontent.com/BetaHydri/hymer-connect-ha/master/images/Dash8.png) |
 
-![Dashboard - Doors & Lights](https://raw.githubusercontent.com/BetaHydri/hymer-connect-ha/master/images/Dash5.png)
-
-![Dashboard - GPS & Location](https://raw.githubusercontent.com/BetaHydri/hymer-connect-ha/master/images/Dash6.png)
-
-![Dashboard - System](https://raw.githubusercontent.com/BetaHydri/hymer-connect-ha/master/images/Dash7.png)
+| System |
+|:---:|
+| ![System](https://raw.githubusercontent.com/BetaHydri/hymer-connect-ha/master/images/Dash9.png) |
 
 </details>
 
