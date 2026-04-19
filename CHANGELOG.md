@@ -5,6 +5,22 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.9.0] - 2026-04-19
+
+### Fixed
+
+- **12V main switch now works** — The switch was sending `bool_value=True/False` but the SCU expects `str_value="On"/"Off"` on bus 3, sid 1. Confirmed via mitmproxy capture. The switch now correctly sends string values matching the EHG app protocol (fixes #39)
+
+### Added
+
+- **Heater energy source select** — New `select.hymer_heater_energy_source` entity with options: Diesel, Both 900W, Both 1800W, Electric. Sends the correct multi-sensor command: (58,4) + (58,6) as paired strings, plus (58,9) uint for watt when in "Both" mode. Note: "Electric" only works with shore power connected (fixes #42)
+- **String value support for commands** — `build_light_command` and `send_light_command` now support `str_value` parameter for switches that use string-based on/off
+- **Modern tile-based dashboard** — Complete dashboard redesign using HA tile cards for mobile-friendly, touch-optimized layout. New Overview tab with at-a-glance gauges, switches, thermostat, and map. Zero HACS frontend dependencies
+
+### Changed
+
+- **Dashboard reorganized** — 12V switch moved to Power tab, water pump to Water tab. Main switch separated from Solar section. Energy Source selector added to Climate tab
+
 ## [2.7.0] - 2026-04-19
 
 ### Added

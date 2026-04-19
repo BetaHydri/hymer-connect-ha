@@ -320,22 +320,26 @@ def build_light_command(
     *,
     bool_value: bool | None = None,
     uint_value: int | None = None,
+    str_value: str | None = None,
 ) -> str:
-    """Build a PiaRequest payload to control a light.
+    """Build a PiaRequest payload to control a light or switch.
 
     Args:
-        bus_id: The light's bus ID (e.g. 11 for living ceiling).
+        bus_id: The bus ID (e.g. 11 for living ceiling, 3 for main switch).
         sensor_id: 1=on/off, 2=brightness, 3=color_temp.
         bool_value: True/False for on/off (sensor_id=1).
         uint_value: 0-100 for brightness/color_temp (sensor_id=2,3).
+        str_value: String value (e.g. "On"/"Off" for main switch on bus 3).
 
     Returns:
         Base64-encoded protobuf payload ready to send as PiaRequest argument.
     """
-    # Build sensor entry: field1=sensor_id, field2=bus_id, field3/5=value
+    # Build sensor entry: field1=sensor_id, field2=bus_id, field3/4/5=value
     sensor_data = _encode_varint_field(1, sensor_id)
     sensor_data += _encode_varint_field(2, bus_id)
-    if bool_value is not None:
+    if str_value is not None:
+        sensor_data += _encode_str_field(4, str_value)
+    elif bool_value is not None:
         sensor_data += _encode_varint_field(5, 1 if bool_value else 0)
     elif uint_value is not None:
         sensor_data += _encode_varint_field(3, uint_value)

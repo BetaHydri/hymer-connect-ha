@@ -126,11 +126,20 @@ class HymerConnectSwitch(
         if not client or not client.connected:
             _LOGGER.warning("Cannot control switch - SignalR not connected")
             return
-        await client.send_light_command(
-            self.entity_description.bus_id,
-            self.entity_description.sensor_id,
-            bool_value=True,
-        )
+        on_val = self.entity_description.on_value
+        if isinstance(on_val, str):
+            # String-based switch (e.g. main_switch uses "On"/"Off")
+            await client.send_light_command(
+                self.entity_description.bus_id,
+                self.entity_description.sensor_id,
+                str_value=on_val,
+            )
+        else:
+            await client.send_light_command(
+                self.entity_description.bus_id,
+                self.entity_description.sensor_id,
+                bool_value=True,
+            )
         self._optimistic_on = True
         self.async_write_ha_state()
 
@@ -140,11 +149,21 @@ class HymerConnectSwitch(
         if not client or not client.connected:
             _LOGGER.warning("Cannot control switch - SignalR not connected")
             return
-        await client.send_light_command(
-            self.entity_description.bus_id,
-            self.entity_description.sensor_id,
-            bool_value=False,
-        )
+        on_val = self.entity_description.on_value
+        if isinstance(on_val, str):
+            # String-based switch — send the off counterpart
+            off_val = "Off" if on_val == "On" else "False"
+            await client.send_light_command(
+                self.entity_description.bus_id,
+                self.entity_description.sensor_id,
+                str_value=off_val,
+            )
+        else:
+            await client.send_light_command(
+                self.entity_description.bus_id,
+                self.entity_description.sensor_id,
+                bool_value=False,
+            )
         self._optimistic_on = False
         self.async_write_ha_state()
 

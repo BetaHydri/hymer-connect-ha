@@ -449,21 +449,24 @@ class HymerSignalRClient:
         *,
         bool_value: bool | None = None,
         uint_value: int | None = None,
+        str_value: str | None = None,
     ) -> None:
-        """Send a light control command to the SCU.
+        """Send a light/switch control command to the SCU.
 
         Args:
-            bus_id: Light bus ID (e.g. 11 for living ceiling).
+            bus_id: Bus ID (e.g. 11 for living ceiling, 3 for main switch).
             sensor_id: 1=on/off, 2=brightness, 3=color_temp.
             bool_value: True/False for on/off.
             uint_value: 0-100 for brightness/color_temp.
+            str_value: String value (e.g. "On"/"Off" for main switch).
         """
         payload = build_light_command(
-            bus_id, sensor_id, bool_value=bool_value, uint_value=uint_value
+            bus_id, sensor_id,
+            bool_value=bool_value, uint_value=uint_value, str_value=str_value,
         )
         _LOGGER.info(
-            "Sending light command: bus=%d sid=%d bool=%s uint=%s",
-            bus_id, sensor_id, bool_value, uint_value,
+            "Sending light command: bus=%d sid=%d bool=%s uint=%s str=%s",
+            bus_id, sensor_id, bool_value, uint_value, str_value,
         )
         await self.send_pia_request(payload)
 

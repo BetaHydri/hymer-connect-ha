@@ -157,7 +157,8 @@
     },
     "select": {
       "fridge_mode_ctrl": { "name": "Fridge mode" },
-      "boiler_mode_ctrl": { "name": "Boiler mode" }
+      "boiler_mode_ctrl": { "name": "Boiler mode" },
+      "heater_energy_ctrl": { "name": "Heater energy source" }
     }
   }
 }

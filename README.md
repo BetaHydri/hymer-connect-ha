@@ -12,7 +12,7 @@ Custom integration to connect your HYMER / Erwin Hymer Group motorhome or carava
 
 > **⚠️ Important:** Real-time sensor data (70+ entities: GPS, battery, doors, heater, fridge, etc.) requires an **EHG Remote Access Refresh Token**. This token must be captured **once** from your phone using mitmproxy during the initial setup. Without it, only basic vehicle metadata (model, VIN, year) is available. See [Obtaining the EHG Refresh Token](#obtaining-the-ehg-refresh-token) for the step-by-step guide.
 
-> **v2.0** — **Light controls!** Turn on/off 8 interior lights from Home Assistant. Real-time sensor data via SignalR. 140+ sensors including odometer, GPS, battery, temperatures, door/lock status, Truma heater, fridge, and more.
+> **v2.9** — **Heater energy source control + 12V switch fix!** Choose between Diesel, Both 900W/1800W, or Electric heating. 12V main switch now works correctly. Modern tile-based dashboard. 140+ sensors including odometer, GPS, battery, temperatures, door/lock status, Truma heater, fridge, and more.
 
 ![HYMER Connect Integration in Home Assistant](https://raw.githubusercontent.com/BetaHydri/hymer-connect-ha/master/images/ha-screenshot.png)
 
@@ -32,42 +32,78 @@ All Erwin Hymer Group brands equipped with a **Smart Interface Unit (SIU)**:
 
 ## Features
 
-### 💡 Light Controls (NEW in v2.0)
+### 🔌 Switch Controls
 
-Control your motorhome's interior lights directly from Home Assistant:
+Control your vehicle's electrical systems from Home Assistant:
 
-| Group | Lights |
-|-------|--------|
-| **Wohnen** (Living) | Ceiling Light, Ambient Light, Kitchen, Seating Overhead |
-| **Privat** (Private) | Bedroom Ambient, Night Light, Bathroom Ceiling, Bedroom Overhead |
+| Switch | Description | Protocol |
+|--------|-------------|----------|
+| **12V Main Switch** | Master 12V power on/off | bus 3, sid 1 — `str "On"/"Off"` |
+| **Water Pump** | Water pump on/off | bus 3, sid 3 — `bool` |
+| **Fridge ECO (Leise)** | Quiet mode overlay | bus 34, sid 2 — `bool` |
 
-- **On/Off toggle** for each light via the HA dashboard
-- Commands sent in real-time via SignalR WebSocket to the SCU
-- Works remotely — control lights from anywhere with internet access
+### 💡 Light Controls
 
-### Real-Time Sensors (via SignalR, requires EHG Refresh Token)
+Control 8 interior lights + 1 outside light with on/off, brightness, and color temperature:
 
-- **Vehicle** — odometer, speed, RPM, AdBlue level, fuel range, engine hours, coolant temp, gear
-- **Battery** — voltage, current, SOC (%), chassis battery voltage, charge phase, charger status, battery type
-- **Water** — grey water level (%), grey water sensor
-- **Temperature** — indoor, outdoor, ambient, AdBlue
-- **GPS** — coordinates, altitude, heading, satellites, signal quality, UTC time
-- **Doors** — driver, passenger, sliding, rear (open/closed)
-- **Status** — lock status, ignition, handbrake, engine running, headlamp, cruise control
-- **Heating** — Truma heater fan speed (Off/Eco/High), setpoint, electric power (0/900/1800W), fuel type, operating mode
-- **Fridge** — mode, status
-- **Alarm** — armed status, battery level
-- **SCU** — firmware version, connectivity
-- **And more** — 130+ sensors total from CAN bus, LIN bus, GPS, and connected components
+| Group | Lights | Features |
+|-------|--------|----------|
+| **Wohnen** (Living) | Ceiling, Ambient, Kitchen, Seating Overhead | On/Off, Brightness, Color Temp* |
+| **Privat** (Private) | Bedroom Ambient, Night Light, Bathroom Ceiling, Bedroom Overhead | On/Off, Brightness, Color Temp* |
+| **Outside** | Outside Light | On/Off, Brightness |
 
-### REST API Sensors
+*Color temperature supported on Ambient and Kitchen lights.
 
-- Vehicle model, VIN, model year
-- SIU online status, mains power, door/window state
+### 🌡️ Climate Controls
 
-### Dashboard
+| Entity | Type | Description |
+|--------|------|-------------|
+| **Truma Heater** | Climate | Set target temperature, Heat/Off mode |
+| **Heater Energy Source** | Select | Diesel / Both 900W / Both 1800W / Electric* |
+| **Boiler Mode** | Select | Off / ECO / Turbo (HOT) |
+| **Fridge Cooling Step** | Select | Off / 1 / 2 / 3 / 4 / 5 |
 
-A ready-to-use Lovelace dashboard is included in `dashboards/hymer_connect.yaml`.
+*Electric mode requires shore power (Landstrom). Without it, only Diesel and Both are available.
+
+### 📊 Real-Time Sensors (via SignalR, requires EHG Refresh Token)
+
+| Category | Sensors |
+|----------|---------|
+| **Vehicle** | Odometer, speed, RPM, AdBlue level/temp, fuel range, engine hours, coolant temp, gear, engine torque, DPF status |
+| **Battery** | Voltage, current, SOC (%), chassis battery, charge phase, charger status, battery type, power source |
+| **Solar** | Voltage, current, power (W), panel connected, charger active |
+| **Water** | Fresh water level (%), grey water level (%), water pump status |
+| **Temperature** | Indoor, outdoor, ambient |
+| **GPS** | Coordinates, altitude, heading, satellites, signal quality, fix status |
+| **Doors** | Driver, passenger, sliding, rear (open/closed) |
+| **Security** | Lock status, ignition, handbrake, engine running, cruise control |
+| **Lights** | Headlamp, high beam, parking, fog front/rear, turn signal |
+| **Heating** | Truma connected/status/firmware, fan speed, fuel type, electric power (0/900/1800W), setpoint, operating mode |
+| **Fridge** | Mode (cooling step), door status |
+| **System** | SCU connected/firmware, Truma firmware, tyre pressure, alarm status/battery |
+| **Total** | **140+ sensors** from CAN bus, LIN bus, GPS, and connected components |
+
+### 🗺️ Device Tracker
+
+GPS-based device tracker for vehicle location on the HA map.
+
+### 📱 Modern Dashboard (included)
+
+A ready-to-use tile-based Lovelace dashboard optimized for mobile and desktop:
+
+| Tab | Content |
+|-----|---------|
+| **Overview** | Battery + water gauges, quick toggles (12V, pump, lock, SCU), thermostat, map |
+| **Power** | Battery details, 12V/main switch, solar & charging |
+| **Climate** | Thermostat, heater details, energy source, boiler, fridge |
+| **Water** | Fresh/grey water gauges, pump control |
+| **Vehicle** | Model info, driving sensors, fuel/AdBlue, security |
+| **Doors** | Door status, vehicle lights |
+| **Lights** | Interior light controls with master groups |
+| **GPS** | Full map, coordinates, satellites, signal |
+| **System** | SCU/Truma firmware, tyre pressure |
+
+**Prerequisites:** Home Assistant 2022.11+ (tile cards). No HACS frontend cards required — 100% stock HA.
 
 ## Installation
 

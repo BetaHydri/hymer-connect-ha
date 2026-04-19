@@ -5,6 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.9.0] - 2026-04-19
+
+### Fixed
+
+- **12V main switch now works** — Switch sends `str_value="On"/"Off"` instead of `bool_value` (fixes #39)
+
+### Added
+
+- **Heater energy source select** — Diesel / Both 900W / Both 1800W / Electric (fixes #42)
+- **String value support for switch commands**
+- **Modern tile-based dashboard**
+
 ## [2.8.8] - 2026-04-19
 
 ### Added

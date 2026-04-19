@@ -24,6 +24,10 @@ FRIDGE_OPTIONS = ["Off", "1", "2", "3", "4", "5"]
 # Boiler modes: Off, ECO, Turbo (HOT)
 BOILER_OPTIONS = ["Off", "ECO", "Turbo"]
 
+# Heater energy source modes (captured via mitmproxy 2026-04-19)
+# Electric only requires shore power — SCU rejects it otherwise
+HEATER_ENERGY_OPTIONS = ["Diesel", "Both 900W", "Both 1800W", "Electric"]
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -35,6 +39,7 @@ async def async_setup_entry(
     async_add_entities([
         HymerFridgeSelect(coordinator, entry),
         HymerBoilerSelect(coordinator, entry),
+        HymerHeaterEnergySelect(coordinator, entry),
     ])
 
 
