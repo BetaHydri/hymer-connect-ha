@@ -371,6 +371,22 @@
       "heater_ctrl": {
         "name": "Heater"
       }
+    },
+    "button": {
+      "wake_up_chassis_ctrl": {
+        "name": "Wake up chassis"
+      },
+      "update_tank_level_immediately_ctrl": {
+        "name": "Refresh tank levels"
+      },
+      "activate_tank_refill_interval_ctrl": {
+        "name": "Start tank-refill polling"
+      }
+    },
+    "number": {
+      "fridge_level_ctrl": {
+        "name": "Fridge cooling level"
+      }
     }
   }
 }
