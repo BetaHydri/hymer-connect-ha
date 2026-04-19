@@ -151,6 +151,11 @@
       "main_switch_ctrl": { "name": "12V Main switch" },
       "water_pump_ctrl": { "name": "Water pump" },
       "heater_ctrl": { "name": "Heater" }
+    },
+    "select": {
+      "heater_power_limit_ctrl": { "name": "Heater electric power" },
+      "heater_air_energy_source_ctrl": { "name": "Heater air energy source" },
+      "heater_water_energy_source_ctrl": { "name": "Heater water energy source" }
     }
   }
 }
