@@ -54,7 +54,11 @@ class HymerHeaterClimate(
     _attr_min_temp = MIN_TEMP
     _attr_max_temp = MAX_TEMP
     _attr_hvac_modes = [HVACMode.OFF, HVACMode.HEAT]
-    _attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
+    _attr_supported_features = (
+        ClimateEntityFeature.TARGET_TEMPERATURE
+        | ClimateEntityFeature.FAN_MODE
+    )
+    _attr_fan_modes = ["Eco", "High"]
     _attr_icon = "mdi:radiator"
 
     def __init__(
@@ -90,6 +94,22 @@ class HymerHeaterClimate(
         if self.hvac_mode == HVACMode.HEAT:
             return HVACAction.HEATING
         return HVACAction.OFF
+
+    @property
+    def fan_mode(self) -> str | None:
+        """Return the current fan mode (experimental)."""
+        if self.coordinator.data is None:
+            return None
+        val = _resolve_path(self.coordinator.data, "signalr_sensors.heater_fan_speed")
+        if val is None:
+            return None
+        fan_str = str(val).upper()
+        if fan_str == "ECO":
+            return "Eco"
+        if fan_str in ("HIGH", "Hi"):
+            return "High"
+        # OFF means heater fan is not running
+        return "Eco"
 
     @property
     def current_temperature(self) -> float | None:
@@ -183,6 +203,31 @@ class HymerHeaterClimate(
         ])
         self._optimistic_mode = HVACMode.HEAT
         self._optimistic_temp = float(temp)
+        self.async_write_ha_state()
+
+    async def async_set_fan_mode(self, fan_mode: str) -> None:
+        """Set fan mode (experimental — untested via EHG app).
+
+        Sends bus=58, sid=5 with 'ECO' or 'High' string value.
+        The EHG app does NOT expose this control — use at your own risk.
+        """
+        client = self.coordinator.signalr_client
+        if not client or not client.connected:
+            _LOGGER.warning("Cannot control fan — SignalR not connected")
+            return
+
+        mode_map = {"Eco": "ECO", "High": "High"}
+        mode_str = mode_map.get(fan_mode)
+        if mode_str is None:
+            _LOGGER.warning("Unknown fan mode: %s", fan_mode)
+            return
+
+        fuel = self._get_fuel_type()
+        _LOGGER.info("EXPERIMENTAL: Setting heater fan to %s", mode_str)
+        await client.send_multi_sensor_command([
+            {"bus_id": 58, "sensor_id": 5, "str_value": mode_str},
+            {"bus_id": 58, "sensor_id": 4, "str_value": fuel},
+        ])
         self.async_write_ha_state()
 
     def _handle_coordinator_update(self) -> None:

@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.8.5] - 2026-04-19
+
+### Added
+
+- **Heater fan speed control (experimental)** — Fan mode Eco/High available in the Truma heater climate entity. This sends `bus=58, sid=5` with `ECO` or `High` string values. Note: the EHG app does NOT expose this control — use at your own risk. Test at the vehicle before relying on it
+- **Thermostat card Heat/Off buttons** — Added explicit HVAC mode feature to the dashboard thermostat card
+
 ## [2.8.4] - 2026-04-19
 
 ### Fixed
