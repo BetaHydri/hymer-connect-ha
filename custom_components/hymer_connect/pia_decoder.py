@@ -17,53 +17,70 @@ _LOGGER = logging.getLogger(__name__)
 # Sensor key map: (bus_id, sensor_id) → (name, unit, value_transform)
 # value_transform: None=raw, "div10"=divide by 10, "div100"=divide by 100, "div1000"=divide by 1000, "div3600"=seconds to hours
 SENSOR_MAP: dict[tuple[int, int], tuple[str, str | None, str | None]] = {
-    # can0 — Vehicle CAN bus
+    # Bus 1 — VehicleSignal (Mercedes Sprinter / Fiat Ducato chassis CAN).
+    # Earlier labels on this bus did not match what the slots actually
+    # report on the 2025 Grand Canyon S700 the integration was tested on:
+    # (1, 2) labelled "speed" sits at ~6 when parked; reads as fuel % instead,
+    # (1, 5) "rpm" is a constant large number; reads as km-to-service,
+    # (1, 9) "coolant_temp" tracks weather not engine temperature, etc.
+    # Each rename below has a trailing comment with the previous label.
     (1, 1): ("odometer", "km", "div1000"),
-    (1, 2): ("speed", "km/h", None),
+    (1, 2): ("fuel_level", "%", None),                       # was speed (km/h)
     (1, 3): ("lock_status", None, None),
-    (1, 4): ("handbrake", None, None),
-    (1, 5): ("rpm", "rpm", "div100"),
+    (1, 4): ("test_signal_write", None, None),               # was handbrake (writable slot)
+    (1, 5): ("distance_to_service", "km", "div100"),         # was rpm
     (1, 6): ("adblue_level", "%", None),
-    (1, 7): ("engine_hours", "h", "div3600"),
+    (1, 7): ("adblue_remaining_distance", "km", "div100"),   # was engine_hours
     (1, 8): ("vin_text", None, None),
-    (1, 9): ("coolant_temp", "\u00b0C", None),
-    (1, 10): ("engine_running", None, None),
-    (1, 11): ("door_driver", None, None),
-    (1, 12): ("door_passenger", None, None),
-    (1, 13): ("door_sliding", None, None),
-    (1, 14): ("door_rear", None, None),
+    (1, 9): ("outside_temperature", "°C", None),             # was coolant_temp
+    (1, 10): ("lightsense_night", None, None),               # was engine_running
+    (1, 11): ("wiping_water_empty", None, None),             # was door_driver (washer fluid low)
+    (1, 12): ("door_driver", None, None),                    # was door_passenger
+    (1, 13): ("door_entrance", None, None),                  # was door_sliding (habitation entrance)
+    (1, 14): ("motor_oil_warning", None, None),              # was door_rear
     (1, 15): ("ignition_state", None, None),
-    (1, 16): ("seatbelt_warning", None, None),
-    (1, 17): ("turn_signal", None, None),
-    (1, 18): ("headlamp", None, None),
-    (1, 19): ("parking_light", None, None),
-    (1, 20): ("fog_front", None, None),
-    (1, 21): ("fog_rear", None, None),
-    (1, 22): ("high_beam", None, None),
-    (1, 23): ("language", None, None),
-    # lin1 — Habitation electrics
-    (3, 1): ("main_switch", None, None),
-    (3, 2): ("power_source", None, None),
-    (3, 3): ("charger_active", None, None),
-    (3, 4): ("charge_phase", None, None),
-    (3, 5): ("battery_voltage", "V", None),
-    (3, 6): ("battery_current", "A", None),
-    (3, 7): ("chassis_battery_voltage", "V", None),
-    (3, 8): ("light_1_level", "%", None),
-    (3, 9): ("light_2_level", "%", None),
-    (3, 10): ("battery_soc", "%", None),
-    (3, 11): ("battery_type", None, None),
-    (3, 12): ("switch_12v_1", None, None),
-    (3, 13): ("switch_12v_2", None, None),
-    (3, 14): ("switch_12v_3", None, None),
-    (3, 15): ("switch_12v_4", None, None),
-    (3, 16): ("switch_12v_5", None, None),
-    (3, 17): ("switch_12v_6", None, None),
-    (3, 18): ("switch_12v_7", None, None),
-    (3, 19): ("solar_voltage_sentinel", "V", None),  # Always 3276.8 — real voltage is on bus 8
-    (3, 20): ("solar_connected", None, None),
-    (3, 21): ("solar_charger_status", None, None),
-    (3, 22): ("switch_22", None, None),
+    (1, 16): ("engine_running", None, None),                 # was seatbelt_warning
+    (1, 17): ("cooling_water_empty", None, None),            # was turn_signal
+    (1, 18): ("parking_brake_engaged", None, None),          # was headlamp
+    (1, 19): ("standheizung_available", None, None),         # was parking_light
+    (1, 20): ("standheizung_state", None, None),             # was fog_front
+    (1, 21): ("cruise_control_active", None, None),          # was fog_rear
+    (1, 22): ("downhill_assist_active", None, None),         # was high_beam
+    (1, 23): ("language_setting", None, None),               # was language
+    # Bus 3 — CBE EBL402 habitation electrics panel.
+    # Author's earlier labels didn't match the underlying slots on the S700:
+    # (3, 3) "charger_active" is actually the SwitchPump (hence the switch
+    # platform's water_pump write target has always been bus 3 sensor 3);
+    # (3, 5-7) distinguishes living vs starter battery; (3, 10) labelled
+    # "battery_soc %" is living battery capacity in Ah, not SoC%;
+    # (3, 19) marked sentinel is the EBL outdoor temperature sensor;
+    # (3, 20-21) labelled solar_* actually drive tank-refill behaviour;
+    # (3, 22) labelled switch_22 is the ShoreLineConnected flag.
+    # Slots 8/9 (FreshWaterLevel/WasteWaterLevel per registry) are NOT
+    # relabelled here — on the S700 water is reported from bus 22/25, and
+    # v2.9.2+ already handles that correctly with the invert100 transform.
+    (3, 1): ("main_switch", None, None),                        # 12VSupply
+    (3, 2): ("power_source", None, None),                       # Registry: ShoreLine — kept as power_source (tested, meaningful)
+    (3, 3): ("water_pump", None, None),                         # was charger_active (SwitchPump)
+    (3, 4): ("charge_phase", None, None),                       # Registry: ChargeMode — kept as charge_phase
+    (3, 5): ("living_battery_voltage", "V", None),              # was battery_voltage
+    (3, 6): ("living_battery_current", "A", None),              # was battery_current
+    (3, 7): ("starter_battery_voltage", "V", None),             # was chassis_battery_voltage
+    (3, 8): ("light_1_level", "%", None),                       # kept for backward compat (not water on this bus)
+    (3, 9): ("light_2_level", "%", None),                       # kept for backward compat (not water on this bus)
+    (3, 10): ("living_battery_capacity", "Ah", None),           # was battery_soc % — unit was wrong
+    (3, 11): ("battery_type", None, None),                      # Registry: LivingBatteryType — kept as battery_type
+    (3, 12): ("fresh_water_sensor_failure", None, None),        # was switch_12v_1
+    (3, 13): ("waste_water_sensor_failure", None, None),        # was switch_12v_2
+    (3, 14): ("outside_temp_sensor_failure", None, None),       # was switch_12v_3
+    (3, 15): ("outside_temp_calib_failure", None, None),        # was switch_12v_4
+    (3, 16): ("ebl_over_temperature", None, None),              # was switch_12v_5
+    (3, 17): ("battery_keeper_active", None, None),             # was switch_12v_6
+    (3, 18): ("d_plus_state", None, None),                      # was switch_12v_7
+    (3, 19): ("ebl_outdoor_temp_sensor", "°C", None),           # was solar_voltage_sentinel (unit is °C not V)
+    (3, 20): ("activate_tank_refill_interval", None, None),     # was solar_connected
+    (3, 21): ("update_tank_level_immediately", None, None),     # was solar_charger_status
+    (3, 22): ("shoreline_connected", None, None),               # was switch_22 (ShoreLineConnected)
     # Light: Schlafzimmer Ambientebeleuchtung / Bedroom ambient (bus 15)
     # sid=1: on/off, sid=2: brightness (WRITE only), sid=3: color_temp
     (15, 1): ("light_bedroom_ambient", None, None),
@@ -72,16 +89,17 @@ SENSOR_MAP: dict[tuple[int, int], tuple[str, str | None, str | None]] = {
     # Light: Badezimmer Deckenbeleuchtung / Bathroom ceiling (bus 19)
     (19, 1): ("light_bathroom_ceiling", None, None),
     (19, 2): ("light_bathroom_ceiling_brightness", "%", None),
-    # lin2 — Voltronic MPP260CI solar charger + climate
-    # sid=2/3 are solar voltage/current from the Voltronic MPPT charger,
-    # confirmed by live correlation with app Energy display (fluctuating V/A).
-    (8, 1): ("gray_water_sensor", None, None),
-    (8, 2): ("solar_voltage", "V", None),
-    (8, 3): ("solar_current", "A", None),
-    (8, 4): ("vent_1", None, None),
-    (8, 5): ("vent_2", None, None),
-    (8, 6): ("vent_3", None, None),
-    (8, 7): ("tire_pressure", "bar", None),
+    # Bus 8 — Votronic MPP250Duo solar charger.
+    # Author's labels had (8,1) as gray_water_sensor and (8,4-7) as
+    # vent_* / tire_pressure which don't belong on this bus at all.
+    # All seven slots are solar-charger signals per the registry.
+    (8, 1): ("solar_active", None, None),             # was gray_water_sensor
+    (8, 2): ("solar_voltage", "V", None),             # SolarPanelVoltage
+    (8, 3): ("solar_current", "A", None),             # ChargingCurrent
+    (8, 4): ("solar_error", None, None),              # was vent_1 (Error)
+    (8, 5): ("solar_reduced_power", None, None),      # was vent_2 (ReducedPower)
+    (8, 6): ("solar_aes_active", None, None),         # was vent_3 (AESActive)
+    (8, 7): ("solar_power", "W", None),               # was tire_pressure/bar (SolarPanelPower W)
     # Light: Wohnraum Deckenbeleuchtung / Living room ceiling (bus 11)
     (11, 1): ("light_living_ceiling", None, None),
     (11, 2): ("light_living_ceiling_brightness", "%", None),
@@ -89,21 +107,24 @@ SENSOR_MAP: dict[tuple[int, int], tuple[str, str | None, str | None]] = {
     (12, 1): ("light_living_ambient", None, None),
     (12, 2): ("light_living_ambient_brightness", "%", None),
     (12, 3): ("light_living_ambient_color_temp", None, None),
-    # GPS (30)
-    (30, 1): ("gps_coordinates", None, None),
-    (30, 2): ("gps_utc_time", None, None),
-    (30, 3): ("gps_signal_quality", None, None),
-    (30, 4): ("gps_fix", None, None),
-    (30, 5): ("gps_altitude", "m", None),
-    (30, 6): ("gps_satellites", None, None),
-    (30, 7): ("gps_heading", "\u00b0", None),
-    (30, 8): ("gps_sensor_8", None, None),
-    (30, 9): ("gps_sensor_9", None, None),
-    (30, 10): ("gps_sensor_10", None, None),
-    (30, 11): ("gps_sensor_11", None, None),
-    (30, 12): ("gps_sensor_12", None, None),
-    (30, 13): ("gps_sensor_13", None, None),
-    (30, 14): ("gps_sensor_14", None, None),
+    # Bus 30 — ScuSignals (SCU platform: GPS, LTE, Bluetooth, chassis wake).
+    # Author's labels treated all 14 slots as gps_*, but only (30,1)/(30,2)
+    # are GPS related.  (30,3-7) are LTE/SCU telemetry and paired-BT counts;
+    # (30,8-14) are chassis state flags including the WakeUpChassis command.
+    (30, 1): ("gps_coordinates", None, None),           # GpsLocation (lat,lon string)
+    (30, 2): ("scu_internal_time", None, None),         # was gps_utc_time
+    (30, 3): ("lte_connection_quality", None, None),   # was gps_signal_quality
+    (30, 4): ("lte_connection_state", None, None),     # was gps_fix
+    (30, 5): ("scu_voltage", "V", None),                # was gps_altitude m (ScuVoltage V — different unit!)
+    (30, 6): ("paired_bt_devices", None, None),        # was gps_satellites
+    (30, 7): ("connected_bt_devices", None, None),     # was gps_heading °
+    (30, 8): ("battery_cutoff_switch", None, None),    # was gps_sensor_8
+    (30, 9): ("user_active", None, None),              # was gps_sensor_9
+    (30, 10): ("d_plus", None, None),                  # was gps_sensor_10
+    (30, 11): ("wake_up_chassis", None, None),         # was gps_sensor_11 (writable — wakes Mercedes CAN)
+    (30, 12): ("battery_switch_active", None, None),   # was gps_sensor_12
+    (30, 13): ("scu_shoreline_connected", None, None), # was gps_sensor_13
+    (30, 14): ("vehicle_movement", None, None),        # was gps_sensor_14
     # Heating / Fridge control (34)
     # sid=1: fridge power (bool), sid=2: fridge ECO mode (bool),
     # sid=3: fridge cooling step (uint 1-5)
@@ -163,27 +184,31 @@ SENSOR_MAP: dict[tuple[int, int], tuple[str, str | None, str | None]] = {
     (58, 12): ("heater_sensor_12", None, None),
     (58, 13): ("heater_sensor_13", None, None),
     (58, 14): ("heater_sensor_14", None, None),
-    # can2 — Extended chassis CAN
-    # Note: Many of these are cached Mercedes CAN values from last drive.
-    # Outdoor/ambient temp only updates when engine is running.
-    (99, 1): ("adblue_temp", "°C", None),
-    (99, 2): ("engine_torque", "%", None),
-    (99, 3): ("ambient_temp", "°C", None),
-    (99, 4): ("lithium_soc", "%", None),
-    (99, 5): ("fuel_range", "km", None),
-    (99, 6): ("current_gear", None, None),
-    (99, 7): ("total_fuel_used", None, None),
-    (99, 8): ("lithium_soc_2", "%", None),
-    (99, 9): ("cruise_control", None, None),
-    (99, 10): ("dpf_status", None, None),
+    # Bus 99 — Lithium battery BMS (not "can2" extended chassis CAN).
+    # Author's labels here were Mercedes CAN signal names that do not apply —
+    # the S700's lithium pack reports BMS telemetry: BatteryVoltage,
+    # BatteryCurrent, BatteryTemperature, StateOfCharge, TimeRemaining,
+    # StateOfHealth, CapacityRemaining, RelativeCapacity, ChargeDetected,
+    # DeviceFailure.  lithium_soc (slot 4) is retained as the canonical SoC.
+    (99, 1): ("bms_battery_voltage", "V", None),        # was adblue_temp °C
+    (99, 2): ("bms_battery_current", "A", None),        # was engine_torque %
+    (99, 3): ("bms_battery_temperature", "°C", None),   # was ambient_temp (same °C, new meaning)
+    (99, 4): ("lithium_soc", "%", None),                # BatteryStateOfCharge (kept)
+    (99, 5): ("bms_time_remaining", "min", None),       # was fuel_range km
+    (99, 6): ("bms_state_of_health", "%", None),        # was current_gear
+    (99, 7): ("bms_capacity_remaining", "Ah", None),    # was total_fuel_used
+    (99, 8): ("bms_relative_capacity", "%", None),      # was lithium_soc_2
+    (99, 9): ("bms_charge_detected", None, None),       # was cruise_control
+    (99, 10): ("bms_device_failure", None, None),       # was dpf_status
 }
 
-# Human-readable mappings for raw SCU string values
+# Human-readable mappings for raw SCU string values.
+# Entries for sensor names that no longer exist after the bus-1 relabel
+# (door_passenger, door_sliding, door_rear, headlamp, fog_*, high_beam,
+# parking_light, turn_signal) have been removed.
 _VALUE_LABELS: dict[str, dict[str, str]] = {
     "door_driver": {"OFF": "Closed", "CLS": "Closed", "ON": "Open", "OPN": "Open", "SNA": "N/A"},
-    "door_passenger": {"OFF": "Closed", "CLS": "Closed", "ON": "Open", "OPN": "Open", "SNA": "N/A"},
-    "door_sliding": {"OFF": "Closed", "CLS": "Closed", "ON": "Open", "OPN": "Open", "SNA": "N/A"},
-    "door_rear": {"OFF": "Closed", "CLS": "Closed", "ON": "Open", "OPN": "Open", "SNA": "N/A"},
+    "door_entrance": {"OFF": "Closed", "CLS": "Closed", "ON": "Open", "OPN": "Open", "SNA": "N/A"},
     "ignition_state": {
         "IGN_LOCK": "Off",
         "IGN_OFF": "Accessory",
@@ -196,19 +221,13 @@ _VALUE_LABELS: dict[str, dict[str, str]] = {
         "Vehicle external locked": "Locked",
         "Vehicle internal locked": "Locked (inside)",
     },
-    "headlamp": {"OFF": "Off", "ON": "On"},
-    "fog_front": {"OFF": "Off", "ON": "On"},
-    "fog_rear": {"OFF": "Off", "ON": "On"},
-    "high_beam": {"OFF": "Off", "ON": "On"},
-    "parking_light": {"OFF": "Off", "ON": "On"},
-    "turn_signal": {"OFF": "Off", "ON": "On"},
     "heater_fan_speed": {"OFF": "Off", "ECO": "Eco", "HOT": "Hot", "HIGH": "High"},
     "heater_state": {"False": "Off", "True": "On"},
 }
 
 # Integer-to-string label maps for sensors that report numeric codes.
+# dpf_status removed (bus 99,10 is now bms_device_failure).
 _INT_LABELS: dict[str, dict[int, str]] = {
-    "dpf_status": {0: "Normal", 1: "Regeneration"},
     "fridge_mode": {0: "On", 1: "Eco", 2: "Boost", 8: "Off"},
     "fridge_status": {0: "Open", 1: "Closed"},
 }
@@ -216,22 +235,6 @@ _INT_LABELS: dict[str, dict[int, str]] = {
 # Sentinel float values that indicate "sensor unavailable / not connected".
 # The SCU stores 32768 (0x8000) as CAN "no data" — scaled to float as 3276.8.
 _FLOAT_SENTINELS: set[float] = {3276.8, 32768.0, 65535.0, 6553.5}
-
-# Mercedes Sprinter 7G-TRONIC automatic transmission gear mapping.
-# CAN bus reports gear position as integers; this maps them to readable labels.
-# Confirmed: 100 = P (observed while parked).
-# TODO: Capture R, N, D values while driving via mitmproxy (#5).
-_GEAR_MAP: dict[int, str] = {
-    0: "N",
-    1: "1",
-    2: "2",
-    3: "3",
-    4: "4",
-    5: "5",
-    6: "6",
-    7: "7",
-    100: "P",
-}
 
 # All PiaRequest payloads captured from the Hymer Connect app.
 # These initialise sensor groups and subscribe to all sensor data from the SCU.
@@ -615,12 +618,9 @@ def _extract_sensors_recursive(
                     # Map raw string values to readable labels
                     if isinstance(val, str) and name in _VALUE_LABELS:
                         val = _VALUE_LABELS[name].get(val, val)
-                    # Map integer values to readable labels (gear, fridge, etc.)
+                    # Map integer values to readable labels (fridge, etc.)
                     if isinstance(val, int) and name in _INT_LABELS:
                         val = _INT_LABELS[name].get(val, val)
-                    # Map gear integer to readable position
-                    if name == "current_gear" and isinstance(val, int):
-                        val = _GEAR_MAP.get(val, str(val))
                     sensors[name] = val
                 else:
                     fallback = f"bus{entry['bus_id']}_s{entry['sensor_id']}"

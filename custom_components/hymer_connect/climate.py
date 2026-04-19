@@ -113,16 +113,14 @@ class HymerHeaterClimate(
 
     @property
     def current_temperature(self) -> float | None:
-        """Return the current indoor temperature."""
-        if self.coordinator.data is None:
-            return None
-        # Use ambient temp from CAN bus as current temp
-        val = _resolve_path(self.coordinator.data, "signalr_sensors.ambient_temp")
-        if val is not None:
-            try:
-                return float(val)
-            except (ValueError, TypeError):
-                pass
+        """Return the current indoor temperature.
+
+        The SCU does not expose an indoor air-temperature sensor.  Earlier
+        releases read `signalr_sensors.ambient_temp`, which was actually
+        the lithium BMS battery temperature on bus 99 — a misleading
+        indoor-temperature reading.  Returning None avoids the bad value;
+        users see only the target setpoint, matching what the EHG app shows.
+        """
         return None
 
     @property

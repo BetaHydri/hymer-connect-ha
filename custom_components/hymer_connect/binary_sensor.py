@@ -29,6 +29,7 @@ class HymerBinarySensorEntityDescription(BinarySensorEntityDescription):
 
 
 BINARY_SENSOR_DESCRIPTIONS: tuple[HymerBinarySensorEntityDescription, ...] = (
+    # --- Bus 1 — Chassis flags ---
     HymerBinarySensorEntityDescription(
         key="engine_running",
         translation_key="engine_running",
@@ -37,53 +38,62 @@ BINARY_SENSOR_DESCRIPTIONS: tuple[HymerBinarySensorEntityDescription, ...] = (
         icon="mdi:engine",
     ),
     HymerBinarySensorEntityDescription(
-        key="handbrake",
-        translation_key="handbrake",
-        value_path="signalr_sensors.handbrake",
-        on_value=1,
+        key="parking_brake_engaged",
+        translation_key="parking_brake_engaged",
+        value_path="signalr_sensors.parking_brake_engaged",
         icon="mdi:car-brake-parking",
     ),
     HymerBinarySensorEntityDescription(
-        key="charger_active",
-        translation_key="charger_active",
-        device_class=BinarySensorDeviceClass.BATTERY_CHARGING,
-        value_path="signalr_sensors.charger_active",
-        icon="mdi:battery-charging",
-    ),
-    HymerBinarySensorEntityDescription(
-        key="solar_connected",
-        translation_key="solar_connected",
-        device_class=BinarySensorDeviceClass.PLUG,
-        value_path="signalr_sensors.solar_connected",
-        on_value=1,
-        icon="mdi:solar-power",
-    ),
-    HymerBinarySensorEntityDescription(
-        key="gps_fix",
-        translation_key="gps_fix",
-        device_class=BinarySensorDeviceClass.CONNECTIVITY,
-        value_path="signalr_sensors.gps_fix",
-        icon="mdi:crosshairs-gps",
-    ),
-    HymerBinarySensorEntityDescription(
-        key="scu_connected",
-        translation_key="scu_connected",
-        device_class=BinarySensorDeviceClass.CONNECTIVITY,
-        value_path="signalr_sensors.scu_connected",
-        icon="mdi:access-point",
-    ),
-    HymerBinarySensorEntityDescription(
-        key="cruise_control",
-        translation_key="cruise_control",
-        value_path="signalr_sensors.cruise_control",
+        key="cruise_control_active",
+        translation_key="cruise_control_active",
+        value_path="signalr_sensors.cruise_control_active",
         icon="mdi:car-cruise-control",
     ),
     HymerBinarySensorEntityDescription(
-        key="light_living_ceiling",
-        translation_key="light_living_ceiling",
-        device_class=BinarySensorDeviceClass.LIGHT,
-        value_path="signalr_sensors.light_living_ceiling",
-        icon="mdi:ceiling-light",
+        key="downhill_assist_active",
+        translation_key="downhill_assist_active",
+        value_path="signalr_sensors.downhill_assist_active",
+        icon="mdi:arrow-down-bold",
+    ),
+    HymerBinarySensorEntityDescription(
+        key="standheizung_available",
+        translation_key="standheizung_available",
+        value_path="signalr_sensors.standheizung_available",
+        icon="mdi:radiator",
+    ),
+    HymerBinarySensorEntityDescription(
+        key="standheizung_state",
+        translation_key="standheizung_state",
+        device_class=BinarySensorDeviceClass.HEAT,
+        value_path="signalr_sensors.standheizung_state",
+        icon="mdi:radiator",
+    ),
+    HymerBinarySensorEntityDescription(
+        key="lightsense_night",
+        translation_key="lightsense_night",
+        value_path="signalr_sensors.lightsense_night",
+        icon="mdi:weather-night",
+    ),
+    HymerBinarySensorEntityDescription(
+        key="wiping_water_empty",
+        translation_key="wiping_water_empty",
+        device_class=BinarySensorDeviceClass.PROBLEM,
+        value_path="signalr_sensors.wiping_water_empty",
+        icon="mdi:wiper-wash",
+    ),
+    HymerBinarySensorEntityDescription(
+        key="motor_oil_warning",
+        translation_key="motor_oil_warning",
+        device_class=BinarySensorDeviceClass.PROBLEM,
+        value_path="signalr_sensors.motor_oil_warning",
+        icon="mdi:oil",
+    ),
+    HymerBinarySensorEntityDescription(
+        key="cooling_water_empty",
+        translation_key="cooling_water_empty",
+        device_class=BinarySensorDeviceClass.PROBLEM,
+        value_path="signalr_sensors.cooling_water_empty",
+        icon="mdi:coolant-temperature",
     ),
     # --- Doors (HA auto-translates: Offen/Geschlossen) ---
     HymerBinarySensorEntityDescription(
@@ -95,20 +105,12 @@ BINARY_SENSOR_DESCRIPTIONS: tuple[HymerBinarySensorEntityDescription, ...] = (
         icon="mdi:car-door",
     ),
     HymerBinarySensorEntityDescription(
-        key="door_passenger",
-        translation_key="door_passenger",
+        key="door_entrance",
+        translation_key="door_entrance",
         device_class=BinarySensorDeviceClass.DOOR,
-        value_path="signalr_sensors.door_passenger",
+        value_path="signalr_sensors.door_entrance",
         on_value="Open",
-        icon="mdi:car-door",
-    ),
-    HymerBinarySensorEntityDescription(
-        key="door_sliding",
-        translation_key="door_sliding",
-        device_class=BinarySensorDeviceClass.DOOR,
-        value_path="signalr_sensors.door_sliding",
-        on_value="Open",
-        icon="mdi:door-sliding",
+        icon="mdi:door",
     ),
     # --- Lock (HA auto-translates: Gesperrt/Entsperrt) ---
     HymerBinarySensorEntityDescription(
@@ -128,64 +130,59 @@ BINARY_SENSOR_DESCRIPTIONS: tuple[HymerBinarySensorEntityDescription, ...] = (
         on_value="On",
         icon="mdi:power",
     ),
-    # --- Rear door ---
+    # --- Bus 3 — Shore power & EBL health ---
     HymerBinarySensorEntityDescription(
-        key="door_rear",
-        translation_key="door_rear",
-        device_class=BinarySensorDeviceClass.DOOR,
-        value_path="signalr_sensors.door_rear",
-        on_value="Open",
-        icon="mdi:car-door",
-    ),
-    # --- Vehicle lights ---
-    HymerBinarySensorEntityDescription(
-        key="headlamp",
-        translation_key="headlamp",
-        device_class=BinarySensorDeviceClass.LIGHT,
-        value_path="signalr_sensors.headlamp",
-        on_value="On",
-        icon="mdi:car-light-high",
+        key="shoreline_connected",
+        translation_key="shoreline_connected",
+        device_class=BinarySensorDeviceClass.PLUG,
+        value_path="signalr_sensors.shoreline_connected",
+        icon="mdi:power-plug",
     ),
     HymerBinarySensorEntityDescription(
-        key="high_beam",
-        translation_key="high_beam",
-        device_class=BinarySensorDeviceClass.LIGHT,
-        value_path="signalr_sensors.high_beam",
-        on_value="On",
-        icon="mdi:car-light-high",
+        key="ebl_over_temperature",
+        translation_key="ebl_over_temperature",
+        device_class=BinarySensorDeviceClass.PROBLEM,
+        value_path="signalr_sensors.ebl_over_temperature",
+        icon="mdi:alert-circle",
+    ),
+    # --- Bus 8 — Solar ---
+    # "solar_active" is computed from solar_current for reliability; the
+    # direct SolarActive flag from (8,1) is also published as a diagnostic.
+    HymerBinarySensorEntityDescription(
+        key="solar_active",
+        translation_key="solar_active",
+        device_class=BinarySensorDeviceClass.POWER,
+        value_path="computed.solar_active",
+        icon="mdi:solar-power",
     ),
     HymerBinarySensorEntityDescription(
-        key="parking_light",
-        translation_key="parking_light",
-        device_class=BinarySensorDeviceClass.LIGHT,
-        value_path="signalr_sensors.parking_light",
-        on_value="On",
-        icon="mdi:car-parking-lights",
+        key="solar_reduced_power",
+        translation_key="solar_reduced_power",
+        value_path="signalr_sensors.solar_reduced_power",
+        icon="mdi:solar-power-variant-outline",
     ),
     HymerBinarySensorEntityDescription(
-        key="fog_front",
-        translation_key="fog_front",
-        device_class=BinarySensorDeviceClass.LIGHT,
-        value_path="signalr_sensors.fog_front",
-        on_value="On",
-        icon="mdi:car-light-fog",
+        key="solar_aes_active",
+        translation_key="solar_aes_active",
+        value_path="signalr_sensors.solar_aes_active",
+        icon="mdi:solar-power",
+    ),
+    # --- Bus 30 — SCU state ---
+    HymerBinarySensorEntityDescription(
+        key="vehicle_movement",
+        translation_key="vehicle_movement",
+        device_class=BinarySensorDeviceClass.MOTION,
+        value_path="signalr_sensors.vehicle_movement",
+        icon="mdi:motion-sensor",
     ),
     HymerBinarySensorEntityDescription(
-        key="fog_rear",
-        translation_key="fog_rear",
-        device_class=BinarySensorDeviceClass.LIGHT,
-        value_path="signalr_sensors.fog_rear",
-        on_value="On",
-        icon="mdi:car-light-fog",
+        key="scu_connected",
+        translation_key="scu_connected",
+        device_class=BinarySensorDeviceClass.CONNECTIVITY,
+        value_path="signalr_sensors.scu_connected",
+        icon="mdi:access-point",
     ),
-    HymerBinarySensorEntityDescription(
-        key="turn_signal",
-        translation_key="turn_signal",
-        value_path="signalr_sensors.turn_signal",
-        on_value="On",
-        icon="mdi:car-turn-signal",
-    ),
-    # --- Truma ---
+    # --- Bus 49 — Truma connectivity ---
     HymerBinarySensorEntityDescription(
         key="truma_connected",
         translation_key="truma_connected",
@@ -193,7 +190,29 @@ BINARY_SENSOR_DESCRIPTIONS: tuple[HymerBinarySensorEntityDescription, ...] = (
         value_path="signalr_sensors.truma_connected",
         icon="mdi:radiator",
     ),
-    # --- Interior lights ---
+    # --- Bus 99 — BMS flags ---
+    HymerBinarySensorEntityDescription(
+        key="bms_charge_detected",
+        translation_key="bms_charge_detected",
+        device_class=BinarySensorDeviceClass.BATTERY_CHARGING,
+        value_path="signalr_sensors.bms_charge_detected",
+        icon="mdi:battery-charging",
+    ),
+    HymerBinarySensorEntityDescription(
+        key="bms_device_failure",
+        translation_key="bms_device_failure",
+        device_class=BinarySensorDeviceClass.PROBLEM,
+        value_path="signalr_sensors.bms_device_failure",
+        icon="mdi:battery-alert",
+    ),
+    # --- Interior lights (on/off) ---
+    HymerBinarySensorEntityDescription(
+        key="light_living_ceiling",
+        translation_key="light_living_ceiling",
+        device_class=BinarySensorDeviceClass.LIGHT,
+        value_path="signalr_sensors.light_living_ceiling",
+        icon="mdi:ceiling-light",
+    ),
     HymerBinarySensorEntityDescription(
         key="light_living_ambient",
         translation_key="light_living_ambient",
@@ -242,23 +261,6 @@ BINARY_SENSOR_DESCRIPTIONS: tuple[HymerBinarySensorEntityDescription, ...] = (
         device_class=BinarySensorDeviceClass.LIGHT,
         value_path="signalr_sensors.light_bedroom_overhead",
         icon="mdi:ceiling-light",
-    ),
-    # --- Solar ---
-    # Derived from solar_current: True when solar current > 0
-    HymerBinarySensorEntityDescription(
-        key="solar_active",
-        translation_key="solar_active",
-        device_class=BinarySensorDeviceClass.POWER,
-        value_path="computed.solar_active",
-        icon="mdi:solar-power",
-    ),
-    # --- Water pump ---
-    HymerBinarySensorEntityDescription(
-        key="water_pump",
-        translation_key="water_pump",
-        device_class=BinarySensorDeviceClass.RUNNING,
-        value_path="signalr_sensors.light_nightlight",
-        icon="mdi:water-pump",
     ),
 )
 

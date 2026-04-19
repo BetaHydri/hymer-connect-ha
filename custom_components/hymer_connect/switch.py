@@ -50,7 +50,7 @@ SWITCH_DESCRIPTIONS: tuple[HymerSwitchEntityDescription, ...] = (
         device_class=SwitchDeviceClass.SWITCH,
         bus_id=3,
         sensor_id=3,
-        value_path="signalr_sensors.charger_active",
+        value_path="signalr_sensors.water_pump",
         on_value=True,
         icon="mdi:water-pump",
     ),
