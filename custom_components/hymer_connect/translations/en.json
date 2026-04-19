@@ -360,6 +360,17 @@
       "light_privat_group": {
         "name": "Privat all lights"
       }
+    },
+    "switch": {
+      "main_switch_ctrl": {
+        "name": "12V Main switch"
+      },
+      "water_pump_ctrl": {
+        "name": "Water pump"
+      },
+      "heater_ctrl": {
+        "name": "Heater"
+      }
     }
   }
 }

@@ -146,6 +146,11 @@
       "truma_connected": { "name": "Truma connected" },
       "step_retracted": { "name": "Entry step" },
       "water_pump": { "name": "Water pump" }
+    },
+    "switch": {
+      "main_switch_ctrl": { "name": "12V Main switch" },
+      "water_pump_ctrl": { "name": "Water pump" },
+      "heater_ctrl": { "name": "Heater" }
     }
   }
 }

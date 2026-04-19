@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.7.0] - 2026-04-19
+
+### Added
+
+- **Switch platform** — New controllable switch entities for 12V Main switch (bus 3), Water pump (bus 22), and Heater (bus 34). Uses the same PIA protobuf command structure as lights. Includes optimistic state with SCU confirmation
+
 ## [2.6.4] - 2026-04-18
 
 ### Fixed
