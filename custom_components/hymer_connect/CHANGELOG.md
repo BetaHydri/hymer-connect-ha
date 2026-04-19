@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.8.3] - 2026-04-19
+
+### Fixed
+
+- **Clean entity IDs** — Device name simplified from `HYMER HYMER Connect (HYMER)` to `HYMER`, producing clean entity IDs like `sensor.hymer_battery_voltage` instead of `sensor.hymer_hymer_connect_hymer_battery_voltage`. **Requires removing and re-adding the integration for existing installations**
+- **Dashboard** — All entity references updated to use clean `hymer_` prefix
+
 ## [2.8.2] - 2026-04-19
 
 ### Fixed

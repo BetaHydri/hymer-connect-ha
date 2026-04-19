@@ -132,12 +132,12 @@ views:
           - entity: sensor.hymer_ambient_temp
             name: Ambient
       - type: thermostat
-        entity: climate.hymer_hymer_connect_hymer_truma_heater
+        entity: climate.hymer_truma_heater
         name: Truma Heater
       - type: entities
         title: Truma Heater Details
         entities:
-          - entity: climate.hymer_hymer_connect_hymer_truma_heater
+          - entity: climate.hymer_truma_heater
             name: Heater Control
           - entity: sensor.hymer_heater_fan_speed
             name: Fan Speed
@@ -154,12 +154,12 @@ views:
       - type: entities
         title: Boiler (Hot Water)
         entities:
-          - entity: select.hymer_hymer_connect_hymer_boiler_mode
+          - entity: select.hymer_boiler_mode
             name: Boiler Mode
       - type: entities
         title: Fridge
         entities:
-          - entity: select.hymer_hymer_connect_hymer_fridge_mode
+          - entity: select.hymer_fridge_mode
             name: Fridge Mode
           - entity: sensor.hymer_fridge_mode
             name: Fridge Status (raw)
@@ -322,9 +322,9 @@ views:
       - type: entities
         title: Switches
         entities:
-          - entity: switch.hymer_hymer_connect_hymer_12v_main_switch
+          - entity: switch.hymer_12v_main_switch
             name: 12V Main Switch
-          - entity: switch.hymer_hymer_connect_hymer_water_pump
+          - entity: switch.hymer_water_pump
             name: Water Pump
   - title: GPS
     path: gps

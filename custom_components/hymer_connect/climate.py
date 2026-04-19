@@ -67,7 +67,7 @@ class HymerHeaterClimate(
         self._attr_unique_id = f"{entry.entry_id}_truma_heater"
         self._attr_device_info = {
             "identifiers": {(DOMAIN, entry.entry_id)},
-            "name": f"HYMER {entry.title}",
+            "name": "HYMER",
             "manufacturer": MANUFACTURER,
             "model": "Smart Interface Unit",
         }

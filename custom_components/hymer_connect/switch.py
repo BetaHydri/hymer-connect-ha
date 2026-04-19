@@ -90,7 +90,7 @@ class HymerConnectSwitch(
         self._attr_unique_id = f"{entry.entry_id}_{description.key}"
         self._attr_device_info = {
             "identifiers": {(DOMAIN, entry.entry_id)},
-            "name": f"HYMER {entry.title}",
+            "name": "HYMER",
             "manufacturer": MANUFACTURER,
             "model": "Smart Interface Unit",
         }
