@@ -134,6 +134,11 @@ views:
       - type: thermostat
         entity: climate.hymer_truma_heater
         name: Truma Heater
+        features:
+          - type: climate-hvac-modes
+            hvac_modes:
+              - heat
+              - "off"
       - type: entities
         title: Truma Heater Details
         entities:
