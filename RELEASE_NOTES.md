@@ -246,11 +246,34 @@ real session — no content lifted from the app binary.
 The S 700 + your van both happen to see tank data on bus 22/25.  On
 vans with different habitation electrics the same component IDs may
 carry different signals (the app's global registry has no per-vehicle
-override table).  The cleanest long-term fix is to read the SCU's own
-`PiaResponse` and look for a field that carries the component's string
-name — if that exists on the wire we can build the label map
-dynamically and stop hardcoding.  I've flagged this as a follow-up; we
-haven't confirmed yet whether the names are actually there.
+override table).
+
+**Update — confirmed no dynamic naming on the wire.**  I captured 38
+consecutive `PiaResponse` frames from a live S 700 session and walked
+every protobuf field.  The only strings the SCU ever sends are:
+interface labels (`lin1` / `can0` / `can2` / `lin2`), sensor *values*
+(`OFF`, `IGN_LOCK`, `ECO`, `AGM/Lithium`, …), firmware versions, GPS
+coordinates, UTC timestamps, and one localization key
+(`SCENARIOS.GOOD_NIGHT.TITLE`).  **No component or sensor names.**
+So dynamic wire-based labelling is not viable — the app's labels come
+purely from its compiled `componentId → componentName` table, and the
+EHG app's per-vehicle user-facing labels must come from per-vehicle
+UI templates higher up in the stack.
+
+For this integration that leaves two real options:
+
+1. **Per-vehicle `SENSOR_MAP` overlays.**  Select an overlay at load
+   time using the `vehicle_model` REST sensor; the overlay only turns
+   on entities validated for that vehicle.  Default map stays narrow
+   and safe.
+2. **Conservative default + user-contributed overrides.**  Ship one
+   minimal map that only labels slots we're confident are universal,
+   and let owners of other vans file issues / PRs with their own
+   observations.
+
+Option (1) is probably cleanest but needs a second van's data point
+before it's useful.  Happy to do either as a follow-up once this PR
+lands.
 
 ## Testing
 
