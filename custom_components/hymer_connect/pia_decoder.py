@@ -282,37 +282,51 @@ def _encode_bytes_field(field_number: int, data: bytes) -> bytes:
     return _encode_field(field_number, 2, _encode_varint(len(data)) + data)
 
 
-def build_light_command(
+def build_sensor_write(
     bus_id: int,
     sensor_id: int,
+    value: bool | int | float | str,
     *,
-    bool_value: bool | None = None,
-    uint_value: int | None = None,
+    signed: bool = False,
 ) -> str:
-    """Build a PiaRequest payload to control a light.
+    """Build a PiaRequest payload to set a single sensor value.
 
-    Args:
-        bus_id: The light's bus ID (e.g. 11 for living ceiling).
-        sensor_id: 1=on/off, 2=brightness, 3=color_temp.
-        bool_value: True/False for on/off (sensor_id=1).
-        uint_value: 0-100 for brightness/color_temp (sensor_id=2,3).
+    The on-the-wire format is the same for every writable sensor the SCU
+    exposes (lights, water pump, fridge level, heater power, etc.): a
+    protobuf-encoded entry that carries the target sensor's bus and sensor
+    numbers plus the value in a datatype-specific field.
 
-    Returns:
-        Base64-encoded protobuf payload ready to send as PiaRequest argument.
+    Python type → protobuf field:
+      * bool      -> field 5 (varint, 0/1) — confirmed via water pump + fridge on/off
+      * int       -> field 3 (unsigned varint) — confirmed via fridge level 1..5
+      * int w/ signed=True -> field 7 (varint signed)
+      * float     -> field 6 (little-endian 32-bit IEEE-754) — confirmed via heater target temp
+      * str       -> field 4 (length-delimited UTF-8) — confirmed via heater energy source
+
+    Returns a Base64 string ready to send as the PiaRequest argument.
     """
-    # Build sensor entry: field1=sensor_id, field2=bus_id, field3/5=value
     sensor_data = _encode_varint_field(1, sensor_id)
     sensor_data += _encode_varint_field(2, bus_id)
-    if bool_value is not None:
-        sensor_data += _encode_varint_field(5, 1 if bool_value else 0)
-    elif uint_value is not None:
-        sensor_data += _encode_varint_field(3, uint_value)
 
-    # Nest: sensor_data inside field1 of sub2, inside field2 of inner
+    if isinstance(value, bool):
+        sensor_data += _encode_varint_field(5, 1 if value else 0)
+    elif isinstance(value, int):
+        if signed:
+            sensor_data += _encode_varint_field(7, value if value >= 0 else (value + (1 << 64)))
+        else:
+            if value < 0:
+                raise ValueError("negative int for unsigned sensor; pass signed=True")
+            sensor_data += _encode_varint_field(3, value)
+    elif isinstance(value, float):
+        sensor_data += _encode_field(6, 5, struct.pack("<f", value))
+    elif isinstance(value, str):
+        sensor_data += _encode_bytes_field(4, value.encode("utf-8"))
+    else:
+        raise TypeError(f"unsupported sensor value type: {type(value).__name__}")
+
     sub2 = _encode_bytes_field(1, sensor_data)
     inner = _encode_bytes_field(2, sub2)
 
-    # Build wrapper: msg_id, version, timestamp, command
     import random
     msg_id = random.randint(1, 10_000_000)
     version_bytes = b"v0.32.0"
@@ -323,10 +337,23 @@ def build_light_command(
     wrapper += _encode_varint_field(3, ts)
     wrapper += _encode_bytes_field(4, inner)
 
-    # Top-level: field 2 = wrapper
     payload = _encode_bytes_field(2, wrapper)
-
     return base64.b64encode(payload).decode("ascii")
+
+
+def build_light_command(
+    bus_id: int,
+    sensor_id: int,
+    *,
+    bool_value: bool | None = None,
+    uint_value: int | None = None,
+) -> str:
+    """Backwards-compatible wrapper for lights; dispatches to build_sensor_write."""
+    if bool_value is not None:
+        return build_sensor_write(bus_id, sensor_id, bool_value)
+    if uint_value is not None:
+        return build_sensor_write(bus_id, sensor_id, int(uint_value))
+    raise ValueError("must provide bool_value or uint_value")
 
 
 def _decode_varint(data: bytes, pos: int) -> tuple[int, int]:

@@ -382,6 +382,11 @@
       "heater_water_energy_source_ctrl": {
         "name": "Heater water energy source"
       }
+    },
+    "number": {
+      "heater_target_temperature_ctrl": {
+        "name": "Heater target temperature"
+      }
     }
   }
 }
