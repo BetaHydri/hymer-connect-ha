@@ -447,6 +447,10 @@ If you have a different EHG vehicle and want to help expand compatibility:
    - Any debug log snippets showing unmapped `(bus_id, sensor_id)` pairs
 4. This helps map sensor IDs for different vehicle configurations and benefits all users
 
+### Sensor Bus Map Reference
+
+A complete slot-by-slot reference for the S600 is available in [`docs/sensor-map.md`](docs/sensor-map.md). This documents every `(bus_id, sensor_id)` mapping with units, transforms, and known S700 conflicts.
+
 ## Key Terminology
 
 | Term | Description |
