@@ -222,20 +222,57 @@ SIGNALR_SENSORS: tuple[HymerSensorEntityDescription, ...] = (
         icon="mdi:gas-burner",
     ),
     # --- Extended CAN (can2) ---
+    # --- Leisure-battery BMS (bus 99) ---
     HymerSensorEntityDescription(
-        key="ambient_temp",
-        translation_key="ambient_temp",
+        key="bms_battery_voltage",
+        translation_key="bms_battery_voltage",
+        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
+        device_class=SensorDeviceClass.VOLTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_path="signalr_sensors.bms_battery_voltage",
+        icon="mdi:battery",
+    ),
+    HymerSensorEntityDescription(
+        key="bms_battery_current",
+        translation_key="bms_battery_current",
+        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
+        device_class=SensorDeviceClass.CURRENT,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_path="signalr_sensors.bms_battery_current",
+        icon="mdi:current-dc",
+    ),
+    HymerSensorEntityDescription(
+        key="bms_battery_temperature",
+        translation_key="bms_battery_temperature",
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
-        value_path="signalr_sensors.ambient_temp",
+        value_path="signalr_sensors.bms_battery_temperature",
         icon="mdi:thermometer",
     ),
     HymerSensorEntityDescription(
-        key="current_gear",
-        translation_key="current_gear",
-        value_path="signalr_sensors.current_gear",
-        icon="mdi:car-shift-pattern",
+        key="bms_state_of_health",
+        translation_key="bms_state_of_health",
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_path="signalr_sensors.bms_state_of_health",
+        icon="mdi:battery-heart",
+    ),
+    HymerSensorEntityDescription(
+        key="bms_capacity_remaining",
+        translation_key="bms_capacity_remaining",
+        native_unit_of_measurement="Ah",
+        state_class=SensorStateClass.MEASUREMENT,
+        value_path="signalr_sensors.bms_capacity_remaining",
+        icon="mdi:battery-50",
+    ),
+    HymerSensorEntityDescription(
+        key="bms_time_remaining",
+        translation_key="bms_time_remaining",
+        native_unit_of_measurement=UnitOfTime.MINUTES,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_path="signalr_sensors.bms_time_remaining",
+        icon="mdi:timer-sand",
     ),
     # --- Engine (can0) ---
     HymerSensorEntityDescription(
@@ -289,46 +326,15 @@ SIGNALR_SENSORS: tuple[HymerSensorEntityDescription, ...] = (
         value_path="signalr_sensors.fridge_status",
         icon="mdi:fridge-outline",
     ),
-    # --- Extended CAN (can2) ---
-    HymerSensorEntityDescription(
-        key="fuel_range",
-        translation_key="fuel_range",
-        native_unit_of_measurement=UnitOfLength.KILOMETERS,
-        device_class=SensorDeviceClass.DISTANCE,
-        state_class=SensorStateClass.MEASUREMENT,
-        value_path="signalr_sensors.fuel_range",
-        icon="mdi:gas-station",
-    ),
-    HymerSensorEntityDescription(
-        key="total_fuel_used",
-        translation_key="total_fuel_used",
-        state_class=SensorStateClass.TOTAL_INCREASING,
-        value_path="signalr_sensors.total_fuel_used",
-        icon="mdi:fuel",
-    ),
-    HymerSensorEntityDescription(
-        key="engine_torque",
-        translation_key="engine_torque",
-        native_unit_of_measurement=PERCENTAGE,
-        state_class=SensorStateClass.MEASUREMENT,
-        value_path="signalr_sensors.engine_torque",
-        icon="mdi:engine",
-    ),
-    HymerSensorEntityDescription(
-        key="adblue_temp",
-        translation_key="adblue_temp",
-        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
-        device_class=SensorDeviceClass.TEMPERATURE,
-        state_class=SensorStateClass.MEASUREMENT,
-        value_path="signalr_sensors.adblue_temp",
-        icon="mdi:thermometer",
-    ),
-    HymerSensorEntityDescription(
-        key="dpf_status",
-        translation_key="dpf_status",
-        value_path="signalr_sensors.dpf_status",
-        icon="mdi:car-exhaust",
-    ),
+    # NOTE: entities "fuel_range", "total_fuel_used", "engine_torque",
+    # "adblue_temp", "dpf_status" and "current_gear" were removed because
+    # they read from bus 99, which is a leisure-battery BMS on this SCU
+    # firmware (not a second chassis-CAN). Each one reported either a
+    # constant or a BMS sentinel value and no user-facing data. Real
+    # Mercedes chassis signals (fuel range, gear, DPF, etc.) would live on
+    # the chassis CAN (bus 1) or Sprinter-extended slots that this
+    # integration does not yet wire up. The BMS readings are exposed as
+    # the new bms_* sensors above.
     # --- Habitation electrics (lin1) ---
     HymerSensorEntityDescription(
         key="solar_charger_status",

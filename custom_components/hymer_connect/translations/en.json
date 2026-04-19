@@ -122,32 +122,29 @@
       "heater_fuel_type": {
         "name": "Heater fuel type"
       },
-      "ambient_temp": {
-        "name": "Ambient temperature"
+      "bms_battery_voltage": {
+        "name": "Leisure battery voltage"
       },
-      "current_gear": {
-        "name": "Current gear"
+      "bms_battery_current": {
+        "name": "Leisure battery current"
+      },
+      "bms_battery_temperature": {
+        "name": "Leisure battery temperature"
+      },
+      "bms_state_of_health": {
+        "name": "Leisure battery health"
+      },
+      "bms_capacity_remaining": {
+        "name": "Leisure battery capacity"
+      },
+      "bms_time_remaining": {
+        "name": "Leisure battery time remaining"
       },
       "rpm": {
         "name": "Engine RPM"
       },
       "engine_hours": {
         "name": "Engine hours"
-      },
-      "fuel_range": {
-        "name": "Fuel range"
-      },
-      "total_fuel_used": {
-        "name": "Total fuel used"
-      },
-      "engine_torque": {
-        "name": "Engine torque"
-      },
-      "adblue_temp": {
-        "name": "AdBlue temperature"
-      },
-      "dpf_status": {
-        "name": "DPF status"
       },
       "solar_charger_status": {
         "name": "Solar charger status"
@@ -250,8 +247,8 @@
       "scu_connected": {
         "name": "SCU connected"
       },
-      "cruise_control": {
-        "name": "Cruise control"
+      "bms_charge_detected": {
+        "name": "Leisure battery charging"
       },
       "alarm_armed": {
         "name": "Alarm"

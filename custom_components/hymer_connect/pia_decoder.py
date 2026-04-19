@@ -159,19 +159,26 @@ SENSOR_MAP: dict[tuple[int, int], tuple[str, str | None, str | None]] = {
     (58, 12): ("heater_sensor_12", None, None),
     (58, 13): ("heater_sensor_13", None, None),
     (58, 14): ("heater_sensor_14", None, None),
-    # can2 — Extended chassis CAN
-    # Note: Many of these are cached Mercedes CAN values from last drive.
-    # Outdoor/ambient temp only updates when engine is running.
-    (99, 1): ("adblue_temp", "°C", None),
-    (99, 2): ("engine_torque", "%", None),
-    (99, 3): ("ambient_temp", "°C", None),
-    (99, 4): ("lithium_soc", "%", None),
-    (99, 5): ("fuel_range", "km", None),
-    (99, 6): ("current_gear", None, None),
-    (99, 7): ("total_fuel_used", None, None),
-    (99, 8): ("lithium_soc_2", "%", None),
-    (99, 9): ("cruise_control", None, None),
-    (99, 10): ("dpf_status", None, None),
+    # Bus 99 — leisure-battery BMS (SmartBatterySensor / Victron-family unit).
+    # This bus was previously mapped as a second chassis CAN (AdBlue temp,
+    # engine torque, fuel range, DPF, gear…), but the values never matched:
+    #   (99, 1) -> ~13.8 V at rest (battery voltage)
+    #   (99, 2) -> ~0 A at rest, non-zero under load (battery current)
+    #   (99, 5) -> 32767 (the BMS's "not calculable" sentinel for minutes)
+    #   (99, 6) -> 100 constantly (state-of-health %, not a gear number)
+    #   (99, 7) -> 320 Ah (capacity of a real leisure bank, not total fuel)
+    # Renamed each slot to reflect what the reading actually is. The lithium
+    # SoC key is kept so the existing sensor.battery_soc entity keeps working.
+    (99, 1): ("bms_battery_voltage", "V", None),       # was adblue_temp
+    (99, 2): ("bms_battery_current", "A", None),       # was engine_torque
+    (99, 3): ("bms_battery_temperature", "°C", None),  # was ambient_temp
+    (99, 4): ("lithium_soc", "%", None),               # BatteryStateOfCharge
+    (99, 5): ("bms_time_remaining", "min", None),      # was fuel_range (km)
+    (99, 6): ("bms_state_of_health", "%", None),       # was current_gear
+    (99, 7): ("bms_capacity_remaining", "Ah", None),   # was total_fuel_used
+    (99, 8): ("bms_relative_capacity", "%", None),     # was lithium_soc_2
+    (99, 9): ("bms_charge_detected", None, None),      # was cruise_control
+    (99, 10): ("bms_device_failure", None, None),      # was dpf_status
 }
 
 # Human-readable mappings for raw SCU string values
@@ -204,7 +211,6 @@ _VALUE_LABELS: dict[str, dict[str, str]] = {
 
 # Integer-to-string label maps for sensors that report numeric codes.
 _INT_LABELS: dict[str, dict[int, str]] = {
-    "dpf_status": {0: "Normal", 1: "Regeneration"},
     "fridge_mode": {0: "On", 1: "Eco", 2: "Boost", 8: "Off"},
     "fridge_status": {0: "Running", 1: "Off", 2: "Standby"},
 }
@@ -213,21 +219,10 @@ _INT_LABELS: dict[str, dict[int, str]] = {
 # The SCU stores 32768 (0x8000) as CAN "no data" — scaled to float as 3276.8.
 _FLOAT_SENTINELS: set[float] = {3276.8, 32768.0, 65535.0, 6553.5}
 
-# Mercedes Sprinter 7G-TRONIC automatic transmission gear mapping.
-# CAN bus reports gear position as integers; this maps them to readable labels.
-# Confirmed: 100 = P (observed while parked).
-# TODO: Capture R, N, D values while driving via mitmproxy (#5).
-_GEAR_MAP: dict[int, str] = {
-    0: "N",
-    1: "1",
-    2: "2",
-    3: "3",
-    4: "4",
-    5: "5",
-    6: "6",
-    7: "7",
-    100: "P",
-}
+# A gear-ratio lookup table previously mapped (99, 6) values to P/R/N/D
+# labels, with a note that 100 == P was "confirmed while parked". That
+# confirmation actually matches the BMS's State-of-Health reading, which
+# idles at 100 %. The gear map no longer has a caller and is removed.
 
 # All PiaRequest payloads captured from the Hymer Connect app.
 # These initialise sensor groups and subscribe to all sensor data from the SCU.
@@ -524,12 +519,9 @@ def _extract_sensors_recursive(
                     # Map raw string values to readable labels
                     if isinstance(val, str) and name in _VALUE_LABELS:
                         val = _VALUE_LABELS[name].get(val, val)
-                    # Map integer values to readable labels (gear, fridge, etc.)
+                    # Map integer values to readable labels (fridge, etc.)
                     if isinstance(val, int) and name in _INT_LABELS:
                         val = _INT_LABELS[name].get(val, val)
-                    # Map gear integer to readable position
-                    if name == "current_gear" and isinstance(val, int):
-                        val = _GEAR_MAP.get(val, str(val))
                     sensors[name] = val
                 else:
                     fallback = f"bus{entry['bus_id']}_s{entry['sensor_id']}"

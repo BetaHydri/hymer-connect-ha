@@ -72,11 +72,16 @@ BINARY_SENSOR_DESCRIPTIONS: tuple[HymerBinarySensorEntityDescription, ...] = (
         value_path="signalr_sensors.scu_connected",
         icon="mdi:access-point",
     ),
+    # The previous "cruise_control" binary sensor read (99, 9), which
+    # actually reports whether the leisure-battery BMS detects a charge
+    # current. Reused the slot for a battery_charging sensor and removed
+    # the cruise-control entity (bus 99 is not a chassis-CAN).
     HymerBinarySensorEntityDescription(
-        key="cruise_control",
-        translation_key="cruise_control",
-        value_path="signalr_sensors.cruise_control",
-        icon="mdi:car-cruise-control",
+        key="bms_charge_detected",
+        translation_key="bms_charge_detected",
+        device_class=BinarySensorDeviceClass.BATTERY_CHARGING,
+        value_path="signalr_sensors.bms_charge_detected",
+        icon="mdi:battery-charging",
     ),
     HymerBinarySensorEntityDescription(
         key="light_living_ceiling",
