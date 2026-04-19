@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.8.8] - 2026-04-19
+
+### Added
+
+- **Refresh command after subscription** — Sends a PIA poll/refresh command (field 9) after subscribing to sensor data, matching the EHG app's "aktualisiere" behavior. This forces the SCU to re-report all current states including correct light on/off values, fixing stale cached states after HA restart
+
 ## [2.8.7] - 2026-04-19
 
 ### Changed

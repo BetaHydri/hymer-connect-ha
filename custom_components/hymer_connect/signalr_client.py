@@ -16,7 +16,7 @@ import aiohttp
 
 from .api import HymerConnectApi, HymerConnectApiError
 from .const import USER_AGENT
-from .pia_decoder import build_subscription_requests, decode_pia_payload, build_light_command, build_multi_sensor_command
+from .pia_decoder import build_subscription_requests, decode_pia_payload, build_light_command, build_multi_sensor_command, build_refresh_command
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -207,6 +207,12 @@ class HymerSignalRClient:
         for payload in requests:
             await self.send_pia_request(payload)
 
+        # Send refresh command to force SCU to push fresh states
+        # (like EHG app's "aktualisiere" on startup)
+        refresh = build_refresh_command()
+        _LOGGER.info("Sending refresh command to force SCU state update")
+        await self.send_pia_request(refresh)
+
     async def resubscribe(self) -> None:
         """Re-send PIA subscriptions to trigger fresh sensor data from the SCU.
 
@@ -221,6 +227,10 @@ class HymerSignalRClient:
         _LOGGER.debug("Re-sending %d PiaRequest subscriptions", len(requests))
         for payload in requests:
             await self.send_pia_request(payload)
+
+        # Send refresh command on resubscribe too
+        refresh = build_refresh_command()
+        await self.send_pia_request(refresh)
 
     async def _send_update_tokens(self) -> None:
         """Send UpdateTokens invocation to authenticate the SignalR connection.

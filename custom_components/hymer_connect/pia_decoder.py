@@ -258,6 +258,25 @@ def build_subscription_requests() -> list[str]:
     return list(_PIA_REQUESTS)
 
 
+def build_refresh_command() -> str:
+    """Build a PiaRequest poll/refresh command to force SCU to re-report all states.
+
+    The EHG app sends this after subscribing (shows "aktualisiere").
+    Uses protobuf field 9 (empty) which triggers a full state refresh.
+    """
+    import random
+    msg_id = random.randint(1, 10_000_000)
+    ts = int(time.time())
+
+    wrapper = _encode_varint_field(1, msg_id)
+    wrapper += _encode_bytes_field(2, b"v0.32.0")
+    wrapper += _encode_varint_field(3, ts)
+    wrapper += _encode_bytes_field(9, b"")  # field 9 = refresh/poll
+
+    payload = _encode_bytes_field(2, wrapper)
+    return base64.b64encode(payload).decode("ascii")
+
+
 def _encode_varint(value: int) -> bytes:
     """Encode an integer as a protobuf varint."""
     result = bytearray()
