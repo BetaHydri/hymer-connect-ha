@@ -41,29 +41,33 @@ SENSOR_MAP: dict[tuple[int, int], tuple[str, str | None, str | None]] = {
     (1, 21): ("fog_rear", None, None),
     (1, 22): ("high_beam", None, None),
     (1, 23): ("language", None, None),
-    # lin1 — Habitation electrics
+    # Bus 3 — caravan electrical-block control unit (fresh/waste water,
+    # leisure battery, water pump, shore-line status). Earlier versions of
+    # this map had many sensors on this bus mislabelled. Names below reflect
+    # each field's functional role inferred from observed protocol behaviour
+    # on a 2025 Grand Canyon S700; each differs from the previous mapping.
     (3, 1): ("main_switch", None, None),
     (3, 2): ("power_source", None, None),
-    (3, 3): ("charger_active", None, None),
+    (3, 3): ("water_pump", None, None),                    # was charger_active; sensor is a pump toggle
     (3, 4): ("charge_phase", None, None),
     (3, 5): ("battery_voltage", "V", None),
     (3, 6): ("battery_current", "A", None),
     (3, 7): ("chassis_battery_voltage", "V", None),
-    (3, 8): ("light_1_level", "%", None),
-    (3, 9): ("light_2_level", "%", None),
-    (3, 10): ("battery_soc", "%", None),
+    (3, 8): ("fresh_water_level", "%", None),              # was light_1_level
+    (3, 9): ("gray_water_level", "%", None),               # was light_2_level
+    (3, 10): ("living_battery_capacity", "Ah", None),      # was battery_soc; unit is Ah not %
     (3, 11): ("battery_type", None, None),
-    (3, 12): ("switch_12v_1", None, None),
-    (3, 13): ("switch_12v_2", None, None),
-    (3, 14): ("switch_12v_3", None, None),
-    (3, 15): ("switch_12v_4", None, None),
-    (3, 16): ("switch_12v_5", None, None),
-    (3, 17): ("switch_12v_6", None, None),
-    (3, 18): ("switch_12v_7", None, None),
-    (3, 19): ("solar_voltage_sentinel", "V", None),  # Always 3276.8 — real voltage is on bus 8
-    (3, 20): ("solar_connected", None, None),
-    (3, 21): ("solar_charger_status", None, None),
-    (3, 22): ("switch_22", None, None),
+    (3, 12): ("fresh_water_sensor_failure", None, None),   # was switch_12v_1
+    (3, 13): ("waste_water_sensor_failure", None, None),   # was switch_12v_2
+    (3, 14): ("outside_temp_sensor_failure", None, None),  # was switch_12v_3
+    (3, 15): ("outside_temp_calib_failure", None, None),   # was switch_12v_4
+    (3, 16): ("ebl_over_temperature", None, None),         # was switch_12v_5
+    (3, 17): ("battery_keeper_active", None, None),        # was switch_12v_6
+    (3, 18): ("d_plus_state", None, None),                 # was switch_12v_7
+    (3, 19): ("ebl_outdoor_temp_sensor", "°C", None),      # was solar_voltage_sentinel
+    (3, 20): ("activate_tank_refill_interval", None, None),# write-only; was solar_connected
+    (3, 21): ("update_tank_level_immediately", None, None),# write-only; was solar_charger_status
+    (3, 22): ("shoreline_connected", None, None),          # was switch_22
     # Light: Schlafzimmer Ambientebeleuchtung / Bedroom ambient (bus 15)
     # sid=1: on/off, sid=2: brightness (WRITE only), sid=3: color_temp
     (15, 1): ("light_bedroom_ambient", None, None),
@@ -75,13 +79,17 @@ SENSOR_MAP: dict[tuple[int, int], tuple[str, str | None, str | None]] = {
     # lin2 — Voltronic MPP260CI solar charger + climate
     # sid=2/3 are solar voltage/current from the Voltronic MPPT charger,
     # confirmed by live correlation with app Energy display (fluctuating V/A).
-    (8, 1): ("gray_water_sensor", None, None),
+    # Bus 8 — solar charger. Sensors 2 and 3 already correctly carried panel
+    # voltage and charging current; 1/4/5/6/7 were mis-named as water/vent/
+    # tyre sensors. Renamed here based on consistent behaviour of the slot
+    # (boolean flags + a wattage reading) observed on the S700.
+    (8, 1): ("solar_active", None, None),           # was gray_water_sensor
     (8, 2): ("solar_voltage", "V", None),
     (8, 3): ("solar_current", "A", None),
-    (8, 4): ("vent_1", None, None),
-    (8, 5): ("vent_2", None, None),
-    (8, 6): ("vent_3", None, None),
-    (8, 7): ("tire_pressure", "bar", None),
+    (8, 4): ("solar_error", None, None),            # was vent_1
+    (8, 5): ("solar_reduced_power", None, None),    # was vent_2
+    (8, 6): ("solar_aes_active", None, None),       # was vent_3
+    (8, 7): ("solar_panel_power", "W", None),       # was tire_pressure
     # Light: Wohnraum Deckenbeleuchtung / Living room ceiling (bus 11)
     (11, 1): ("light_living_ceiling", None, None),
     (11, 2): ("light_living_ceiling_brightness", "%", None),
@@ -89,29 +97,36 @@ SENSOR_MAP: dict[tuple[int, int], tuple[str, str | None, str | None]] = {
     (12, 1): ("light_living_ambient", None, None),
     (12, 2): ("light_living_ambient_brightness", "%", None),
     (12, 3): ("light_living_ambient_color_temp", None, None),
-    # GPS (30)
+    # Bus 30 — SCU platform signals. Slot 1 genuinely carries a "lat,lon"
+    # string and 2 a timestamp, so those keep their gps_* keys, but slots
+    # 3–14 are not GPS: they report cellular connection state, SCU supply
+    # voltage, Bluetooth pairing counts, and several bool flags including a
+    # write-only "wake chassis" command. Renamed to match.
     (30, 1): ("gps_coordinates", None, None),
     (30, 2): ("gps_utc_time", None, None),
-    (30, 3): ("gps_signal_quality", None, None),
-    (30, 4): ("gps_fix", None, None),
-    (30, 5): ("gps_altitude", "m", None),
-    (30, 6): ("gps_satellites", None, None),
-    (30, 7): ("gps_heading", "\u00b0", None),
-    (30, 8): ("gps_sensor_8", None, None),
-    (30, 9): ("gps_sensor_9", None, None),
-    (30, 10): ("gps_sensor_10", None, None),
-    (30, 11): ("gps_sensor_11", None, None),
-    (30, 12): ("gps_sensor_12", None, None),
-    (30, 13): ("gps_sensor_13", None, None),
-    (30, 14): ("gps_sensor_14", None, None),
-    # Heating control (34)
-    (34, 1): ("heat_switch_1", None, None),
-    (34, 2): ("heat_switch_2", None, None),
-    (34, 3): ("heat_mode", None, None),
-    (34, 4): ("heat_ctrl_4", None, None),
-    (34, 5): ("heat_ctrl_5", None, None),
-    (34, 6): ("heat_ctrl_6", None, None),
-    (34, 7): ("heat_setpoint_raw", None, "div1000"),
+    (30, 3): ("lte_connection_quality", None, None),    # was gps_signal_quality
+    (30, 4): ("lte_connection_state", None, None),      # was gps_fix
+    (30, 5): ("scu_voltage", "V", None),                # was gps_altitude
+    (30, 6): ("paired_bt_devices", None, None),         # was gps_satellites
+    (30, 7): ("connected_bt_devices", None, None),      # was gps_heading
+    (30, 8): ("battery_cutoff_switch", None, None),
+    (30, 9): ("user_active", None, None),
+    (30, 10): ("d_plus", None, None),
+    (30, 11): ("wake_up_chassis", None, None),          # write-only remote wake
+    (30, 12): ("battery_switch_active", None, None),
+    (30, 13): ("scu_shoreline_connected", None, None),
+    (30, 14): ("vehicle_movement", None, None),
+    # Bus 34 — fridge controls. Earlier labelled as a heating group with a
+    # "heat_setpoint_raw"; the slot instead carries a DC-voltage reading in
+    # millivolts and the four toggles behave as cooling level, silent mode,
+    # on/off and a door-state flag. Renamed to match observed behaviour.
+    (34, 1): ("fridge_on", None, None),             # was heat_switch_1
+    (34, 2): ("fridge_night_mode", None, None),     # silent-mode toggle; was heat_switch_2
+    (34, 3): ("fridge_level", None, None),          # 1..5 cooling level; was heat_mode
+    (34, 4): ("fridge_freezer_level", None, None),  # was heat_ctrl_4
+    (34, 5): ("fridge_door_open", None, None),      # was heat_ctrl_5
+    (34, 6): ("fridge_warning_info", None, None),   # was heat_ctrl_6
+    (34, 7): ("fridge_dc_voltage", "V", "div1000"), # mV → V; was heat_setpoint_raw
     # Light: Nachtlicht / Night light (bus 16)
     (16, 1): ("light_nightlight", None, None),
     (16, 2): ("light_nightlight_brightness", "%", None),
@@ -119,19 +134,25 @@ SENSOR_MAP: dict[tuple[int, int], tuple[str, str | None, str | None]] = {
     (21, 1): ("light_kitchen", None, None),
     (21, 2): ("light_kitchen_brightness", "%", None),
     (21, 3): ("light_kitchen_color_temp", None, None),
-    # Water tanks — bus 22 = fresh water, bus 25 = grey water (confirmed: both ~6% when tanks empty)
-    (22, 1): ("fresh_water_sensor", None, None),
-    (22, 2): ("fresh_water_level", "%", None),
+    # Bus 22 on the 2025 S700 reports the standard On/Brightness pair of a
+    # lighting circuit; its sensor 2 returns a constant 100 placeholder when
+    # the slot is unused, which earlier versions of this integration mistook
+    # for a 100%-full fresh-water tank. Real water levels are on bus 3 above.
+    (22, 1): ("light_bus22_on", None, None),
+    (22, 2): ("light_bus22_brightness", "%", None),
     # Light: Außenbeleuchtung / Outside light (bus 24)
     (24, 1): ("light_outside", None, None),
     (24, 2): ("light_outside_brightness", "%", None),
     (24, 3): ("light_outside_color_temp", None, None),
-    # Grey water / inverter (25)
-    (25, 1): ("gray_water_sensor_ext", None, None),
-    (25, 2): ("gray_water_level", "%", None),
-    # Fridge (37)
-    (37, 1): ("fridge_mode", None, None),
-    (37, 2): ("fridge_status", None, None),
+    # Bus 25 behaves identically to bus 22 (see note above): a light circuit
+    # whose brightness slot returns a constant 100 placeholder when the
+    # circuit is unused. Not grey water despite the previous label.
+    (25, 1): ("light_bus25_on", None, None),
+    (25, 2): ("light_bus25_brightness", "%", None),
+    # Bus 37 — metadata slot that was previously mis-mapped as a fridge.
+    # The values are a vehicle-type and brand code, unchanged across sessions.
+    (37, 1): ("vehicle_type", None, None),
+    (37, 2): ("vehicle_brand", None, None),
     # Light: Sitzgruppe Dachschrank / Seating area overhead (bus 43)
     (43, 1): ("light_seating_overhead", None, None),
     (43, 2): ("light_seating_overhead_brightness", "%", None),
@@ -205,8 +226,7 @@ _VALUE_LABELS: dict[str, dict[str, str]] = {
 # Integer-to-string label maps for sensors that report numeric codes.
 _INT_LABELS: dict[str, dict[int, str]] = {
     "dpf_status": {0: "Normal", 1: "Regeneration"},
-    "fridge_mode": {0: "On", 1: "Eco", 2: "Boost", 8: "Off"},
-    "fridge_status": {0: "Running", 1: "Off", 2: "Standby"},
+    # Bus 34 fridge level is a 1..5 step integer — no label mapping needed.
 }
 
 # Sentinel float values that indicate "sensor unavailable / not connected".
@@ -282,33 +302,49 @@ def _encode_bytes_field(field_number: int, data: bytes) -> bytes:
     return _encode_field(field_number, 2, _encode_varint(len(data)) + data)
 
 
-def build_light_command(
+def build_sensor_write(
     bus_id: int,
     sensor_id: int,
+    value: bool | int | float | str,
     *,
-    bool_value: bool | None = None,
-    uint_value: int | None = None,
+    signed: bool = False,
 ) -> str:
-    """Build a PiaRequest payload to control a light.
+    """Build a PiaRequest payload to set a single sensor value.
 
-    Args:
-        bus_id: The light's bus ID (e.g. 11 for living ceiling).
-        sensor_id: 1=on/off, 2=brightness, 3=color_temp.
-        bool_value: True/False for on/off (sensor_id=1).
-        uint_value: 0-100 for brightness/color_temp (sensor_id=2,3).
+    The on-the-wire format is the same for every writable sensor the SCU
+    exposes (lights, water pump, fridge level, heater power, etc.): a
+    protobuf-encoded entry that carries the target sensor's bus and sensor
+    numbers plus the value in a datatype-specific field.
 
-    Returns:
-        Base64-encoded protobuf payload ready to send as PiaRequest argument.
+    Python type → protobuf field:
+      * bool      -> field 5 (varint, 0/1) — confirmed via water pump + fridge on/off
+      * int       -> field 3 (unsigned varint) — confirmed via fridge level 1..5
+      * int w/ signed=True -> field 7 (varint signed)
+      * float     -> field 6 (little-endian 32-bit IEEE-754)
+      * str       -> field 4 (length-delimited UTF-8)
+
+    Returns a Base64 string ready to send as the PiaRequest argument.
     """
-    # Build sensor entry: field1=sensor_id, field2=bus_id, field3/5=value
     sensor_data = _encode_varint_field(1, sensor_id)
     sensor_data += _encode_varint_field(2, bus_id)
-    if bool_value is not None:
-        sensor_data += _encode_varint_field(5, 1 if bool_value else 0)
-    elif uint_value is not None:
-        sensor_data += _encode_varint_field(3, uint_value)
 
-    # Nest: sensor_data inside field1 of sub2, inside field2 of inner
+    if isinstance(value, bool):
+        sensor_data += _encode_varint_field(5, 1 if value else 0)
+    elif isinstance(value, int):
+        if signed:
+            sensor_data += _encode_varint_field(7, value if value >= 0 else (value + (1 << 64)))
+        else:
+            if value < 0:
+                raise ValueError("negative int for unsigned sensor; pass signed=True")
+            sensor_data += _encode_varint_field(3, value)
+    elif isinstance(value, float):
+        sensor_data += _encode_field(6, 5, struct.pack("<f", value))
+    elif isinstance(value, str):
+        sensor_data += _encode_bytes_field(4, value.encode("utf-8"))
+    else:
+        raise TypeError(f"unsupported sensor value type: {type(value).__name__}")
+
+    # Nest: sensor_data inside field1 of sub2, inside field2 of inner.
     sub2 = _encode_bytes_field(1, sensor_data)
     inner = _encode_bytes_field(2, sub2)
 
@@ -323,10 +359,26 @@ def build_light_command(
     wrapper += _encode_varint_field(3, ts)
     wrapper += _encode_bytes_field(4, inner)
 
-    # Top-level: field 2 = wrapper
     payload = _encode_bytes_field(2, wrapper)
-
     return base64.b64encode(payload).decode("ascii")
+
+
+def build_light_command(
+    bus_id: int,
+    sensor_id: int,
+    *,
+    bool_value: bool | None = None,
+    uint_value: int | None = None,
+) -> str:
+    """Backwards-compatible wrapper for lights: dispatches to build_sensor_write.
+
+    New code should call build_sensor_write directly.
+    """
+    if bool_value is not None:
+        return build_sensor_write(bus_id, sensor_id, bool_value)
+    if uint_value is not None:
+        return build_sensor_write(bus_id, sensor_id, int(uint_value))
+    raise ValueError("must provide bool_value or uint_value")
 
 
 def _decode_varint(data: bytes, pos: int) -> tuple[int, int]:

@@ -43,20 +43,16 @@ BINARY_SENSOR_DESCRIPTIONS: tuple[HymerBinarySensorEntityDescription, ...] = (
         on_value=1,
         icon="mdi:car-brake-parking",
     ),
+    # NOTE: the previous "charger_active" binary sensor and the
+    # "solar_connected" binary sensor were pulling (3, 3) and (3, 20) —
+    # which the app's capability registry calls SwitchPump (water pump)
+    # and ActivateTankRefillInterval (write-only). Neither is a charger or
+    # solar-plug signal. Remove until a proper fridge/pump control PR.
     HymerBinarySensorEntityDescription(
-        key="charger_active",
-        translation_key="charger_active",
-        device_class=BinarySensorDeviceClass.BATTERY_CHARGING,
-        value_path="signalr_sensors.charger_active",
-        icon="mdi:battery-charging",
-    ),
-    HymerBinarySensorEntityDescription(
-        key="solar_connected",
-        translation_key="solar_connected",
-        device_class=BinarySensorDeviceClass.PLUG,
-        value_path="signalr_sensors.solar_connected",
-        on_value=1,
-        icon="mdi:solar-power",
+        key="water_pump",
+        translation_key="water_pump",
+        value_path="signalr_sensors.water_pump",
+        icon="mdi:water-pump",
     ),
     HymerBinarySensorEntityDescription(
         key="gps_fix",

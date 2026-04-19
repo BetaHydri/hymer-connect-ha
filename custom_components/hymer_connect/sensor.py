@@ -18,7 +18,6 @@ from homeassistant.const import (
     UnitOfElectricPotential,
     UnitOfLength,
     UnitOfPower,
-    UnitOfPressure,
     UnitOfSpeed,
     UnitOfTemperature,
     UnitOfTime,
@@ -276,18 +275,23 @@ SIGNALR_SENSORS: tuple[HymerSensorEntityDescription, ...] = (
         value_path="signalr_sensors.heater_operating_mode",
         icon="mdi:radiator",
     ),
-    # --- Fridge (bus 37) ---
+    # --- Fridge (bus 34 per the app's capability registry) ---
+    # Bus 37 used to be mapped as fridge but it's VehicleInformation.
+    # The real fridge reports on bus 34 (Dometic/Thetford-T2000 family).
     HymerSensorEntityDescription(
-        key="fridge_mode",
-        translation_key="fridge_mode",
-        value_path="signalr_sensors.fridge_mode",
+        key="fridge_level",
+        translation_key="fridge_level",
+        value_path="signalr_sensors.fridge_level",
         icon="mdi:fridge",
     ),
     HymerSensorEntityDescription(
-        key="fridge_status",
-        translation_key="fridge_status",
-        value_path="signalr_sensors.fridge_status",
-        icon="mdi:fridge-outline",
+        key="fridge_dc_voltage",
+        translation_key="fridge_dc_voltage",
+        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
+        device_class=SensorDeviceClass.VOLTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_path="signalr_sensors.fridge_dc_voltage",
+        icon="mdi:current-dc",
     ),
     # --- Extended CAN (can2) ---
     HymerSensorEntityDescription(
@@ -414,16 +418,11 @@ SIGNALR_SENSORS: tuple[HymerSensorEntityDescription, ...] = (
         value_path="signalr_sensors.light_bedroom_overhead_brightness",
         icon="mdi:ceiling-light",
     ),
-    # --- Climate (lin2) ---
-    HymerSensorEntityDescription(
-        key="tire_pressure",
-        translation_key="tire_pressure",
-        native_unit_of_measurement=UnitOfPressure.BAR,
-        device_class=SensorDeviceClass.PRESSURE,
-        state_class=SensorStateClass.MEASUREMENT,
-        value_path="signalr_sensors.tire_pressure",
-        icon="mdi:car-tire-alert",
-    ),
+    # NOTE: a "tire_pressure" sensor previously pulled from signalr key
+    # tire_pressure which the decoder now routes to solar_panel_power. The
+    # raw value on this slot always read 0.0 and the label never matched
+    # anything the SCU actually measured, so the entity is removed. Real
+    # TPMS data lives on bus 100 and is not yet wired up.
     # --- Living ceiling brightness (was alarm_battery) ---
     # Bus 11 sid 2 is living room ceiling brightness, not alarm battery
     # --- SCU/Truma firmware ---
