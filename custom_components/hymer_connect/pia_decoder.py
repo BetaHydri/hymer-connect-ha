@@ -121,16 +121,17 @@ SENSOR_MAP: dict[tuple[int, int], tuple[str, str | None, str | None]] = {
     (21, 1): ("light_kitchen", None, None),
     (21, 2): ("light_kitchen_brightness", "%", None),
     (21, 3): ("light_kitchen_color_temp", None, None),
-    # Water tanks — bus 22 = fresh water, bus 25 = grey water (confirmed: both ~6% when tanks empty)
+    # Water tanks — bus 22 = fresh water, bus 25 = grey water
+    # Raw uint is inverted: 100 = empty (0%), 0 = full (100%)
     (22, 1): ("fresh_water_sensor", None, None),
-    (22, 2): ("fresh_water_level", "%", None),
+    (22, 2): ("fresh_water_level", "%", "invert100"),
     # Light: Außenbeleuchtung / Outside light (bus 24)
     (24, 1): ("light_outside", None, None),
     (24, 2): ("light_outside_brightness", "%", None),
     (24, 3): ("light_outside_color_temp", None, None),
     # Grey water (25)
     (25, 1): ("gray_water_sensor_ext", None, None),
-    (25, 2): ("gray_water_level", "%", None),
+    (25, 2): ("gray_water_level", "%", "invert100"),
     # Fridge (37)
     (37, 1): ("fridge_mode", None, None),
     (37, 2): ("fridge_status", None, None),
@@ -603,6 +604,8 @@ def _extract_sensors_recursive(
                         val = val / 1000
                     elif transform == "div3600" and isinstance(val, (int, float)):
                         val = round(val / 3600, 1)
+                    elif transform == "invert100" and isinstance(val, (int, float)):
+                        val = 100 - val
                     # Map raw string values to readable labels
                     if isinstance(val, str) and name in _VALUE_LABELS:
                         val = _VALUE_LABELS[name].get(val, val)
