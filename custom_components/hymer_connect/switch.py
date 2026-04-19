@@ -54,16 +54,6 @@ SWITCH_DESCRIPTIONS: tuple[HymerSwitchEntityDescription, ...] = (
         on_value=True,
         icon="mdi:water-pump",
     ),
-    HymerSwitchEntityDescription(
-        key="outside_light_ctrl",
-        translation_key="outside_light_ctrl",
-        device_class=SwitchDeviceClass.SWITCH,
-        bus_id=25,
-        sensor_id=1,
-        value_path="signalr_sensors.outside_light",
-        on_value=True,
-        icon="mdi:outdoor-lamp",
-    ),
 )
 
 

@@ -149,8 +149,7 @@
     },
     "switch": {
       "main_switch_ctrl": { "name": "12V Main switch" },
-      "water_pump_ctrl": { "name": "Water pump" },
-      "outside_light_ctrl": { "name": "Outside light" }
+      "water_pump_ctrl": { "name": "Water pump" }
     },
     "climate": {
       "truma_heater": { "name": "Truma heater" }

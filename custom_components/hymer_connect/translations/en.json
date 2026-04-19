@@ -367,9 +367,6 @@
       },
       "water_pump_ctrl": {
         "name": "Water pump"
-      },
-      "outside_light_ctrl": {
-        "name": "Outside light"
       }
     },
     "climate": {

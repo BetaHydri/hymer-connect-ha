@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.8.1] - 2026-04-19
+
+### Fixed
+
+- **Outside light** — Moved from switch (bus 25) to proper light entity (bus 24) with brightness and color temperature control, matching all other interior lights
+- **Removed duplicate** — Outside light no longer appears in both Lights and Controls sections of the dashboard
+- **Bus 25 sensor** — Reverted bus 25 sid 1 back to grey water sensor (was incorrectly mapped as outside light)
+
 ## [2.8.0] - 2026-04-19
 
 ### Added

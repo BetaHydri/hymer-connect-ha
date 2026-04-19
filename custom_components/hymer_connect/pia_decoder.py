@@ -128,8 +128,8 @@ SENSOR_MAP: dict[tuple[int, int], tuple[str, str | None, str | None]] = {
     (24, 1): ("light_outside", None, None),
     (24, 2): ("light_outside_brightness", "%", None),
     (24, 3): ("light_outside_color_temp", None, None),
-    # Outside light / grey water (25)
-    (25, 1): ("outside_light", None, None),
+    # Grey water (25)
+    (25, 1): ("gray_water_sensor_ext", None, None),
     (25, 2): ("gray_water_level", "%", None),
     # Fridge (37)
     (37, 1): ("fridge_mode", None, None),
