@@ -264,7 +264,7 @@ views:
           - type: markdown
             content: "### ⚡ Energy Source"
           - type: tile
-            entity: select.hymer_heater_energy_source
+            entity: select.hymer
             name: Energy Source
             icon: mdi:gas-station
             color: orange

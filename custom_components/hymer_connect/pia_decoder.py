@@ -210,7 +210,7 @@ _VALUE_LABELS: dict[str, dict[str, str]] = {
 _INT_LABELS: dict[str, dict[int, str]] = {
     "dpf_status": {0: "Normal", 1: "Regeneration"},
     "fridge_mode": {0: "On", 1: "Eco", 2: "Boost", 8: "Off"},
-    "fridge_status": {0: "Running", 1: "Off", 2: "Standby"},
+    "fridge_status": {0: "Open", 1: "Closed"},
 }
 
 # Sentinel float values that indicate "sensor unavailable / not connected".
