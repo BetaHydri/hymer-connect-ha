@@ -165,11 +165,11 @@ views:
         title: Fridge (Kühlschrank)
         entities:
           - entity: select.hymer_fridge_mode
-            name: Fridge Mode
+            name: Cooling Step (Kühlstufe)
+          - entity: switch.hymer_fridge_eco_ctrl
+            name: Quiet Mode (Leise)
           - entity: sensor.hymer_fridge_status
             name: Door (Tür)
-          - entity: sensor.hymer_fridge_mode
-            name: Cooling Step (Kühlstufe)
   - title: Water
     path: water
     icon: mdi:water

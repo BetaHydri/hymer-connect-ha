@@ -54,6 +54,16 @@ SWITCH_DESCRIPTIONS: tuple[HymerSwitchEntityDescription, ...] = (
         on_value=True,
         icon="mdi:water-pump",
     ),
+    HymerSwitchEntityDescription(
+        key="fridge_eco_ctrl",
+        translation_key="fridge_eco_ctrl",
+        device_class=SwitchDeviceClass.SWITCH,
+        bus_id=34,
+        sensor_id=2,
+        value_path="signalr_sensors.fridge_eco",
+        on_value=True,
+        icon="mdi:leaf",
+    ),
 )
 
 

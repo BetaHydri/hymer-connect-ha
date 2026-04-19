@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.8.7] - 2026-04-19
+
+### Changed
+
+- **Fridge ECO is now a separate switch** — `switch.hymer_fridge_eco_ctrl` (Leise) is an independent toggle that can be enabled on top of any cooling step, matching the EHG app behavior. Previously ECO was a mutually exclusive option in the select dropdown
+- **Fridge select simplified** — Options are now Off/1/2/3/4/5 only. ECO removed from the dropdown since it's an overlay, not a mode
+- **Dashboard** — Fridge section now shows: Cooling Step (Kühlstufe) select, Quiet Mode (Leise) toggle, Door (Tür) status — matching the EHG app layout
+
 ## [2.8.6] - 2026-04-19
 
 ### Fixed

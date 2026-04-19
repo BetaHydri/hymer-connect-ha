@@ -18,8 +18,8 @@ from .sensor import _resolve_path
 
 _LOGGER = logging.getLogger(__name__)
 
-# Fridge modes: Off, Step 1-5, ECO
-FRIDGE_OPTIONS = ["Off", "1", "2", "3", "4", "5", "ECO"]
+# Fridge cooling steps (ECO is a separate switch, not a mode)
+FRIDGE_OPTIONS = ["Off", "1", "2", "3", "4", "5"]
 
 # Boiler modes: Off, ECO, Turbo (HOT)
 BOILER_OPTIONS = ["Off", "ECO", "Turbo"]
@@ -77,11 +77,6 @@ class HymerFridgeSelect(
         if power is False:
             return "Off"
 
-        # Check ECO mode (bus 34, sid 2)
-        eco = _resolve_path(self.coordinator.data, "signalr_sensors.fridge_eco")
-        if eco is True:
-            return "ECO"
-
         # Check cooling step (bus 34, sid 3)
         step = _resolve_path(self.coordinator.data, "signalr_sensors.fridge_cooling_step")
         if step is not None:
@@ -111,15 +106,7 @@ class HymerFridgeSelect(
         import asyncio
 
         if option == "Off":
-            # Turn ECO off first, then power off
-            await client.send_light_command(34, 2, bool_value=False)
-            await asyncio.sleep(0.5)
             await client.send_light_command(34, 1, bool_value=False)
-        elif option == "ECO":
-            # Power on first, wait, then enable ECO
-            await client.send_light_command(34, 1, bool_value=True)
-            await asyncio.sleep(0.5)
-            await client.send_light_command(34, 2, bool_value=True)
         elif option in ("1", "2", "3", "4", "5"):
             # Power on first, wait, then set cooling step
             await client.send_light_command(34, 1, bool_value=True)

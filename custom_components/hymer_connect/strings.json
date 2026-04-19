@@ -149,7 +149,8 @@
     },
     "switch": {
       "main_switch_ctrl": { "name": "12V Main switch" },
-      "water_pump_ctrl": { "name": "Water pump" }
+      "water_pump_ctrl": { "name": "Water pump" },
+      "fridge_eco_ctrl": { "name": "Fridge ECO (Leise)" }
     },
     "climate": {
       "truma_heater": { "name": "Truma heater" }

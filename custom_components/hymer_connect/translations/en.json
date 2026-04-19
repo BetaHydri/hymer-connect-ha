@@ -367,6 +367,9 @@
       },
       "water_pump_ctrl": {
         "name": "Water pump"
+      },
+      "fridge_eco_ctrl": {
+        "name": "Fridge ECO (Leise)"
       }
     },
     "climate": {
