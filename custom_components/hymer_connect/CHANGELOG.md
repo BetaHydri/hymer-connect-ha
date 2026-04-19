@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.8.4] - 2026-04-19
+
+### Fixed
+
+- **Dashboard entity ID alignment** — Fixed 14 entity IDs in the dashboard that didn't match HA's auto-generated names from translation keys (e.g. `sensor.hymer_battery_soc` → `sensor.hymer_battery_level`, `sensor.hymer_coolant_temp` → `sensor.hymer_coolant_temperature`, `binary_sensor.hymer_lock_status` → `binary_sensor.hymer_lock`)
+
 ## [2.8.3] - 2026-04-19
 
 ### Fixed
