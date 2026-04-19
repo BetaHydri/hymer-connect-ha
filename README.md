@@ -14,7 +14,8 @@ Custom integration to connect your HYMER / Erwin Hymer Group motorhome or carava
 
 > **v2.9.8** — **Dashboard redesign with clear visual hierarchy!** Section headers, controls (switches/selects), and status info are now visually distinct on mobile. Heater energy source control, 12V switch fix, fridge door labels, water level inversion fix. 140+ sensors including odometer, GPS, battery, temperatures, door/lock status, Truma heater, fridge, and more.
 
-### Screenshots
+<details>
+<summary><strong>Integration Screenshots</strong> (click to expand)</summary>
 
 <p align="center">
   <img src="https://raw.githubusercontent.com/BetaHydri/hymer-connect-ha/master/images/ha-screenshot_1.png" alt="HYMER Connect — Entities" width="45%">
@@ -27,6 +28,8 @@ Custom integration to connect your HYMER / Erwin Hymer Group motorhome or carava
 <p align="center">
   <img src="https://raw.githubusercontent.com/BetaHydri/hymer-connect-ha/master/images/ha-screenshot_5.png" alt="HYMER Connect — Device" width="45%">
 </p>
+
+</details>
 
 ## Supported Brands
 

@@ -16,7 +16,8 @@ Custom integration to connect your HYMER / Erwin Hymer Group motorhome or carava
 
 > **v2.8** — **Full climate/appliance controls!** Truma heater thermostat, fridge cooling steps + ECO switch, boiler mode, energy source select. SignalR refresh command forces SCU to re-report states.
 
-### Screenshots
+<details>
+<summary><strong>Integration Screenshots</strong> (click to expand)</summary>
 
 <p align="center">
   <img src="https://raw.githubusercontent.com/BetaHydri/hymer-connect-ha/master/images/ha-screenshot_1.png" alt="HYMER Connect — Entities" width="45%">
@@ -29,6 +30,8 @@ Custom integration to connect your HYMER / Erwin Hymer Group motorhome or carava
 <p align="center">
   <img src="https://raw.githubusercontent.com/BetaHydri/hymer-connect-ha/master/images/ha-screenshot_5.png" alt="HYMER Connect — Device" width="45%">
 </p>
+
+</details>
 
 ## Supported Brands
 
