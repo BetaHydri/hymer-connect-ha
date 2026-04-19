@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+import time
 from dataclasses import dataclass
 from typing import Any
 
@@ -21,6 +22,21 @@ from .coordinator import HymerConnectCoordinator
 from .sensor import _resolve_path
 
 _LOGGER = logging.getLogger(__name__)
+
+# How long (seconds) to hold optimistic state after commanding the 12V main
+# switch OFF.  The SCU runs on the chassis battery and stays alive when the
+# habitation 12V is cut.  During its reconnection cycle (~5 s) it pushes a
+# stale cached "On" value that would overwrite the commanded "Off".  The EHG
+# app handles this by caching the commanded state client-side.
+#
+# Observed in mitmproxy trace (2026-04-19):
+#   19:56:02 — main_switch = "Off"   (command accepted)
+#   19:56:03 — scu_connected = false (SCU briefly disconnects)
+#   19:56:08 — main_switch = "On"    (stale readback after reconnection)
+#
+# We hold the optimistic OFF for 30 s to ride through this bounce-back.
+# The ON direction doesn't need a holdoff — the SCU confirms "On" immediately.
+_MAIN_SWITCH_OFF_HOLDOFF_S = 30
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -105,6 +121,7 @@ class HymerConnectSwitch(
             "model": "Smart Interface Unit",
         }
         self._optimistic_on: bool | None = None
+        self._optimistic_set_at: float = 0.0  # monotonic timestamp of last command
 
     @property
     def is_on(self) -> bool | None:
@@ -128,7 +145,6 @@ class HymerConnectSwitch(
             return
         on_val = self.entity_description.on_value
         if isinstance(on_val, str):
-            # String-based switch (e.g. main_switch uses "On"/"Off")
             await client.send_light_command(
                 self.entity_description.bus_id,
                 self.entity_description.sensor_id,
@@ -141,6 +157,7 @@ class HymerConnectSwitch(
                 bool_value=True,
             )
         self._optimistic_on = True
+        self._optimistic_set_at = time.monotonic()
         self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
@@ -151,7 +168,6 @@ class HymerConnectSwitch(
             return
         on_val = self.entity_description.on_value
         if isinstance(on_val, str):
-            # String-based switch — send the off counterpart
             off_val = "Off" if on_val == "On" else "False"
             await client.send_light_command(
                 self.entity_description.bus_id,
@@ -165,16 +181,43 @@ class HymerConnectSwitch(
                 bool_value=False,
             )
         self._optimistic_on = False
+        self._optimistic_set_at = time.monotonic()
         self.async_write_ha_state()
 
     def _handle_coordinator_update(self) -> None:
-        """Clear optimistic state when SCU confirms the commanded value."""
+        """Clear optimistic state when SCU confirms the commanded value.
+
+        Special handling for the 12V main switch OFF command:
+        The SCU stays powered via the chassis battery when habitation 12V is
+        cut. During its ~5s reconnection cycle it pushes a stale cached "On"
+        that would overwrite our commanded "Off". We hold the optimistic OFF
+        state for _MAIN_SWITCH_OFF_HOLDOFF_S seconds to ignore this bounce.
+        """
         if self._optimistic_on is not None and self.coordinator.data:
             value = _resolve_path(
                 self.coordinator.data, self.entity_description.value_path
             )
             if value is not None:
                 actual = value == self.entity_description.on_value
+
+                # For the 12V main switch OFF: hold optimistic state through
+                # the stale bounce-back window
+                if (
+                    self._optimistic_on is False
+                    and actual is True
+                    and self.entity_description.key == "main_switch_ctrl"
+                ):
+                    elapsed = time.monotonic() - self._optimistic_set_at
+                    if elapsed < _MAIN_SWITCH_OFF_HOLDOFF_S:
+                        _LOGGER.debug(
+                            "12V switch: ignoring stale 'On' readback "
+                            "%.1fs after OFF command (holdoff %ds)",
+                            elapsed,
+                            _MAIN_SWITCH_OFF_HOLDOFF_S,
+                        )
+                        super()._handle_coordinator_update()
+                        return
+
                 if actual == self._optimistic_on:
                     self._optimistic_on = None
         super()._handle_coordinator_update()

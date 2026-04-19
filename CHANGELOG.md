@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.9.9] - 2026-04-20
+
+### Fixed
+
+- **12V main switch OFF stays off in HA** — After commanding OFF, the SCU briefly disconnects (it runs on chassis battery), reconnects after ~5s, and pushes a stale cached `"On"` value that overwrote the commanded OFF state. The switch now holds the optimistic OFF for 30 seconds to ride through this bounce-back, matching the EHG app behavior. Confirmed via mitmproxy trace: OFF at 19:56:02 → SCU disconnect 19:56:03 → stale "On" readback 19:56:08. The EHG app ignores this readback and shows OFF (fixes #40 for 12V switch)
+
 ## [2.9.8] - 2026-04-19
 
 ### Changed
