@@ -218,3 +218,112 @@ class HymerBoilerSelect(
             if actual == self._optimistic:
                 self._optimistic = None
         super()._handle_coordinator_update()
+
+
+class HymerHeaterEnergySelect(
+    CoordinatorEntity[HymerConnectCoordinator], SelectEntity
+):
+    """Heater energy source select — Diesel / Both 900W / Both 1800W / Electric.
+
+    Protocol (captured 2026-04-19 via mitmproxy):
+      - (58,4) heater_fuel_type and (58,6) heater_fuel_type_2 are always sent
+        as a pair with the same string value: "Diesel", "Both", or "Electric".
+      - (58,9) heater_electric_power is only sent when mode is "Both",
+        as uint 900 or 1800.
+      - "Electric" only works with shore power connected.
+    """
+
+    _attr_has_entity_name = True
+    _attr_translation_key = "heater_energy_ctrl"
+    _attr_options = HEATER_ENERGY_OPTIONS
+    _attr_icon = "mdi:gas-station"
+
+    def __init__(
+        self,
+        coordinator: HymerConnectCoordinator,
+        entry: ConfigEntry,
+    ) -> None:
+        """Initialize the heater energy source select entity."""
+        super().__init__(coordinator)
+        self._attr_unique_id = f"{entry.entry_id}_heater_energy_ctrl"
+        self._attr_device_info = {
+            "identifiers": {(DOMAIN, entry.entry_id)},
+            "name": "HYMER",
+            "manufacturer": MANUFACTURER,
+            "model": "Smart Interface Unit",
+        }
+        self._optimistic: str | None = None
+
+    @property
+    def current_option(self) -> str | None:
+        """Return the current heater energy source."""
+        if self._optimistic is not None:
+            return self._optimistic
+        if self.coordinator.data is None:
+            return None
+
+        fuel = _resolve_path(
+            self.coordinator.data, "signalr_sensors.heater_fuel_type"
+        )
+        if fuel is None:
+            return None
+
+        fuel_str = str(fuel)
+        if fuel_str == "Diesel":
+            return "Diesel"
+        if fuel_str == "Electric":
+            return "Electric"
+        if fuel_str == "Both":
+            watt = _resolve_path(
+                self.coordinator.data, "signalr_sensors.heater_electric_power"
+            )
+            try:
+                w = int(watt) if watt is not None else 900
+            except (ValueError, TypeError):
+                w = 900
+            return f"Both {w}W"
+        return "Diesel"
+
+    async def async_select_option(self, option: str) -> None:
+        """Set the heater energy source."""
+        client = self.coordinator.signalr_client
+        if not client or not client.connected:
+            _LOGGER.warning("Cannot control heater energy — SignalR not connected")
+            return
+
+        if option == "Diesel":
+            await client.send_multi_sensor_command([
+                {"bus_id": 58, "sensor_id": 4, "str_value": "Diesel"},
+                {"bus_id": 58, "sensor_id": 6, "str_value": "Diesel"},
+            ])
+        elif option == "Electric":
+            await client.send_multi_sensor_command([
+                {"bus_id": 58, "sensor_id": 4, "str_value": "Electric"},
+                {"bus_id": 58, "sensor_id": 6, "str_value": "Electric"},
+            ])
+        elif option == "Both 900W":
+            await client.send_multi_sensor_command([
+                {"bus_id": 58, "sensor_id": 4, "str_value": "Both"},
+                {"bus_id": 58, "sensor_id": 6, "str_value": "Both"},
+                {"bus_id": 58, "sensor_id": 9, "uint_value": 900},
+            ])
+        elif option == "Both 1800W":
+            await client.send_multi_sensor_command([
+                {"bus_id": 58, "sensor_id": 4, "str_value": "Both"},
+                {"bus_id": 58, "sensor_id": 6, "str_value": "Both"},
+                {"bus_id": 58, "sensor_id": 9, "uint_value": 1800},
+            ])
+        else:
+            _LOGGER.warning("Unknown heater energy option: %s", option)
+            return
+
+        self._optimistic = option
+        self.async_write_ha_state()
+
+    def _handle_coordinator_update(self) -> None:
+        """Clear optimistic state when confirmed."""
+        if self._optimistic is not None and self.coordinator.data:
+            actual = self.current_option
+            if actual == self._optimistic:
+                self._optimistic = None
+        super()._handle_coordinator_update()
