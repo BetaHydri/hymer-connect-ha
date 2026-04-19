@@ -162,14 +162,14 @@ views:
           - entity: select.hymer_boiler_mode
             name: Boiler Mode
       - type: entities
-        title: Fridge
+        title: Fridge (Kühlschrank)
         entities:
           - entity: select.hymer_fridge_mode
             name: Fridge Mode
-          - entity: sensor.hymer_fridge_mode
-            name: Fridge Status (raw)
           - entity: sensor.hymer_fridge_status
-            name: Fridge Status
+            name: Door (Tür)
+          - entity: sensor.hymer_fridge_mode
+            name: Cooling Step (Kühlstufe)
   - title: Water
     path: water
     icon: mdi:water
