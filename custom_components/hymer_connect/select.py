@@ -108,18 +108,22 @@ class HymerFridgeSelect(
             _LOGGER.warning("Cannot control fridge — SignalR not connected")
             return
 
+        import asyncio
+
         if option == "Off":
             # Turn ECO off first, then power off
             await client.send_light_command(34, 2, bool_value=False)
+            await asyncio.sleep(0.5)
             await client.send_light_command(34, 1, bool_value=False)
         elif option == "ECO":
-            # Power on, then enable ECO
+            # Power on first, wait, then enable ECO
             await client.send_light_command(34, 1, bool_value=True)
+            await asyncio.sleep(0.5)
             await client.send_light_command(34, 2, bool_value=True)
         elif option in ("1", "2", "3", "4", "5"):
-            # Power on, disable ECO, set cooling step
+            # Power on first, wait, then set cooling step
             await client.send_light_command(34, 1, bool_value=True)
-            await client.send_light_command(34, 2, bool_value=False)
+            await asyncio.sleep(0.5)
             await client.send_light_command(34, 3, uint_value=int(option))
         else:
             _LOGGER.warning("Unknown fridge option: %s", option)
