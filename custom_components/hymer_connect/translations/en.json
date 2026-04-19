@@ -368,8 +368,11 @@
       "water_pump_ctrl": {
         "name": "Water pump"
       },
-      "heater_ctrl": {
-        "name": "Heater"
+      "fridge_ctrl": {
+        "name": "Fridge"
+      },
+      "fridge_night_mode_ctrl": {
+        "name": "Fridge silent mode"
       }
     }
   }

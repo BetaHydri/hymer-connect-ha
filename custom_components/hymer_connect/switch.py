@@ -33,6 +33,14 @@ class HymerSwitchEntityDescription(SwitchEntityDescription):
     on_value: Any = True
 
 
+# The previous bus/sensor assignments here wrote to slots that don't actually
+# control the named device on either S600 or S700:
+#   * water_pump_ctrl targeted (22, 1), which is a light circuit's On flag;
+#     the real water-pump toggle is on the EBL at (3, 3).
+#   * heater_ctrl targeted (34, 1), which is fridge on/off — the Truma
+#     heater is on bus 58.
+# Re-pointed at the correct slots and renamed heater_ctrl → fridge_ctrl to
+# match what the bus-34 on/off actually controls.
 SWITCH_DESCRIPTIONS: tuple[HymerSwitchEntityDescription, ...] = (
     HymerSwitchEntityDescription(
         key="main_switch_ctrl",
@@ -48,21 +56,31 @@ SWITCH_DESCRIPTIONS: tuple[HymerSwitchEntityDescription, ...] = (
         key="water_pump_ctrl",
         translation_key="water_pump_ctrl",
         device_class=SwitchDeviceClass.SWITCH,
-        bus_id=22,
-        sensor_id=1,
-        value_path="signalr_sensors.fresh_water_sensor",
+        bus_id=3,
+        sensor_id=3,
+        value_path="signalr_sensors.water_pump",
         on_value=True,
         icon="mdi:water-pump",
     ),
     HymerSwitchEntityDescription(
-        key="heater_ctrl",
-        translation_key="heater_ctrl",
+        key="fridge_ctrl",
+        translation_key="fridge_ctrl",
         device_class=SwitchDeviceClass.SWITCH,
         bus_id=34,
         sensor_id=1,
-        value_path="signalr_sensors.heat_switch_1",
+        value_path="signalr_sensors.fridge_on",
         on_value=True,
-        icon="mdi:radiator",
+        icon="mdi:fridge",
+    ),
+    HymerSwitchEntityDescription(
+        key="fridge_night_mode_ctrl",
+        translation_key="fridge_night_mode_ctrl",
+        device_class=SwitchDeviceClass.SWITCH,
+        bus_id=34,
+        sensor_id=2,
+        value_path="signalr_sensors.fridge_night_mode",
+        on_value=True,
+        icon="mdi:weather-night",
     ),
 )
 
