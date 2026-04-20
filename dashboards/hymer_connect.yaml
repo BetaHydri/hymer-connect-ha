@@ -218,9 +218,6 @@ views:
           - entity: sensor.hymer_bms_capacity_remaining
             name: Capacity Remaining
             icon: mdi:battery
-          - entity: sensor.hymer_bms_time_remaining
-            name: Time Remaining
-            icon: mdi:clock-outline
 
   # ══════════════════════════════════════════════════════════
   # Climate & Appliances
