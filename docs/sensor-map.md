@@ -22,7 +22,7 @@ may have different slot assignments on buses 1, 3, 8, 30, and 99 — see the
 | (1, 6) | `adblue_level` | % | — | AdBlue tank level |
 | (1, 7) | `engine_hours` | h | div3600 | Engine runtime |
 | (1, 8) | `vin_text` | — | — | VIN string |
-| (1, 9) | `outside_temperature` | °C | — | Outside temperature (was: coolant_temp — confirmed ambient) |
+| (1, 9) | `outside_temperature` | °C | — | Mercedes outside temperature sensor (bumper-mounted). Confirmed 2026-04-20: read 13°C → 16°C tracking real ambient weather in Unterföhring. Same value as Mercedes cockpit "Außentemperatur" display. |
 | (1, 10) | `engine_running` | — | — | Engine on/off |
 | (1, 11) | `door_sliding` | — | — | Sliding door (does NOT update on S600; ⚠️ S700: wiping_water_empty) |
 | (1, 12) | `door_driver` | — | — | Driver door (confirmed at vehicle 2026-04-20; ⚠️ S700: door_driver at same slot) |

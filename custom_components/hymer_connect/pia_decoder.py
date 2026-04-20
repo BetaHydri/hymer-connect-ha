@@ -46,7 +46,7 @@ SENSOR_MAP: dict[tuple[int, int], tuple[str, str | None, str | None]] = {
     (1, 6): ("adblue_level", "%", None),
     (1, 7): ("engine_hours", "h", "div3600"),
     (1, 8): ("vin_text", None, None),
-    (1, 9): ("outside_temperature", "°C", None),
+    (1, 9): ("outside_temperature", "°C", None),  # Mercedes bumper sensor = cockpit "Außentemperatur" (confirmed 13→16°C tracking weather 2026-04-20)
     (1, 10): ("engine_running", None, None),
     (1, 11): ("door_sliding", None, None),
     (1, 12): ("door_driver", None, None),
