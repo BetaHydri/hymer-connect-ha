@@ -176,7 +176,7 @@ views:
           - entity: sensor.hymer_power_source
             name: Power Source
             icon: mdi:power-plug
-          - entity: binary_sensor.hymer_shoreline_connected
+          - entity: binary_sensor.hymer_stecker
             name: Shore Power
             icon: mdi:power-plug
 
