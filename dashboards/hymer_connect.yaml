@@ -63,6 +63,10 @@ views:
             name: 12V Main
             icon: mdi:flash
             color: amber
+            tap_action:
+              action: toggle
+              confirmation:
+                text: "Turning off 12V will disable some devices. Are you sure?"
           - type: tile
             entity: switch.hymer_water_pump
             name: Water Pump
@@ -141,6 +145,10 @@ views:
         name: 12V Main Switch
         icon: mdi:flash
         color: amber
+        tap_action:
+          action: toggle
+          confirmation:
+            text: "Turning off 12V will disable some devices. Are you sure?"
 
       # ── Habitation Battery ──
       - type: entities
