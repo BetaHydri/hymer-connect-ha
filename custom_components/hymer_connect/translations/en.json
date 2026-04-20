@@ -149,6 +149,24 @@
       "dpf_status": {
         "name": "DPF status"
       },
+      "bms_voltage": {
+        "name": "BMS voltage"
+      },
+      "bms_current": {
+        "name": "BMS current"
+      },
+      "bms_temperature": {
+        "name": "BMS temperature"
+      },
+      "bms_time_remaining": {
+        "name": "BMS time remaining"
+      },
+      "bms_state_of_health": {
+        "name": "BMS state of health"
+      },
+      "bms_capacity_remaining": {
+        "name": "BMS capacity remaining"
+      },
       "solar_charger_status": {
         "name": "Solar charger status"
       },

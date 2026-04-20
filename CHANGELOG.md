@@ -5,6 +5,28 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.12.0] - 2026-04-20
+
+### Fixed
+
+- **Bus 99 remapped from chassis CAN to BOS LUX BMS** — The S600 CrossOver has a BOS 2.0 LiFePO4 battery (4×80Ah), not AGM. Bus 99 is the battery management system, matching PR #44 S700 observations:
+  - (99,1) `adblue_temp` → `bms_voltage` (V) — reads 13.35V = lithium pack voltage
+  - (99,2) `engine_torque` → `bms_current` (A) — reads -0.38A = discharge current
+  - (99,3) `ambient_temp` → `bms_temperature` (°C) — pack cell temperature
+  - (99,5) `fuel_range` → `bms_time_remaining` (min) — estimated runtime (fixes #14)
+  - (99,6) `current_gear` → `bms_state_of_health` (%) — reads 100% = new battery
+  - (99,7) `total_fuel_used` → `bms_capacity_remaining` (Ah)
+  - (99,9) `cruise_control` → `bms_charge_detected`
+  - (99,10) `dpf_status` → `bms_device_failure`
+
+### Added
+
+- **BOS LUX BMS section** in dashboard Power tab with voltage, current, temperature, SoH, capacity, time remaining
+
+### Removed
+
+- **Old bus 99 sensors** — adblue_temp, engine_torque, fuel_range, current_gear, total_fuel_used, dpf_status removed
+
 ## [2.11.0] - 2026-04-20
 
 ### Fixed

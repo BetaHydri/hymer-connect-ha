@@ -170,19 +170,21 @@ SENSOR_MAP: dict[tuple[int, int], tuple[str, str | None, str | None]] = {
     (58, 12): ("heater_sensor_12", None, None),
     (58, 13): ("heater_sensor_13", None, None),
     (58, 14): ("heater_sensor_14", None, None),
-    # can2 — Extended chassis CAN
-    # Note: Many of these are cached Mercedes CAN values from last drive.
-    # Outdoor/ambient temp only updates when engine is running.
-    (99, 1): ("adblue_temp", "°C", None),
-    (99, 2): ("engine_torque", "%", None),
-    (99, 3): ("ambient_temp", "°C", None),
+    # can2 — BOS LUX LiFePO4 Battery Management System (4×80Ah)
+    # Confirmed: S600 CrossOver has BOS 2.0 lithium battery, not AGM.
+    # Bus 99 is the BMS, not extended chassis CAN. Matches S700 (PR #44).
+    # (99,1) reads 13.35 = BMS pack voltage, not AdBlue temp.
+    # (99,6) reads 100 = SoH 100% (new battery), not gear position.
+    (99, 1): ("bms_voltage", "V", None),
+    (99, 2): ("bms_current", "A", None),
+    (99, 3): ("bms_temperature", "°C", None),
     (99, 4): ("lithium_soc", "%", None),
-    (99, 5): ("fuel_range", "km", None),
-    (99, 6): ("current_gear", None, None),
-    (99, 7): ("total_fuel_used", None, None),
+    (99, 5): ("bms_time_remaining", "min", None),
+    (99, 6): ("bms_state_of_health", "%", None),
+    (99, 7): ("bms_capacity_remaining", "Ah", None),
     (99, 8): ("lithium_soc_2", "%", None),
-    (99, 9): ("cruise_control", None, None),
-    (99, 10): ("dpf_status", None, None),
+    (99, 9): ("bms_charge_detected", None, None),
+    (99, 10): ("bms_device_failure", None, None),
 }
 
 # Human-readable mappings for raw SCU string values

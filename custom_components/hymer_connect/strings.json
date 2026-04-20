@@ -96,6 +96,12 @@
       "heater_state": { "name": "Heater state" },
       "heater_electric_power": { "name": "Heater electric power" },
       "heater_operating_mode": { "name": "Heater operating mode" },
+      "bms_voltage": { "name": "BMS voltage" },
+      "bms_current": { "name": "BMS current" },
+      "bms_temperature": { "name": "BMS temperature" },
+      "bms_time_remaining": { "name": "BMS time remaining" },
+      "bms_state_of_health": { "name": "BMS state of health" },
+      "bms_capacity_remaining": { "name": "BMS capacity remaining" },
       "fridge_mode": { "name": "Fridge mode" },
       "fridge_status": { "name": "Fridge status" },
       "fresh_water_level": { "name": "Fresh water level" }
