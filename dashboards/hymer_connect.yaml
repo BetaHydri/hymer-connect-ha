@@ -204,6 +204,30 @@ views:
             name: Charge Phase
             icon: mdi:sine-wave
 
+      # ── BOS LUX BMS ──
+      - type: entities
+        title: "🔋 BOS LUX Battery (BMS)"
+        show_header_toggle: false
+        entities:
+          - entity: sensor.hymer_bms_voltage
+            name: BMS Voltage
+            icon: mdi:battery-charging
+          - entity: sensor.hymer_bms_current
+            name: BMS Current
+            icon: mdi:current-dc
+          - entity: sensor.hymer_bms_temperature
+            name: BMS Temperature
+            icon: mdi:thermometer
+          - entity: sensor.hymer_bms_state_of_health
+            name: State of Health
+            icon: mdi:battery-heart
+          - entity: sensor.hymer_bms_capacity_remaining
+            name: Capacity Remaining
+            icon: mdi:battery
+          - entity: sensor.hymer_bms_time_remaining
+            name: Time Remaining
+            icon: mdi:clock-outline
+
   # ══════════════════════════════════════════════════════════
   # Climate & Appliances
   # ══════════════════════════════════════════════════════════
@@ -409,30 +433,6 @@ views:
           - entity: sensor.hymer_adblue_level
             name: AdBlue Level
             icon: mdi:car-turbocharger
-
-      # ── BOS LUX BMS ──
-      - type: entities
-        title: "🔋 BOS LUX Battery (BMS)"
-        show_header_toggle: false
-        entities:
-          - entity: sensor.hymer_bms_voltage
-            name: BMS Voltage
-            icon: mdi:battery-charging
-          - entity: sensor.hymer_bms_current
-            name: BMS Current
-            icon: mdi:current-dc
-          - entity: sensor.hymer_bms_temperature
-            name: BMS Temperature
-            icon: mdi:thermometer
-          - entity: sensor.hymer_bms_state_of_health
-            name: State of Health
-            icon: mdi:battery-heart
-          - entity: sensor.hymer_bms_capacity_remaining
-            name: Capacity Remaining
-            icon: mdi:battery
-          - entity: sensor.hymer_bms_time_remaining
-            name: Time Remaining
-            icon: mdi:clock-outline
 
       # ── Security ──
       - type: entities
