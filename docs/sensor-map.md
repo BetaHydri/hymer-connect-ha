@@ -49,9 +49,9 @@ may have different slot assignments on buses 1, 3, 8, 30, and 99 — see the
 | (3, 5) | `battery_voltage` | V | — | Living battery voltage |
 | (3, 6) | `battery_current` | A | — | Living battery current (negative = discharging) |
 | (3, 7) | `chassis_battery_voltage` | V | — | Starter battery voltage |
-| (3, 8) | `light_1_level` | % | — | (⚠️ S700: fresh_water_level) |
-| (3, 9) | `light_2_level` | % | — | (⚠️ S700: gray_water_level) |
-| (3, 10) | `battery_soc` | % | — | Battery state of charge (⚠️ S700: Ah capacity) |
+| (3, 8) | `light_1_level` | % | — | ⚠️ Label unverified on S600 — EBL402 has tank inputs, not "light levels". Likely water level (S700: fresh_water_level). S600 uses dedicated bus 22. |
+| (3, 9) | `light_2_level` | % | — | ⚠️ Label unverified on S600 — same as (3,8). Likely water level (S700: gray_water_level). S600 uses dedicated bus 25. |
+| (3, 10) | `battery_soc` | % | — | Battery state of charge — confirmed 77% on S600 (⚠️ S700: Ah capacity, not %) |
 | (3, 11) | `battery_type` | — | — | "AGM/Lithium" |
 | (3, 12–18) | `switch_12v_1..7` | — | — | 12V switch channels |
 | (3, 19) | `solar_voltage_sentinel` | V | — | Always 3276.8 (sentinel). Real solar on bus 8 |
@@ -59,17 +59,23 @@ may have different slot assignments on buses 1, 3, 8, 30, and 99 — see the
 | (3, 21) | `solar_charger_status` | — | — | MPPT charger status |
 | (3, 22) | `switch_22` | — | — | (⚠️ S700: shoreline_connected) |
 
-## Bus 8 — Voltronic MPP260CI (solar charger)
+## Bus 8 — Voltronic MPP260CI (MPPT solar charger)
 
-| Slot | Sensor Name | Unit | Transform | Notes |
-|------|------------|------|-----------|-------|
-| (8, 1) | `gray_water_sensor` | — | — | ⚠️ S700: solar_active |
-| (8, 2) | `solar_voltage` | V | — | Panel voltage (confirmed via live correlation) |
-| (8, 3) | `solar_current` | A | — | Charge current |
-| (8, 4) | `vent_1` | — | — | ⚠️ S700: solar_error |
-| (8, 5) | `vent_2` | — | — | ⚠️ S700: solar_reduced_power |
-| (8, 6) | `vent_3` | — | — | ⚠️ S700: solar_aes_active |
-| (8, 7) | `tire_pressure` | bar | — | ⚠️ S700: solar_power (W) |
+All 7 slots are solar charger data. The S600 code has legacy placeholder labels
+(`gray_water_sensor`, `vent_1..3`, `tire_pressure`) that are wrong — the S700
+labels from PR #44 reflect the actual Voltronic register layout. The S600 works
+around the mislabelling by computing `solar_active` and `solar_power` from
+`solar_voltage × solar_current` instead of reading the raw slots.
+
+| Slot | Code label (S600) | Actual meaning | Unit | Notes |
+|------|-------------------|---------------|------|-------|
+| (8, 1) | `gray_water_sensor` | `solar_active` | — | ⚠️ S600 label wrong — this is the MPPT's "charging active" flag. S600 computes `solar_active` from `solar_current > 0` instead. |
+| (8, 2) | `solar_voltage` | `solar_voltage` | V | Panel voltage — confirmed 19.9V live |
+| (8, 3) | `solar_current` | `solar_current` | A | Charge current — confirmed 2.1A live |
+| (8, 4) | `vent_1` | `solar_error` | — | ⚠️ S600 label wrong — MPPT error flag |
+| (8, 5) | `vent_2` | `solar_reduced_power` | — | ⚠️ S600 label wrong — MPPT reduced power flag |
+| (8, 6) | `vent_3` | `solar_aes_active` | — | ⚠️ S600 label wrong — MPPT AES mode flag |
+| (8, 7) | `tire_pressure` | `solar_power` | W | ⚠️ S600 label wrong — MPPT power output. Shows 0.0 because S600 computes solar_power as V×I instead. |
 
 ## Bus 11 — Living ceiling light
 
