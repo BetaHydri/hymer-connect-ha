@@ -376,9 +376,6 @@ views:
           - entity: sensor.hymer_odometer
             name: Odometer
             icon: mdi:counter
-          - entity: sensor.hymer_fuel_level
-            name: Fuel Level
-            icon: mdi:fuel
           - entity: sensor.hymer_outside_temperature
             name: Outside Temp
             icon: mdi:thermometer
@@ -406,6 +403,9 @@ views:
         title: "⛽ Fuel & AdBlue"
         show_header_toggle: false
         entities:
+          - entity: sensor.hymer_fuel_level
+            name: Fuel Level
+            icon: mdi:fuel
           - entity: sensor.hymer_adblue_level
             name: AdBlue Level
             icon: mdi:car-turbocharger
