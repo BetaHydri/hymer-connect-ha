@@ -5,6 +5,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.13.0] - 2026-04-20
+
+### Changed
+
+- **Dashboard: BMS section moved to Power tab** — removed duplicate from Vehicle tab
+- **Dashboard: current sensor labels clarified** — "Load Draw" (EBL), "Net Battery Current" (BMS)
+- **Diagnostic sensors for EBL slots (3,8) and (3,9)** — temporary sensors to verify if these are water levels (compare with bus 22/25)
+
+### Documentation
+
+- **Power Flow diagram** added to sensor-map.md explaining Solar → BMS → EBL current relationship
+- **Bus 3 annotations corrected** — (3,8)/(3,9) flagged as unverified "light levels", likely water levels
+- **Bus 8 labels corrected** — all 7 slots are Voltronic MPPT solar data, not water/vents/tire
+
 ## [2.12.0] - 2026-04-20
 
 ### Fixed
