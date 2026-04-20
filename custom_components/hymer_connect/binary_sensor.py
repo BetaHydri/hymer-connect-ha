@@ -86,14 +86,9 @@ BINARY_SENSOR_DESCRIPTIONS: tuple[HymerBinarySensorEntityDescription, ...] = (
         icon="mdi:ceiling-light",
     ),
     # --- Doors (HA auto-translates: Offen/Geschlossen) ---
-    HymerBinarySensorEntityDescription(
-        key="door_driver",
-        translation_key="door_driver",
-        device_class=BinarySensorDeviceClass.DOOR,
-        value_path="signalr_sensors.door_driver",
-        on_value="Open",
-        icon="mdi:car-door",
-    ),
+    # Confirmed at vehicle 2026-04-20: S600 has no driver door sensor via SCU.
+    # (1,11) = passenger door, (1,12) = sliding door.
+    # (1,13)/(1,14) don't update on S600 but kept for other models.
     HymerBinarySensorEntityDescription(
         key="door_passenger",
         translation_key="door_passenger",
@@ -109,6 +104,14 @@ BINARY_SENSOR_DESCRIPTIONS: tuple[HymerBinarySensorEntityDescription, ...] = (
         value_path="signalr_sensors.door_sliding",
         on_value="Open",
         icon="mdi:door-sliding",
+    ),
+    HymerBinarySensorEntityDescription(
+        key="door_rear",
+        translation_key="door_rear",
+        device_class=BinarySensorDeviceClass.DOOR,
+        value_path="signalr_sensors.door_rear",
+        on_value="Open",
+        icon="mdi:car-door",
     ),
     # --- Lock (HA auto-translates: Gesperrt/Entsperrt) ---
     HymerBinarySensorEntityDescription(

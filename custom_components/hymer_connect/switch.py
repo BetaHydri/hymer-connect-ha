@@ -15,6 +15,7 @@ from homeassistant.components.switch import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -167,12 +168,24 @@ class HymerConnectSwitch(
             return None
         return value == self.entity_description.on_value
 
-    async def async_turn_on(self, **kwargs: Any) -> None:
-        """Turn the switch on."""
+    async def _ensure_connected(self) -> None:
+        """Ensure SignalR is connected, attempt reconnect if not."""
+        client = self.coordinator.signalr_client
+        if client and client.connected:
+            return
+        _LOGGER.info("SignalR not connected — attempting reconnect before switch command")
+        await self.coordinator.start_signalr()
         client = self.coordinator.signalr_client
         if not client or not client.connected:
-            _LOGGER.warning("Cannot control switch - SignalR not connected")
-            return
+            raise HomeAssistantError(
+                "Cannot control switch — SignalR not connected. "
+                "Try reloading the integration."
+            )
+
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        """Turn the switch on."""
+        await self._ensure_connected()
+        client = self.coordinator.signalr_client
         on_val = self.entity_description.on_value
         if isinstance(on_val, str):
             await client.send_light_command(
@@ -196,10 +209,8 @@ class HymerConnectSwitch(
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
+        await self._ensure_connected()
         client = self.coordinator.signalr_client
-        if not client or not client.connected:
-            _LOGGER.warning("Cannot control switch - SignalR not connected")
-            return
         on_val = self.entity_description.on_value
         if isinstance(on_val, str):
             off_val = "Off" if on_val == "On" else "False"

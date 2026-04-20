@@ -5,6 +5,31 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.15.0] - 2026-04-20
+
+### Fixed
+
+- **SignalR auto-reconnect on connection loss** — when the WebSocket listen loop ends unexpectedly, the coordinator now triggers an immediate reconnect (resets backoff, schedules refresh) instead of waiting up to 15 minutes for the next poll + exponential backoff cycle. Fixes the issue where the integration became unresponsive after a connection drop and required manual reload.
+- **Light/switch/climate/select commands auto-reconnect** — all controllable entities now attempt to reconnect SignalR before sending a command. If reconnection fails, a `HomeAssistantError` is raised with a user-visible toast message instead of silently failing. No more "press button, nothing happens" after a connection drop.
+- **S600 door sensor mapping corrected** — confirmed at vehicle (2026-04-20):
+  - (1,11) `door_driver` → `door_passenger` — physically tested, was mislabelled
+  - (1,12) `door_passenger` → `door_sliding` — physically tested, was mislabelled
+  - (1,13) and (1,14) do not update on S600 (no rear door sensors via SCU)
+  - Note: S700 (PR #44) maps these slots differently — per-vehicle overlays needed
+
+### Added
+
+- **Truma heater energy source: 5 modes** matching physical Truma Combi panel:
+  - `Diesel` (FUEL), `Mix 900W` (MIX 1), `Mix 1800W` (MIX 2), `Electric 900W` (EL 1), `Electric 1800W` (EL 2)
+  - Previously only had 4 options (Diesel, Both 900W, Both 1800W, Electric)
+- **VENT fan mode read-only display** — when VENT is set on the physical Truma panel, HA now shows `fan_mode: Vent` and `hvac_action: Fan`. VENT cannot be controlled via HA (EHG app also cannot control it — panel-only feature).
+- **`on_connection_lost` callback** in `HymerSignalRClient` — notifies coordinator immediately when WebSocket closes
+
+### Changed
+
+- **Heater energy select labels** — renamed from technical names to match Truma panel: "Both 900W" → "Mix 900W", "Electric" → "Electric 900W"/"Electric 1800W"
+- **`heater_fan_speed` value labels** — added `VENT` → `Vent` mapping in PIA decoder
+
 ## [2.14.0] - 2026-04-20
 
 ### Fixed

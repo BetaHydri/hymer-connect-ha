@@ -42,6 +42,7 @@ class HymerSignalRClient:
         scu_urn: str,
         ehg_refresh_token: str = "",
         on_sensor_update: Callable[[dict[str, Any]], None] | None = None,
+        on_connection_lost: Callable[[], None] | None = None,
     ) -> None:
         """Initialize the SignalR client."""
         self._api = api
@@ -50,6 +51,7 @@ class HymerSignalRClient:
         self._scu_urn = scu_urn
         self._ehg_refresh_token = ehg_refresh_token  # Long-lived refresh token (ett=access-refresh)
         self._on_sensor_update = on_sensor_update
+        self._on_connection_lost = on_connection_lost
         self._ws: aiohttp.ClientWebSocketResponse | None = None
         self._running = False
         self._task: asyncio.Task | None = None
@@ -433,11 +435,15 @@ class HymerSignalRClient:
             )
         finally:
             _LOGGER.warning(
-                "SignalR listen loop ended after %d messages — will reconnect on next poll",
+                "SignalR listen loop ended after %d messages — requesting immediate reconnect",
                 msg_count,
             )
             self._connected = False
             self._running = False
+            # Notify coordinator to reconnect immediately instead of
+            # waiting for the next poll interval + backoff.
+            if self._on_connection_lost:
+                self._on_connection_lost()
 
     async def send_pia_request(self, b64_payload: str) -> None:
         """Send a PiaRequest message to the SCU."""

@@ -16,6 +16,7 @@ from homeassistant.components.light import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN, MANUFACTURER
@@ -210,11 +211,23 @@ class HymerConnectLight(
             + val * (MAX_COLOR_TEMP_KELVIN - MIN_COLOR_TEMP_KELVIN) / 100
         )
 
-    async def async_turn_on(self, **kwargs: Any) -> None:
+    async def _ensure_connected(self) -> None:
+        """Ensure SignalR is connected, attempt reconnect if not."""
+        client = self.coordinator.signalr_client
+        if client and client.connected:
+            return
+        _LOGGER.info("SignalR not connected — attempting reconnect before light command")
+        await self.coordinator.start_signalr()
         client = self.coordinator.signalr_client
         if not client or not client.connected:
-            _LOGGER.warning("Cannot control light - SignalR not connected")
-            return
+            raise HomeAssistantError(
+                "Cannot control light — SignalR not connected. "
+                "Try reloading the integration."
+            )
+
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        await self._ensure_connected()
+        client = self.coordinator.signalr_client
         bus = self.entity_description.bus_id
         await client.send_light_command(bus, 1, bool_value=True)
         self._optimistic_on = True
@@ -230,10 +243,8 @@ class HymerConnectLight(
         self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
+        await self._ensure_connected()
         client = self.coordinator.signalr_client
-        if not client or not client.connected:
-            _LOGGER.warning("Cannot control light - SignalR not connected")
-            return
         bus = self.entity_description.bus_id
         await client.send_light_command(bus, 1, bool_value=False)
         self._optimistic_on = False

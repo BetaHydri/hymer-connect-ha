@@ -5,6 +5,29 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.15.0] - 2026-04-20
+
+### Fixed
+
+- **SignalR auto-reconnect on connection loss** — when the WebSocket listen loop ends unexpectedly, the coordinator now triggers an immediate reconnect (resets backoff, schedules refresh) instead of waiting up to 15 minutes for the next poll + exponential backoff cycle. Fixes the issue where the integration became unresponsive after a connection drop and required manual reload.
+- **Light/switch/climate/select commands auto-reconnect** — all controllable entities now attempt to reconnect SignalR before sending a command. If reconnection fails, a `HomeAssistantError` is raised with a user-visible toast message instead of silently failing.
+- **S600 door sensor mapping corrected** — confirmed at vehicle (2026-04-20):
+  - (1,11) `door_driver` → `door_passenger` — physically tested
+  - (1,12) `door_passenger` → `door_sliding` — physically tested
+  - (1,13)/(1,14) do not update on S600 (no rear door sensors via SCU)
+
+### Added
+
+- **Truma heater energy source: 5 modes** matching physical Truma Combi panel:
+  - Diesel (FUEL), Mix 900W (MIX 1), Mix 1800W (MIX 2), Electric 900W (EL 1), Electric 1800W (EL 2)
+- **VENT fan mode read-only display** — when VENT is set on the physical Truma panel, HA shows `fan_mode: Vent` and `hvac_action: Fan`
+- **`on_connection_lost` callback** in `HymerSignalRClient`
+
+### Changed
+
+- **Heater energy select labels** — renamed to match Truma panel display
+- **`heater_fan_speed` value labels** — added VENT mapping
+
 ## [2.14.0] - 2026-04-20
 
 ### Fixed

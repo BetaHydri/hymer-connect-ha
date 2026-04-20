@@ -24,10 +24,10 @@ may have different slot assignments on buses 1, 3, 8, 30, and 99 — see the
 | (1, 8) | `vin_text` | — | — | VIN string |
 | (1, 9) | `outside_temperature` | °C | — | Outside temperature (was: coolant_temp — confirmed ambient) |
 | (1, 10) | `engine_running` | — | — | Engine on/off |
-| (1, 11) | `door_driver` | — | — | Driver door open/closed (⚠️ S700: wiping_water_empty) |
-| (1, 12) | `door_passenger` | — | — | Passenger door (⚠️ S700: door_driver) |
-| (1, 13) | `door_sliding` | — | — | Sliding door (⚠️ S700: door_entrance) |
-| (1, 14) | `door_rear` | — | — | Rear door (⚠️ S700: motor_oil_warning) |
+| (1, 11) | `door_passenger` | — | — | Passenger door open/closed (confirmed at vehicle 2026-04-20; ⚠️ S700: wiping_water_empty) |
+| (1, 12) | `door_sliding` | — | — | Sliding door (confirmed at vehicle 2026-04-20; ⚠️ S700: door_driver) |
+| (1, 13) | `door_rear` | — | — | Rear door (does not update on S600; ⚠️ S700: door_entrance) |
+| (1, 14) | `door_rear_2` | — | — | Rear door 2 (does not update on S600; ⚠️ S700: motor_oil_warning) |
 | (1, 15) | `ignition_state` | — | — | IGN_LOCK/OFF/ACC/ON/START |
 | (1, 16) | `seatbelt_warning` | — | — | Seatbelt warning |
 | (1, 17) | `coolant_warning` | — | — | Coolant low warning (was: turn_signal) |

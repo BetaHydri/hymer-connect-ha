@@ -9,6 +9,7 @@ from typing import Any
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -24,9 +25,14 @@ FRIDGE_OPTIONS = ["Off", "1", "2", "3", "4", "5"]
 # Boiler modes: Off, ECO, Turbo (HOT)
 BOILER_OPTIONS = ["Off", "ECO", "Turbo"]
 
-# Heater energy source modes (captured via mitmproxy 2026-04-19)
-# Electric only requires shore power — SCU rejects it otherwise
-HEATER_ENERGY_OPTIONS = ["Diesel", "Both 900W", "Both 1800W", "Electric"]
+# Heater energy source modes matching Truma panel display:
+#   FUEL  = Diesel only
+#   MIX 1 = Diesel + Electric 900W
+#   MIX 2 = Diesel + Electric 1800W
+#   EL 1  = Electric only 900W
+#   EL 2  = Electric only 1800W
+# Electric modes require shore power — SCU rejects them otherwise
+HEATER_ENERGY_OPTIONS = ["Diesel", "Mix 900W", "Mix 1800W", "Electric 900W", "Electric 1800W"]
 
 
 async def async_setup_entry(
@@ -105,8 +111,14 @@ class HymerFridgeSelect(
         """Set the fridge mode."""
         client = self.coordinator.signalr_client
         if not client or not client.connected:
-            _LOGGER.warning("Cannot control fridge — SignalR not connected")
-            return
+            _LOGGER.info("SignalR not connected — attempting reconnect before fridge command")
+            await self.coordinator.start_signalr()
+            client = self.coordinator.signalr_client
+            if not client or not client.connected:
+                raise HomeAssistantError(
+                    "Cannot control fridge — SignalR not connected. "
+                    "Try reloading the integration."
+                )
 
         import asyncio
 
@@ -193,8 +205,14 @@ class HymerBoilerSelect(
         """Set the boiler mode."""
         client = self.coordinator.signalr_client
         if not client or not client.connected:
-            _LOGGER.warning("Cannot control boiler — SignalR not connected")
-            return
+            _LOGGER.info("SignalR not connected — attempting reconnect before boiler command")
+            await self.coordinator.start_signalr()
+            client = self.coordinator.signalr_client
+            if not client or not client.connected:
+                raise HomeAssistantError(
+                    "Cannot control boiler — SignalR not connected. "
+                    "Try reloading the integration."
+                )
 
         mode_map = {"Off": "OFF", "ECO": "ECO", "Turbo": "HOT"}
         mode_str = mode_map.get(option)
@@ -223,14 +241,24 @@ class HymerBoilerSelect(
 class HymerHeaterEnergySelect(
     CoordinatorEntity[HymerConnectCoordinator], SelectEntity
 ):
-    """Heater energy source select — Diesel / Both 900W / Both 1800W / Electric.
+    """Heater energy source select matching Truma Combi panel modes.
+
+    Panel labels → SCU wire values:
+      FUEL  → (58,4)="Diesel", (58,6)="Diesel"
+      MIX 1 → (58,4)="Both",  (58,6)="Both",  (58,9)=uint 900
+      MIX 2 → (58,4)="Both",  (58,6)="Both",  (58,9)=uint 1800
+      EL 1  → (58,4)="Electric", (58,6)="Electric", (58,9)=uint 900
+      EL 2  → (58,4)="Electric", (58,6)="Electric", (58,9)=uint 1800
 
     Protocol (captured 2026-04-19 via mitmproxy):
       - (58,4) heater_fuel_type and (58,6) heater_fuel_type_2 are always sent
         as a pair with the same string value: "Diesel", "Both", or "Electric".
-      - (58,9) heater_electric_power is only sent when mode is "Both",
-        as uint 900 or 1800.
-      - "Electric" only works with shore power connected.
+      - (58,9) heater_electric_power is sent as uint 900 or 1800 when mode
+        involves electric power (Both or Electric).
+      - Electric modes require shore power — SCU rejects otherwise.
+      - NOTE: "Both" and "Diesel" were captured via mitmproxy.  "Electric"
+        with wattage and VENT fan mode are extrapolated from the same
+        protocol pattern + Truma panel labels.  Not yet verified on wire.
     """
 
     _attr_has_entity_name = True
@@ -272,7 +300,14 @@ class HymerHeaterEnergySelect(
         if fuel_str == "Diesel":
             return "Diesel"
         if fuel_str == "Electric":
-            return "Electric"
+            watt = _resolve_path(
+                self.coordinator.data, "signalr_sensors.heater_electric_power"
+            )
+            try:
+                w = int(watt) if watt is not None else 900
+            except (ValueError, TypeError):
+                w = 900
+            return f"Electric {w}W"
         if fuel_str == "Both":
             watt = _resolve_path(
                 self.coordinator.data, "signalr_sensors.heater_electric_power"
@@ -281,33 +316,46 @@ class HymerHeaterEnergySelect(
                 w = int(watt) if watt is not None else 900
             except (ValueError, TypeError):
                 w = 900
-            return f"Both {w}W"
+            return f"Mix {w}W"
         return "Diesel"
 
     async def async_select_option(self, option: str) -> None:
         """Set the heater energy source."""
         client = self.coordinator.signalr_client
         if not client or not client.connected:
-            _LOGGER.warning("Cannot control heater energy — SignalR not connected")
-            return
+            _LOGGER.info("SignalR not connected — attempting reconnect before heater energy command")
+            await self.coordinator.start_signalr()
+            client = self.coordinator.signalr_client
+            if not client or not client.connected:
+                raise HomeAssistantError(
+                    "Cannot control heater energy — SignalR not connected. "
+                    "Try reloading the integration."
+                )
 
         if option == "Diesel":
             await client.send_multi_sensor_command([
                 {"bus_id": 58, "sensor_id": 4, "str_value": "Diesel"},
                 {"bus_id": 58, "sensor_id": 6, "str_value": "Diesel"},
             ])
-        elif option == "Electric":
+        elif option == "Electric 900W":
             await client.send_multi_sensor_command([
                 {"bus_id": 58, "sensor_id": 4, "str_value": "Electric"},
                 {"bus_id": 58, "sensor_id": 6, "str_value": "Electric"},
+                {"bus_id": 58, "sensor_id": 9, "uint_value": 900},
             ])
-        elif option == "Both 900W":
+        elif option == "Electric 1800W":
+            await client.send_multi_sensor_command([
+                {"bus_id": 58, "sensor_id": 4, "str_value": "Electric"},
+                {"bus_id": 58, "sensor_id": 6, "str_value": "Electric"},
+                {"bus_id": 58, "sensor_id": 9, "uint_value": 1800},
+            ])
+        elif option == "Mix 900W":
             await client.send_multi_sensor_command([
                 {"bus_id": 58, "sensor_id": 4, "str_value": "Both"},
                 {"bus_id": 58, "sensor_id": 6, "str_value": "Both"},
                 {"bus_id": 58, "sensor_id": 9, "uint_value": 900},
             ])
-        elif option == "Both 1800W":
+        elif option == "Mix 1800W":
             await client.send_multi_sensor_command([
                 {"bus_id": 58, "sensor_id": 4, "str_value": "Both"},
                 {"bus_id": 58, "sensor_id": 6, "str_value": "Both"},

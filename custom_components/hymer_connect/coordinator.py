@@ -82,6 +82,23 @@ class HymerConnectCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             "signalr_sensors": self._signalr_data,
         })
 
+    def _on_signalr_connection_lost(self) -> None:
+        """Handle SignalR connection loss — schedule immediate reconnect.
+
+        Called from the listen loop's finally block when the WebSocket
+        closes unexpectedly.  Resets backoff and triggers a coordinator
+        refresh so `_async_update_data` reconnects within seconds instead
+        of waiting for the next poll interval + exponential backoff.
+        """
+        _LOGGER.warning("SignalR connection lost — scheduling immediate reconnect")
+        self._reconnect_backoff = _INITIAL_BACKOFF
+        self._last_reconnect_attempt = 0.0
+        # Schedule an async coordinator refresh from sync context
+        self.hass.loop.call_soon_threadsafe(
+            self.hass.async_create_task,
+            self.async_request_refresh(),
+        )
+
     async def start_signalr(self) -> None:
         """Start the SignalR WebSocket connection."""
         if not self._scu_urn:
@@ -104,6 +121,7 @@ class HymerConnectCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             scu_urn=self._scu_urn,
             ehg_refresh_token=self._ehg_refresh_token,
             on_sensor_update=self._on_signalr_update,
+            on_connection_lost=self._on_signalr_connection_lost,
         )
 
         try:

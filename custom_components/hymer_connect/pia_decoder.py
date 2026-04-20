@@ -22,6 +22,12 @@ SENSOR_MAP: dict[tuple[int, int], tuple[str, str | None, str | None]] = {
     # (1,2) reads 72.72 while parked = EHG app shows "Dieselfüllstand 73%" = fuel level.
     # (1,5) reads 167040 div100 = 1670 = km to next service, not RPM.
     # (1,9) reads ~9°C while parked cold = outside temp, not coolant.
+    #
+    # Door mapping confirmed at vehicle 2026-04-20:
+    #   (1,11) = passenger door (physically tested — open/close correlated)
+    #   (1,12) = sliding door   (physically tested — open/close correlated)
+    #   (1,13) and (1,14) do NOT update on S600 (no rear door sensors)
+    # Note: S700 PR #44 maps these differently — per-vehicle overlays needed.
     (1, 1): ("odometer", "km", "div1000"),
     (1, 2): ("fuel_level", "%", None),
     (1, 3): ("lock_status", None, None),
@@ -32,10 +38,10 @@ SENSOR_MAP: dict[tuple[int, int], tuple[str, str | None, str | None]] = {
     (1, 8): ("vin_text", None, None),
     (1, 9): ("outside_temperature", "°C", None),
     (1, 10): ("engine_running", None, None),
-    (1, 11): ("door_driver", None, None),
-    (1, 12): ("door_passenger", None, None),
-    (1, 13): ("door_sliding", None, None),
-    (1, 14): ("door_rear", None, None),
+    (1, 11): ("door_passenger", None, None),
+    (1, 12): ("door_sliding", None, None),
+    (1, 13): ("door_rear", None, None),
+    (1, 14): ("door_rear_2", None, None),
     (1, 15): ("ignition_state", None, None),
     (1, 16): ("seatbelt_warning", None, None),
     # Slots 17-22: Chassis state flags (confirmed matching S700 via PR #44).
@@ -189,10 +195,10 @@ SENSOR_MAP: dict[tuple[int, int], tuple[str, str | None, str | None]] = {
 
 # Human-readable mappings for raw SCU string values
 _VALUE_LABELS: dict[str, dict[str, str]] = {
-    "door_driver": {"OFF": "Closed", "CLS": "Closed", "ON": "Open", "OPN": "Open", "SNA": "N/A"},
     "door_passenger": {"OFF": "Closed", "CLS": "Closed", "ON": "Open", "OPN": "Open", "SNA": "N/A"},
     "door_sliding": {"OFF": "Closed", "CLS": "Closed", "ON": "Open", "OPN": "Open", "SNA": "N/A"},
     "door_rear": {"OFF": "Closed", "CLS": "Closed", "ON": "Open", "OPN": "Open", "SNA": "N/A"},
+    "door_rear_2": {"OFF": "Closed", "CLS": "Closed", "ON": "Open", "OPN": "Open", "SNA": "N/A"},
     "ignition_state": {
         "IGN_LOCK": "Off",
         "IGN_OFF": "Accessory",
@@ -218,7 +224,7 @@ _VALUE_LABELS: dict[str, dict[str, str]] = {
     "cruise_control_can": {"OFF": "Off", "ON": "On"},
     "downhill_assist": {"OFF": "Off", "ON": "On"},
     "coolant_warning": {"OFF": "Off", "ON": "On"},
-    "heater_fan_speed": {"OFF": "Off", "ECO": "Eco", "HOT": "Hot", "HIGH": "High"},
+    "heater_fan_speed": {"OFF": "Off", "ECO": "Eco", "HOT": "Hot", "HIGH": "High", "VENT": "Vent"},
     "heater_state": {"False": "Off", "True": "On"},
 }
 
