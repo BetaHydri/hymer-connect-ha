@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.15.1] - 2026-04-20
+
+### Fixed
+
+- **S600 door mapping corrected (take 2)** — v2.15.0 had the swap reversed. Correct mapping:
+  - (1,12) = `door_driver`, (1,13) = `door_passenger`
+  - (1,11) `door_sliding` and (1,14) `door_rear` don't update on S600
+
 ## [2.15.0] - 2026-04-20
 
 ### Fixed

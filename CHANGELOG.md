@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.15.1] - 2026-04-20
+
+### Fixed
+
+- **S600 door mapping corrected (take 2)** — v2.15.0 swapped the wrong direction. Correct mapping confirmed at vehicle:
+  - (1,12) = `door_driver` — the sensor previously labelled "Passenger" actually reacted to the driver door
+  - (1,13) = `door_passenger` — the sensor previously labelled "Sliding" actually reacted to the passenger door
+  - (1,11) `door_sliding` and (1,14) `door_rear` do NOT update on S600 (kept for other models)
+- **Dashboard restored** Driver door entity
+
 ## [2.15.0] - 2026-04-20
 
 ### Fixed
