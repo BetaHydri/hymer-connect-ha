@@ -427,10 +427,10 @@ views:
     icon: mdi:car-door
     cards:
       # ── Doors ──
-      # S600: (1,12)=driver, (1,13)=passenger update via SCU.
-      # (1,11) sliding and (1,14) rear don't update on S600.
+      # S600: (1,12)=driver, (1,13)=passenger confirmed at vehicle.
+      # (1,11) and (1,14) are vehicle warnings per S700 PR #44.
       - type: entities
-        title: "🛏 Doors"
+        title: "🚪 Doors"
         show_header_toggle: false
         entities:
           - entity: binary_sensor.hymer_driver_door
@@ -439,15 +439,26 @@ views:
           - entity: binary_sensor.hymer_passenger_door
             name: Passenger
             icon: mdi:car-door
-          - entity: binary_sensor.hymer_sliding_door
-            name: Sliding
-            icon: mdi:door-sliding-open
-          - entity: binary_sensor.hymer_rear_door
-            name: Rear
-            icon: mdi:car-door
           - entity: binary_sensor.hymer_lock
             name: Lock
             icon: mdi:lock
+
+      # ── Vehicle Warnings ──
+      # (1,11) wiping_water_empty, (1,14) motor_oil_warning per S700 PR #44
+      # (1,17) coolant_warning — moved here from Chassis State for grouping
+      - type: entities
+        title: "⚠️ Vehicle Warnings"
+        show_header_toggle: false
+        entities:
+          - entity: binary_sensor.hymer_washer_fluid_low
+            name: Washer Fluid Low
+            icon: mdi:wiper-wash
+          - entity: binary_sensor.hymer_motor_oil_warning
+            name: Motor Oil Warning
+            icon: mdi:oil
+          - entity: binary_sensor.hymer_coolant_warning
+            name: Coolant Warning
+            icon: mdi:coolant-temperature
 
       # ── Chassis State ──
       # Slots (1,17)-(1,22) are chassis state flags, NOT vehicle lights.
@@ -472,9 +483,6 @@ views:
           - entity: binary_sensor.hymer_downhill_assist
             name: Downhill Assist
             icon: mdi:arrow-down-bold
-          - entity: binary_sensor.hymer_coolant_warning
-            name: Coolant Warning
-            icon: mdi:coolant-temperature
 
   # ══════════════════════════════════════════════════════════
   # Interior Lights

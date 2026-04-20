@@ -5,6 +5,21 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.16.0] - 2026-04-20
+
+### Changed
+
+- **Slots (1,11) and (1,14) remapped from doors to vehicle warnings** per S700 PR #44:
+  - (1,11) `door_sliding` → `wiping_water_empty` — washer fluid low warning
+  - (1,14) `door_rear` → `motor_oil_warning` — engine oil warning
+  - These slots never updated as doors on S600; warning indicators match the S700 decompiled registry
+- **Dashboard: new “⚠️ Vehicle Warnings” section** — washer fluid, motor oil, coolant grouped together
+- **Dashboard: Doors section** cleaned to only Driver + Passenger + Lock
+
+### Removed
+
+- **`door_sliding` and `door_rear` binary sensors** — replaced by warning indicators
+
 ## [2.15.2] - 2026-04-20
 
 ### Added

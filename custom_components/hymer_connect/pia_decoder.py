@@ -48,10 +48,10 @@ SENSOR_MAP: dict[tuple[int, int], tuple[str, str | None, str | None]] = {
     (1, 8): ("vin_text", None, None),
     (1, 9): ("outside_temperature", "°C", None),  # Mercedes bumper sensor = cockpit "Außentemperatur" (confirmed 13→16°C tracking weather 2026-04-20)
     (1, 10): ("engine_running", None, None),
-    (1, 11): ("door_sliding", None, None),
+    (1, 11): ("wiping_water_empty", None, None),  # S700 PR #44: washer fluid low warning (was door_sliding — never updated on S600)
     (1, 12): ("door_driver", None, None),
     (1, 13): ("door_passenger", None, None),
-    (1, 14): ("door_rear", None, None),
+    (1, 14): ("motor_oil_warning", None, None),  # S700 PR #44: engine oil warning (was door_rear — never updated on S600)
     (1, 15): ("ignition_state", None, None),
     (1, 16): ("seatbelt_warning", None, None),
     # Slots 17-22: Chassis state flags (confirmed matching S700 via PR #44).
@@ -207,8 +207,8 @@ SENSOR_MAP: dict[tuple[int, int], tuple[str, str | None, str | None]] = {
 _VALUE_LABELS: dict[str, dict[str, str]] = {
     "door_driver": {"OFF": "Closed", "CLS": "Closed", "ON": "Open", "OPN": "Open", "SNA": "N/A"},
     "door_passenger": {"OFF": "Closed", "CLS": "Closed", "ON": "Open", "OPN": "Open", "SNA": "N/A"},
-    "door_sliding": {"OFF": "Closed", "CLS": "Closed", "ON": "Open", "OPN": "Open", "SNA": "N/A"},
-    "door_rear": {"OFF": "Closed", "CLS": "Closed", "ON": "Open", "OPN": "Open", "SNA": "N/A"},
+    "wiping_water_empty": {"OFF": "Off", "ON": "On"},
+    "motor_oil_warning": {"OFF": "Off", "ON": "On"},
     "ignition_state": {
         "IGN_LOCK": "Off",
         "IGN_OFF": "Accessory",

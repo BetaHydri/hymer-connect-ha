@@ -24,10 +24,10 @@ may have different slot assignments on buses 1, 3, 8, 30, and 99 — see the
 | (1, 8) | `vin_text` | — | — | VIN string |
 | (1, 9) | `outside_temperature` | °C | — | Mercedes outside temperature sensor (bumper-mounted). Confirmed 2026-04-20: read 13°C → 16°C tracking real ambient weather in Unterföhring. Same value as Mercedes cockpit "Außentemperatur" display. |
 | (1, 10) | `engine_running` | — | — | Engine on/off |
-| (1, 11) | `door_sliding` | — | — | Sliding door (does NOT update on S600; ⚠️ S700: wiping_water_empty) |
-| (1, 12) | `door_driver` | — | — | Driver door (confirmed at vehicle 2026-04-20; ⚠️ S700: door_driver at same slot) |
-| (1, 13) | `door_passenger` | — | — | Passenger door (confirmed at vehicle 2026-04-20; ⚠️ S700: door_entrance) |
-| (1, 14) | `door_rear` | — | — | Rear door (does NOT update on S600; ⚠️ S700: motor_oil_warning) |
+| (1, 11) | `wiping_water_empty` | — | — | Washer fluid low warning (per S700 PR #44; was door_sliding — never updated on S600) |
+| (1, 12) | `door_driver` | — | — | Driver door (confirmed at vehicle 2026-04-20) |
+| (1, 13) | `door_passenger` | — | — | Passenger door (confirmed at vehicle 2026-04-20) |
+| (1, 14) | `motor_oil_warning` | — | — | Engine oil warning (per S700 PR #44; was door_rear — never updated on S600) |
 | (1, 15) | `ignition_state` | — | — | IGN_LOCK/OFF/ACC/ON/START |
 | (1, 16) | `seatbelt_warning` | — | — | Seatbelt warning |
 | (1, 17) | `coolant_warning` | — | — | Coolant low warning (was: turn_signal) |
