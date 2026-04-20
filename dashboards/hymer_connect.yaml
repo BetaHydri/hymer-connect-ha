@@ -454,13 +454,12 @@ views:
     icon: mdi:car-door
     cards:
       # ── Doors ──
+      # S600: only passenger + sliding report via SCU (no driver door sensor).
+      # (1,13)/(1,14) don't update on S600 but kept for other models.
       - type: entities
         title: "🚪 Doors"
         show_header_toggle: false
         entities:
-          - entity: binary_sensor.hymer_driver_door
-            name: Driver
-            icon: mdi:car-door
           - entity: binary_sensor.hymer_passenger_door
             name: Passenger
             icon: mdi:car-door
