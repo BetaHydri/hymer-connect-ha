@@ -176,6 +176,9 @@ views:
           - entity: sensor.hymer_power_source
             name: Power Source
             icon: mdi:power-plug
+          - entity: binary_sensor.hymer_shoreline_connected
+            name: Shore Power
+            icon: mdi:power-plug
 
       # ── Solar & Charging ──
       - type: entities

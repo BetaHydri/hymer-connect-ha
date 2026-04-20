@@ -86,7 +86,7 @@ SENSOR_MAP: dict[tuple[int, int], tuple[str, str | None, str | None]] = {
     (3, 19): ("solar_voltage_sentinel", "V", None),  # Always 3276.8 — real voltage is on bus 8
     (3, 20): ("solar_connected", None, None),
     (3, 21): ("solar_charger_status", None, None),
-    (3, 22): ("switch_22", None, None),
+    (3, 22): ("shoreline_connected", None, None),
     # Light: Schlafzimmer Ambientebeleuchtung / Bedroom ambient (bus 15)
     # sid=1: on/off, sid=2: brightness (WRITE only), sid=3: color_temp
     (15, 1): ("light_bedroom_ambient", None, None),

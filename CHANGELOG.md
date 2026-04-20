@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.18.0] - 2026-04-20
+
+### Added
+
+- **Shore power binary sensor** — New `binary_sensor.hymer_shoreline_connected` exposes the EBL 402 shore power detection (bus 3, sid 22). Shows whether the 230V Landstrom cable is plugged in. Added to the Power section of the dashboard
+
+### Changed
+
+- **Sensor rename** — `switch_22` renamed to `shoreline_connected` in the PIA decoder to match the S700 registry and actual function (EBL 402 shore power input)
+
 ## [2.17.0] - 2026-04-20
 
 ### Fixed

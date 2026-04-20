@@ -198,6 +198,14 @@ BINARY_SENSOR_DESCRIPTIONS: tuple[HymerBinarySensorEntityDescription, ...] = (
         on_value="On",
         icon="mdi:coolant-temperature",
     ),
+    HymerBinarySensorEntityDescription(
+        key="shoreline_connected",
+        translation_key="shoreline_connected",
+        device_class=BinarySensorDeviceClass.PLUG,
+        value_path="signalr_sensors.shoreline_connected",
+        on_value=1,
+        icon="mdi:power-plug",
+    ),
     # --- Truma ---
     HymerBinarySensorEntityDescription(
         key="truma_connected",

@@ -57,7 +57,7 @@ may have different slot assignments on buses 1, 3, 8, 30, and 99 — see the
 | (3, 19) | `solar_voltage_sentinel` | V | — | Always 3276.8 (sentinel). Real solar on bus 8 |
 | (3, 20) | `solar_connected` | — | — | Solar panel connected flag |
 | (3, 21) | `solar_charger_status` | — | — | MPPT charger status |
-| (3, 22) | `switch_22` | — | — | (⚠️ S700: shoreline_connected) |
+| (3, 22) | `shoreline_connected` | — | — | Shore power (Landstrom) connected. Binary: 1=connected, 0=disconnected |
 
 ## Bus 8 — Voltronic MPP260CI (MPPT solar charger)
 
