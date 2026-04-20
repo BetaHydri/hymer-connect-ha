@@ -429,6 +429,24 @@ SIGNALR_SENSORS: tuple[HymerSensorEntityDescription, ...] = (
         value_path="signalr_sensors.tire_pressure",
         icon="mdi:car-tire-alert",
     ),
+    # --- Diagnostic: EBL402 slots (3,8) and (3,9) ---
+    # Temporary sensors to verify if these are water levels (not light levels)
+    HymerSensorEntityDescription(
+        key="ebl_slot_8",
+        translation_key="ebl_slot_8",
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_path="signalr_sensors.light_1_level",
+        icon="mdi:help-circle-outline",
+    ),
+    HymerSensorEntityDescription(
+        key="ebl_slot_9",
+        translation_key="ebl_slot_9",
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_path="signalr_sensors.light_2_level",
+        icon="mdi:help-circle-outline",
+    ),
     # --- Living ceiling brightness (was alarm_battery) ---
     # Bus 11 sid 2 is living room ceiling brightness, not alarm battery
     # --- SCU/Truma firmware ---

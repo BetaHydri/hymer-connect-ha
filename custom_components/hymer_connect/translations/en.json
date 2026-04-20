@@ -182,6 +182,12 @@
       "tire_pressure": {
         "name": "Tyre pressure"
       },
+      "ebl_slot_8": {
+        "name": "EBL Slot 3,8 (diag)"
+      },
+      "ebl_slot_9": {
+        "name": "EBL Slot 3,9 (diag)"
+      },
       "alarm_battery": {
         "name": "Alarm battery"
       },

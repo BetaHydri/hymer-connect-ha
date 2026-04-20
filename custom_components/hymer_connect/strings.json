@@ -87,6 +87,8 @@
       "light_bedroom_ambient_brightness": { "name": "Bedroom ambient brightness" },
       "light_bedroom_ambient_color_temp": { "name": "Bedroom ambient color temp" },
       "tire_pressure": { "name": "Tyre pressure" },
+      "ebl_slot_8": { "name": "EBL Slot 3,8 (diag)" },
+      "ebl_slot_9": { "name": "EBL Slot 3,9 (diag)" },
       "alarm_battery": { "name": "Alarm battery" },
       "scu_firmware": { "name": "SCU firmware" },
       "truma_firmware": { "name": "Truma firmware" },

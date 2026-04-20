@@ -668,3 +668,23 @@ views:
           - entity: update.hymer_connect_update
             name: Integration Update
             icon: mdi:update
+
+      # ── Diagnostic: EBL402 slots (3,8) and (3,9) ──
+      # Temporary — verify if these are water levels (not "light levels")
+      # Compare with fresh_water_level (bus 22) and grey_water_level (bus 25)
+      - type: entities
+        title: "🔬 EBL Slot Diagnostic"
+        show_header_toggle: false
+        entities:
+          - entity: sensor.hymer_ebl_slot_3_8_diag
+            name: "EBL (3,8) — fresh water?"
+            icon: mdi:help-circle-outline
+          - entity: sensor.hymer_ebl_slot_3_9_diag
+            name: "EBL (3,9) — grey water?"
+            icon: mdi:help-circle-outline
+          - entity: sensor.hymer_fresh_water_level
+            name: "Bus 22 Fresh Water (reference)"
+            icon: mdi:water
+          - entity: sensor.hymer_grey_water_level
+            name: "Bus 25 Grey Water (reference)"
+            icon: mdi:water-off
