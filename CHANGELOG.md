@@ -5,6 +5,26 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.15.2] - 2026-04-20
+
+### Added
+
+- **Discovery logging for unmapped PIA sensors** — tracks value changes for all sensors. Unmapped slots log at INFO level (`DISCOVERY unmapped (bus,sensor): old → new`), mapped sensors at DEBUG level. Enable via `configuration.yaml`:
+  ```yaml
+  logger:
+    logs:
+      custom_components.hymer_connect.pia_decoder: info
+  ```
+
+### Fixed
+
+- **Dashboard cleanup** — removed ~15 stale entity references (ambient_temperature, speed, rpm, engine_hours, GPS satellites/heading/altitude, tire_pressure, etc.)
+- **BMS Time Remaining removed from dashboard** — value (19 min at 259Ah) doesn’t correspond to any meaningful metric
+
+### Documentation
+
+- **(1,9) outside_temperature confirmed** as Mercedes cockpit “Außentemperatur” (bumper sensor, verified 13→16°C tracking weather)
+
 ## [2.15.1] - 2026-04-20
 
 ### Fixed
