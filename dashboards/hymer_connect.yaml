@@ -66,7 +66,7 @@ views:
             tap_action:
               action: toggle
               confirmation:
-                text: "Turning off 12V will disable some devices. Are you sure?"
+                text: "Toggle 12V main switch? This controls all habitation devices."
           - type: tile
             entity: switch.hymer_water_pump
             name: Water Pump
@@ -148,7 +148,7 @@ views:
         tap_action:
           action: toggle
           confirmation:
-            text: "Turning off 12V will disable some devices. Are you sure?"
+            text: "Toggle 12V main switch? This controls all habitation devices."
 
       # ── Habitation Battery ──
       - type: entities
