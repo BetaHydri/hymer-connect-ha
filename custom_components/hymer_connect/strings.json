@@ -38,10 +38,10 @@
       "vehicle_model": { "name": "Model" },
       "vehicle_model_year": { "name": "Model year" },
       "vehicle_vin": { "name": "VIN" },
-      "fuel_level": { "name": "Fuel level" },
-      "outside_temperature": { "name": "Outside temperature" },
-      "distance_to_service": { "name": "Distance to next service" },
+      "odometer": { "name": "Odometer" },
+      "speed": { "name": "Speed" },
       "adblue_level": { "name": "AdBlue level" },
+      "coolant_temp": { "name": "Coolant temperature" },
       "lock_status": { "name": "Lock status" },
       "ignition_state": { "name": "Ignition" },
       "door_driver": { "name": "Driver door" },
@@ -87,8 +87,6 @@
       "light_bedroom_ambient_brightness": { "name": "Bedroom ambient brightness" },
       "light_bedroom_ambient_color_temp": { "name": "Bedroom ambient color temp" },
       "tire_pressure": { "name": "Tyre pressure" },
-      "ebl_slot_8": { "name": "EBL Slot 3,8 (diag)" },
-      "ebl_slot_9": { "name": "EBL Slot 3,9 (diag)" },
       "alarm_battery": { "name": "Alarm battery" },
       "scu_firmware": { "name": "SCU firmware" },
       "truma_firmware": { "name": "Truma firmware" },
@@ -98,12 +96,6 @@
       "heater_state": { "name": "Heater state" },
       "heater_electric_power": { "name": "Heater electric power" },
       "heater_operating_mode": { "name": "Heater operating mode" },
-      "bms_voltage": { "name": "BMS voltage" },
-      "bms_current": { "name": "BMS current" },
-      "bms_temperature": { "name": "BMS temperature" },
-      "bms_time_remaining": { "name": "BMS time remaining" },
-      "bms_state_of_health": { "name": "BMS state of health" },
-      "bms_capacity_remaining": { "name": "BMS capacity remaining" },
       "fridge_mode": { "name": "Fridge mode" },
       "fridge_status": { "name": "Fridge status" },
       "fresh_water_level": { "name": "Fresh water level" }
@@ -141,38 +133,30 @@
       "light_bedroom_overhead": { "name": "Bedroom overhead light" },
       "door_driver": { "name": "Driver door" },
       "door_passenger": { "name": "Passenger door" },
-      "wiping_water_empty": { "name": "Washer fluid low" },
-      "motor_oil_warning": { "name": "Motor oil warning" },
+      "door_sliding": { "name": "Sliding door" },
       "lock_status": { "name": "Lock" },
       "main_switch": { "name": "Main switch" },
+      "door_rear": { "name": "Rear door" },
       "headlamp": { "name": "Headlamp" },
       "high_beam": { "name": "High beam" },
       "parking_light": { "name": "Parking light" },
       "fog_front": { "name": "Front fog light" },
       "fog_rear": { "name": "Rear fog light" },
       "turn_signal": { "name": "Turn signal" },
-      "parking_brake": { "name": "Parking brake" },
-      "standheizung_available": { "name": "Auxiliary heater available" },
-      "standheizung_state": { "name": "Auxiliary heater" },
-      "cruise_control_can": { "name": "Cruise control (CAN)" },
-      "downhill_assist": { "name": "Downhill assist" },
-      "coolant_warning": { "name": "Coolant warning" },
       "truma_connected": { "name": "Truma connected" },
       "step_retracted": { "name": "Entry step" },
       "water_pump": { "name": "Water pump" }
     },
     "switch": {
       "main_switch_ctrl": { "name": "12V Main switch" },
-      "water_pump_ctrl": { "name": "Water pump" },
-      "fridge_eco_ctrl": { "name": "Fridge ECO (Leise)" }
+      "water_pump_ctrl": { "name": "Water pump" }
     },
     "climate": {
       "truma_heater": { "name": "Truma heater" }
     },
     "select": {
       "fridge_mode_ctrl": { "name": "Fridge mode" },
-      "boiler_mode_ctrl": { "name": "Boiler mode" },
-      "heater_energy_ctrl": { "name": "Heater energy source" }
+      "boiler_mode_ctrl": { "name": "Boiler mode" }
     }
   }
 }
