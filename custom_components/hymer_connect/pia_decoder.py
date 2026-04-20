@@ -14,6 +14,14 @@ from typing import Any
 
 _LOGGER = logging.getLogger(__name__)
 
+# Discovery mode: tracks all sensor value changes (mapped and unmapped)
+# and logs them at INFO level. Helps identify what unknown bus/sensor
+# slots actually report. Enabled via HA logger config:
+#   logger:
+#     logs:
+#       custom_components.hymer_connect.pia_decoder: info
+_discovery_previous: dict[str, Any] = {}
+
 # Sensor key map: (bus_id, sensor_id) → (name, unit, value_transform)
 # value_transform: None=raw, "div10"=divide by 10, "div100"=divide by 100, "div1000"=divide by 1000, "div3600"=seconds to hours
 SENSOR_MAP: dict[tuple[int, int], tuple[str, str | None, str | None]] = {
@@ -646,9 +654,28 @@ def _extract_sensors_recursive(
                     if name == "current_gear" and isinstance(val, int):
                         val = _GEAR_MAP.get(val, str(val))
                     sensors[name] = val
+                    # Discovery: track mapped sensor changes at DEBUG
+                    prev = _discovery_previous.get(name)
+                    if prev != val:
+                        _discovery_previous[name] = val
+                        _LOGGER.debug(
+                            "DISCOVERY mapped (%d,%d) %s: %r → %r",
+                            entry["bus_id"], entry["sensor_id"],
+                            name, prev, val,
+                        )
                 else:
                     fallback = f"bus{entry['bus_id']}_s{entry['sensor_id']}"
                     sensors[fallback] = entry["value"]
+                    # Discovery logging: log unmapped sensor value changes
+                    # to help identify what unknown slots actually report.
+                    prev = _discovery_previous.get(fallback)
+                    if prev != entry["value"]:
+                        _discovery_previous[fallback] = entry["value"]
+                        _LOGGER.info(
+                            "DISCOVERY unmapped (%d,%d) %s: %r → %r",
+                            entry["bus_id"], entry["sensor_id"],
+                            fallback, prev, entry["value"],
+                        )
             return
 
     # Not a sensor entry (or wrapper) — recurse into length-delimited sub-fields
