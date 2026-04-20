@@ -15,15 +15,15 @@ may have different slot assignments on buses 1, 3, 8, 30, and 99 — see the
 | Slot | Sensor Name | Unit | Transform | Notes |
 |------|------------|------|-----------|-------|
 | (1, 1) | `odometer` | km | div1000 | Lifetime odometer |
-| (1, 2) | `speed` | km/h | — | Vehicle speed (⚠️ S700: fuel_level) |
+| (1, 2) | `fuel_level` | % | — | Diesel fuel level (confirmed: EHG app 73% = sensor 72.72) |
 | (1, 3) | `lock_status` | — | — | Vehicle locked/unlocked string |
-| (1, 4) | `handbrake` | — | — | Parking brake (⚠️ S700: test_signal_write) |
-| (1, 5) | `rpm` | rpm | div100 | Engine RPM (⚠️ S700: distance_to_service) |
+| (1, 4) | `handbrake` | — | — | Handbrake state |
+| (1, 5) | `distance_to_service` | km | div100 | km to next service interval (was: rpm) |
 | (1, 6) | `adblue_level` | % | — | AdBlue tank level |
-| (1, 7) | `engine_hours` | h | div3600 | Engine runtime (⚠️ S700: adblue_remaining_distance) |
+| (1, 7) | `engine_hours` | h | div3600 | Engine runtime |
 | (1, 8) | `vin_text` | — | — | VIN string |
-| (1, 9) | `coolant_temp` | °C | — | ⚠️ Reads ~9°C parked — likely outside_temperature (same as S700) |
-| (1, 10) | `engine_running` | — | — | Engine on/off (⚠️ S700: lightsense_night) |
+| (1, 9) | `outside_temperature` | °C | — | Outside temperature (was: coolant_temp — confirmed ambient) |
+| (1, 10) | `engine_running` | — | — | Engine on/off |
 | (1, 11) | `door_driver` | — | — | Driver door open/closed (⚠️ S700: wiping_water_empty) |
 | (1, 12) | `door_passenger` | — | — | Passenger door (⚠️ S700: door_driver) |
 | (1, 13) | `door_sliding` | — | — | Sliding door (⚠️ S700: door_entrance) |
@@ -212,20 +212,20 @@ may have different slot assignments on buses 1, 3, 8, 30, and 99 — see the
 | (58, 11) | `heater_operating_mode` | — | Operating mode string |
 | (58, 12–14) | `heater_sensor_12..14` | — | Unknown |
 
-## Bus 99 — Extended CAN / BMS
+## Bus 99 — BOS LUX LiFePO4 BMS (4×80Ah)
 
 | Slot | Sensor Name | Unit | Transform | Notes |
 |------|------------|------|-----------|-------|
-| (99, 1) | `adblue_temp` | °C | — | ⚠️ S700: bms_battery_voltage (V) |
-| (99, 2) | `engine_torque` | % | — | ⚠️ S700: bms_battery_current (A) |
-| (99, 3) | `ambient_temp` | °C | — | ⚠️ S700: bms_battery_temperature (°C) |
+| (99, 1) | `bms_voltage` | V | — | BMS pack voltage (was: adblue_temp) |
+| (99, 2) | `bms_current` | A | — | BMS current, negative = discharging (was: engine_torque) |
+| (99, 3) | `bms_temperature` | °C | — | Pack cell temperature (was: ambient_temp) |
 | (99, 4) | `lithium_soc` | % | — | Battery SOC (shared S600/S700) |
-| (99, 5) | `fuel_range` | km | — | ⚠️ S700: bms_time_remaining (min) |
-| (99, 6) | `current_gear` | — | — | ⚠️ S700: bms_state_of_health (%) |
-| (99, 7) | `total_fuel_used` | — | — | ⚠️ S700: bms_capacity_remaining (Ah) |
-| (99, 8) | `lithium_soc_2` | % | — | ⚠️ S700: bms_relative_capacity (%) |
-| (99, 9) | `cruise_control` | — | — | ⚠️ S700: bms_charge_detected |
-| (99, 10) | `dpf_status` | — | — | 0=Normal, 1=Regeneration. ⚠️ S700: bms_device_failure |
+| (99, 5) | `bms_time_remaining` | min | — | Estimated runtime (was: fuel_range) |
+| (99, 6) | `bms_state_of_health` | % | — | Battery SoH (was: current_gear) |
+| (99, 7) | `bms_capacity_remaining` | Ah | — | Remaining capacity (was: total_fuel_used) |
+| (99, 8) | `lithium_soc_2` | % | — | Relative capacity |
+| (99, 9) | `bms_charge_detected` | — | — | Charge active flag (was: cruise_control) |
+| (99, 10) | `bms_device_failure` | — | — | BMS error flag (was: dpf_status) |
 
 ## Value Transforms
 
