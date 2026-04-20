@@ -34,12 +34,15 @@ SENSOR_MAP: dict[tuple[int, int], tuple[str, str | None, str | None]] = {
     (1, 14): ("door_rear", None, None),
     (1, 15): ("ignition_state", None, None),
     (1, 16): ("seatbelt_warning", None, None),
-    (1, 17): ("turn_signal", None, None),
-    (1, 18): ("headlamp", None, None),
-    (1, 19): ("parking_light", None, None),
-    (1, 20): ("fog_front", None, None),
-    (1, 21): ("fog_rear", None, None),
-    (1, 22): ("high_beam", None, None),
+    # Slots 17-22: Chassis state flags (confirmed matching S700 via PR #44).
+    # Previously mislabelled as vehicle lights — (1,18) reading "ON" while
+    # parked proved it was the parking brake, not the headlamp.
+    (1, 17): ("coolant_warning", None, None),
+    (1, 18): ("parking_brake", None, None),
+    (1, 19): ("standheizung_available", None, None),
+    (1, 20): ("standheizung_state", None, None),
+    (1, 21): ("cruise_control_can", None, None),
+    (1, 22): ("downhill_assist", None, None),
     (1, 23): ("language", None, None),
     # lin1 — Habitation electrics
     (3, 1): ("main_switch", None, None),
@@ -202,6 +205,13 @@ _VALUE_LABELS: dict[str, dict[str, str]] = {
     "high_beam": {"OFF": "Off", "ON": "On"},
     "parking_light": {"OFF": "Off", "ON": "On"},
     "turn_signal": {"OFF": "Off", "ON": "On"},
+    # Chassis state flags (bus 1, slots 17-22) — remapped from vehicle lights
+    "parking_brake": {"OFF": "Off", "ON": "On"},
+    "standheizung_available": {"OFF": "Off", "ON": "On"},
+    "standheizung_state": {"OFF": "Off", "ON": "On"},
+    "cruise_control_can": {"OFF": "Off", "ON": "On"},
+    "downhill_assist": {"OFF": "Off", "ON": "On"},
+    "coolant_warning": {"OFF": "Off", "ON": "On"},
     "heater_fan_speed": {"OFF": "Off", "ECO": "Eco", "HOT": "Hot", "HIGH": "High"},
     "heater_state": {"False": "Off", "True": "On"},
 }

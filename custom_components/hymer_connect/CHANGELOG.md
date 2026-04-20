@@ -5,6 +5,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.10.0] - 2026-04-20
+
+### Fixed
+
+- **Bus 1 slots 17-22 remapped** — Were vehicle lights, actually chassis state flags (parking brake, aux heater, cruise control, etc.). Confirmed by (1,18)="ON" while parked = parking brake
+
+### Removed
+
+- **Vehicle light binary sensors** — headlamp, high_beam, parking_light, fog_front, fog_rear, turn_signal removed (mislabelled)
+
+### Added
+
+- **Chassis state sensors** — parking_brake, standheizung_available/state, cruise_control_can, downhill_assist, coolant_warning
+
 ## [2.9.9] - 2026-04-20
 
 ### Fixed

@@ -5,6 +5,22 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.10.0] - 2026-04-20
+
+### Fixed
+
+- **Bus 1 slots 17-22 remapped from vehicle lights to chassis state flags** — Slots (1,17)-(1,22) were mislabelled as headlamp/high beam/parking light/fog lights/turn signal. They are actually chassis CAN state flags: parking brake, auxiliary heater (Standheizung), cruise control, downhill assist, and coolant warning. Confirmed by (1,18) reading "ON" while parked with engine off = parking brake engaged, not headlamp. Matches PR #44 S700 observations — bus 1 layout is identical on S600 and S700
+- **12V main switch OFF stays off in HA** — 30s holdoff prevents stale "On" readback from overwriting commanded OFF during SCU reconnection (v2.9.9)
+
+### Removed
+
+- **Vehicle lights section removed from dashboard** — Replaced by "Chassis State" section with the correctly labelled sensors (parking brake, aux heater, cruise control, downhill assist, coolant warning)
+- **Old binary sensors** — `headlamp`, `high_beam`, `parking_light`, `fog_front`, `fog_rear`, `turn_signal` entities removed. Users will see these as "unavailable" until deleted from the entity registry
+
+### Added
+
+- **New chassis state binary sensors** — `parking_brake`, `standheizung_available`, `standheizung_state`, `cruise_control_can`, `downhill_assist`, `coolant_warning`
+
 ## [2.9.9] - 2026-04-20
 
 ### Fixed

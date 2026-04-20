@@ -416,12 +416,6 @@ views:
           - entity: binary_sensor.hymer_engine_running_corrected
             name: Engine Running
             icon: mdi:engine
-          - entity: binary_sensor.hymer_handbrake
-            name: Handbrake
-            icon: mdi:car-brake-parking
-          - entity: binary_sensor.hymer_cruise_control
-            name: Cruise Control
-            icon: mdi:car-cruise-control
 
   # ══════════════════════════════════════════════════════════
   # Doors & Vehicle Lights
@@ -451,29 +445,32 @@ views:
             name: Lock
             icon: mdi:lock
 
-      # ── Vehicle Lights ──
+      # ── Chassis State ──
+      # Slots (1,17)-(1,22) are chassis state flags, NOT vehicle lights.
+      # Confirmed via PR #44 S700 observations + S600 live data:
+      # (1,18) read "ON" while parked = parking brake, not headlamp.
       - type: entities
-        title: "💡 Vehicle Lights"
+        title: "🚗 Chassis State"
         show_header_toggle: false
         entities:
-          - entity: binary_sensor.hymer_headlamp
-            name: Headlamp
-            icon: mdi:car-light-high
-          - entity: binary_sensor.hymer_high_beam
-            name: High Beam
-            icon: mdi:car-light-high
-          - entity: binary_sensor.hymer_parking_light
-            name: Parking Light
-            icon: mdi:car-parking-lights
-          - entity: binary_sensor.hymer_front_fog_light
-            name: Fog Front
-            icon: mdi:car-light-fog
-          - entity: binary_sensor.hymer_rear_fog_light
-            name: Fog Rear
-            icon: mdi:car-light-fog
-          - entity: binary_sensor.hymer_turn_signal
-            name: Turn Signal
-            icon: mdi:arrow-left-right
+          - entity: binary_sensor.hymer_parking_brake
+            name: Parking Brake
+            icon: mdi:car-brake-parking
+          - entity: binary_sensor.hymer_standheizung_available
+            name: Aux Heater Available
+            icon: mdi:radiator
+          - entity: binary_sensor.hymer_standheizung_state
+            name: Aux Heater
+            icon: mdi:radiator
+          - entity: binary_sensor.hymer_cruise_control_can
+            name: Cruise Control
+            icon: mdi:car-cruise-control
+          - entity: binary_sensor.hymer_downhill_assist
+            name: Downhill Assist
+            icon: mdi:arrow-down-bold
+          - entity: binary_sensor.hymer_coolant_warning
+            name: Coolant Warning
+            icon: mdi:coolant-temperature
 
   # ══════════════════════════════════════════════════════════
   # Interior Lights

@@ -143,6 +143,12 @@
       "fog_front": { "name": "Front fog light" },
       "fog_rear": { "name": "Rear fog light" },
       "turn_signal": { "name": "Turn signal" },
+      "parking_brake": { "name": "Parking brake" },
+      "standheizung_available": { "name": "Auxiliary heater available" },
+      "standheizung_state": { "name": "Auxiliary heater" },
+      "cruise_control_can": { "name": "Cruise control (CAN)" },
+      "downhill_assist": { "name": "Downhill assist" },
+      "coolant_warning": { "name": "Coolant warning" },
       "truma_connected": { "name": "Truma connected" },
       "step_retracted": { "name": "Entry step" },
       "water_pump": { "name": "Water pump" }

@@ -29,13 +29,13 @@ may have different slot assignments on buses 1, 3, 8, 30, and 99 — see the
 | (1, 13) | `door_sliding` | — | — | Sliding door (⚠️ S700: door_entrance) |
 | (1, 14) | `door_rear` | — | — | Rear door (⚠️ S700: motor_oil_warning) |
 | (1, 15) | `ignition_state` | — | — | IGN_LOCK/OFF/ACC/ON/START |
-| (1, 16) | `seatbelt_warning` | — | — | (⚠️ S700: engine_running) |
-| (1, 17) | `turn_signal` | — | — | (⚠️ S700: cooling_water_empty) |
-| (1, 18) | `headlamp` | — | — | (⚠️ S700: parking_brake_engaged) |
-| (1, 19) | `parking_light` | — | — | (⚠️ S700: standheizung_available) |
-| (1, 20) | `fog_front` | — | — | (⚠️ S700: standheizung_state) |
-| (1, 21) | `fog_rear` | — | — | (⚠️ S700: cruise_control_active) |
-| (1, 22) | `high_beam` | — | — | (⚠️ S700: downhill_assist_active) |
+| (1, 16) | `seatbelt_warning` | — | — | Seatbelt warning |
+| (1, 17) | `coolant_warning` | — | — | Coolant low warning (was: turn_signal) |
+| (1, 18) | `parking_brake` | — | — | Parking brake engaged (was: headlamp — confirmed by "ON" while parked) |
+| (1, 19) | `standheizung_available` | — | — | Auxiliary heater fitted (was: parking_light) |
+| (1, 20) | `standheizung_state` | — | — | Auxiliary heater on/off (was: fog_front) |
+| (1, 21) | `cruise_control_can` | — | — | Cruise control active (was: fog_rear) |
+| (1, 22) | `downhill_assist` | — | — | Downhill assist active (was: high_beam) |
 | (1, 23) | `language` | — | — | Dashboard language code |
 
 ## Bus 3 — CBE EBL402 (habitation electrics)
