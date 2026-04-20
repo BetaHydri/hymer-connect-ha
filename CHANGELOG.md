@@ -5,6 +5,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.17.0] - 2026-04-20
+
+### Fixed
+
+- **SignalR auto-recovery after 12V toggle** — When commanding 12V ON from HA, the SCU reboots as habitation power comes up, killing the SignalR WebSocket. Previously, the dead-connection detector was bypassed indefinitely because `main_switch` in sensor data was still `"Off"` (the confirmation never arrived). Now:
+  - **Optimistic `main_switch` update** — Immediately sets `main_switch` to `"On"`/`"Off"` in SignalR sensor data when commanding the 12V switch, so the standby bypass cannot block the 10-minute stale-data reconnect
+  - **Standby safety cap (30 min)** — Even in genuine standby (`main_switch == "Off"`), forces reconnect after 30 minutes of silence as a safety net (fixes #46)
+- **No more manual integration reload** required after 12V toggle — the integration self-heals within 10 minutes
+
 ## [2.16.0] - 2026-04-20
 
 ### Changed

@@ -201,6 +201,11 @@ class HymerConnectSwitch(
             )
         self._optimistic_on = True
         self._optimistic_set_at = time.monotonic()
+        # Optimistically update main_switch in SignalR sensor_data so the
+        # standby bypass in needs_reconnect doesn't block auto-recovery
+        # if the connection dies during the SCU reboot after 12V toggle.
+        if self.entity_description.key == "main_switch_ctrl" and client:
+            client._sensor_data["main_switch"] = on_val if isinstance(on_val, str) else "On"
         self.async_write_ha_state()
         # Schedule send verification — detect stale SignalR connections
         if self._verify_task and not self._verify_task.done():
@@ -227,6 +232,10 @@ class HymerConnectSwitch(
             )
         self._optimistic_on = False
         self._optimistic_set_at = time.monotonic()
+        # Optimistically update main_switch in SignalR sensor_data so the
+        # standby bypass in needs_reconnect reflects the commanded state.
+        if self.entity_description.key == "main_switch_ctrl" and client:
+            client._sensor_data["main_switch"] = "Off" if isinstance(on_val, str) else False
         self.async_write_ha_state()
         # Schedule send verification — detect stale SignalR connections
         if self._verify_task and not self._verify_task.done():

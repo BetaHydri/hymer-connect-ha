@@ -29,6 +29,7 @@ MSG_TYPE_PING = 6
 # Connection health constants
 MAX_CONNECTION_AGE = 50 * 60  # 50 min — reconnect before Azure token expires (~1h)
 STALE_DATA_TIMEOUT = 10 * 60  # 10 min — no data = connection is likely dead
+STANDBY_MAX_SILENCE = 30 * 60  # 30 min — even in standby, reconnect after this
 
 
 class HymerSignalRClient:
@@ -88,6 +89,11 @@ class HymerSignalRClient:
         # In standby, the SCU stops streaming sensor data but the WebSocket
         # stays open for commands. Recycling during standby would trigger
         # exponential backoff and lose the connection. See issue #45.
+        #
+        # Safety cap: even in standby, force reconnect after STANDBY_MAX_SILENCE.
+        # If the connection died during a 12V ON toggle (SCU reboots, socket breaks
+        # but main_switch in sensor_data is still "Off"), the stale-data check
+        # would never trigger without this cap. See issue #46.
         if self._last_data_received > 0:
             main_switch = self._sensor_data.get("main_switch")
             is_standby = main_switch == "Off"
@@ -95,6 +101,12 @@ class HymerSignalRClient:
             if silent > STALE_DATA_TIMEOUT and not is_standby:
                 _LOGGER.warning(
                     "No SignalR data for %.0fs — connection likely dead",
+                    silent,
+                )
+                return True
+            if silent > STANDBY_MAX_SILENCE and is_standby:
+                _LOGGER.warning(
+                    "No data for %.0fs even in standby — forcing reconnect (safety cap)",
                     silent,
                 )
                 return True
