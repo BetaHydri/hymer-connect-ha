@@ -81,14 +81,25 @@ class HymerSignalRClient:
             )
             return True
         # Detect dead connection (no data received for a long time)
+        # BUT: skip this check when the 12V main switch is off (SCU standby).
+        # In standby, the SCU stops streaming sensor data but the WebSocket
+        # stays open for commands. Recycling during standby would trigger
+        # exponential backoff and lose the connection. See issue #45.
         if self._last_data_received > 0:
+            main_switch = self._sensor_data.get("main_switch")
+            is_standby = main_switch == "Off"
             silent = now - self._last_data_received
-            if silent > STALE_DATA_TIMEOUT:
+            if silent > STALE_DATA_TIMEOUT and not is_standby:
                 _LOGGER.warning(
                     "No SignalR data for %.0fs — connection likely dead",
                     silent,
                 )
                 return True
+            if silent > STALE_DATA_TIMEOUT and is_standby:
+                _LOGGER.debug(
+                    "No data for %.0fs but 12V is off (standby) — keeping connection alive",
+                    silent,
+                )
         return False
 
     @property

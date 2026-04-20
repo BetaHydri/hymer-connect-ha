@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.10.1] - 2026-04-20
+
+### Fixed
+
+- **SignalR stays alive during 12V standby** — When 12V is off, the SCU enters standby (chassis battery, no sensor data). The dead-connection detector (10 min no data) no longer recycles the WebSocket during standby, preventing exponential backoff and connection loss. Commands like 12V-ON can still reach the SCU through the idle connection (fixes #45)
+- **12V switch confirmation dialog** — Toggle confirmation on both on/off actions: "Toggle 12V main switch? This controls all habitation devices."
+- **Dashboard Standheizung entity IDs** — Fixed entity references to match HA-generated IDs from translation keys (`auxiliary_heater_available`, `auxiliary_heater`)
+
 ## [2.10.0] - 2026-04-20
 
 ### Fixed

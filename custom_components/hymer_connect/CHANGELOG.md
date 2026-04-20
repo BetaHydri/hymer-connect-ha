@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.10.1] - 2026-04-20
+
+### Fixed
+
+- **SignalR stays alive during 12V standby** — Dead-connection detector skips recycling when main_switch="Off" (fixes #45)
+- **12V switch confirmation dialog** — Bidirectional toggle confirmation
+- **Dashboard Standheizung entity IDs** — Fixed to match HA translation-based IDs
+
 ## [2.10.0] - 2026-04-20
 
 ### Fixed
