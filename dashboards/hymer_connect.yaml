@@ -456,10 +456,10 @@ views:
           - entity: binary_sensor.hymer_parking_brake
             name: Parking Brake
             icon: mdi:car-brake-parking
-          - entity: binary_sensor.hymer_standheizung_available
+          - entity: binary_sensor.hymer_auxiliary_heater_available
             name: Aux Heater Available
             icon: mdi:radiator
-          - entity: binary_sensor.hymer_standheizung_state
+          - entity: binary_sensor.hymer_auxiliary_heater
             name: Aux Heater
             icon: mdi:radiator
           - entity: binary_sensor.hymer_cruise_control_can
