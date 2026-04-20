@@ -5,7 +5,24 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [2.14.0] - 2026-04-20\n\n### Fixed\n\n- **Stale SignalR send channel auto-detection** — after sending a switch command, verify SCU readback after 15s. If readback doesn't match, marks connection as dead for automatic reconnect.\n- **SignalR send error handling** — catches send exceptions instead of silently failing.\n- **Dashboard: removed stale current_gear entity** from Vehicle tab.\n\n## [2.13.0] - 2026-04-20\n\n### Changed\n\n- **Dashboard: BMS moved to Power tab**, current sensor labels clarified\n- **Diagnostic sensors for EBL slots (3,8)/(3,9)** — verify water level hypothesis\n- **Bus 3/8 documentation corrected** in sensor-map.md\n- **Power Flow diagram** added to docs\n\n## [2.12.0] - 2026-04-20
+## [2.14.0] - 2026-04-20
+
+### Fixed
+
+- **Stale SignalR send channel auto-detection** — after sending a switch command, verify SCU readback after 15s. If readback doesn't match, marks connection as dead for automatic reconnect.
+- **SignalR send error handling** — catches send exceptions instead of silently failing.
+- **Dashboard: removed stale current_gear entity** from Vehicle tab.
+
+## [2.13.0] - 2026-04-20
+
+### Changed
+
+- **Dashboard: BMS moved to Power tab**, current sensor labels clarified
+- **Diagnostic sensors for EBL slots (3,8)/(3,9)** — verify water level hypothesis
+- **Bus 3/8 documentation corrected** in sensor-map.md
+- **Power Flow diagram** added to docs
+
+## [2.12.0] - 2026-04-20
 
 ### Fixed
 
