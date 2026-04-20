@@ -568,15 +568,6 @@ views:
             icon: mdi:ceiling-light
             color: amber
 
-      # ── Outside ──
-      - type: markdown
-        content: "## 🏕️ Outside"
-      - type: tile
-        entity: light.hymer_outside_light
-        name: Outside Light
-        icon: mdi:outdoor-lamp
-        color: amber
-
   # ══════════════════════════════════════════════════════════
   # GPS
   # ══════════════════════════════════════════════════════════

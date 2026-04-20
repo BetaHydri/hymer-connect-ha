@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.19.2] - 2026-04-20
+
+### Fixed
+
+- **Reverted outside LED bar entity** — Bus 24 is the DALI master brightness/color_temp channel, not the outside light. The EHG app sends `(24,2)` and `(24,3)` alongside every individual light toggle as a global brightness/color_temp context. Sending commands to bus 24 has no effect on the outside LED bar. The outside light entity is removed until a dedicated mitmproxy trace captures the real bus ID
+
+### Removed
+
+- **`light.hymer_outside_light` entity** — temporarily removed pending discovery of the correct bus ID via EHG app trace
+
 ## [2.19.1] - 2026-04-20
 
 ### Fixed

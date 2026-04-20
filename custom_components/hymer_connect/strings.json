@@ -109,7 +109,6 @@
       "light_nightlight": { "name": "Night light" },
       "light_bathroom_ceiling": { "name": "Bathroom ceiling" },
       "light_bedroom_overhead": { "name": "Bedroom overhead" },
-      "light_outside": { "name": "Outside light" },
       "light_wohnen_group": { "name": "Wohnen all lights" },
       "light_privat_group": { "name": "Privat all lights" }
     },
