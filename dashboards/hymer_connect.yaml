@@ -676,10 +676,10 @@ views:
         title: "🔬 EBL Slot Diagnostic"
         show_header_toggle: false
         entities:
-          - entity: sensor.hymer_ebl_slot_3_8_diag
+          - entity: sensor.hymer_ebl_slot_38_diag
             name: "EBL (3,8) — fresh water?"
             icon: mdi:help-circle-outline
-          - entity: sensor.hymer_ebl_slot_3_9_diag
+          - entity: sensor.hymer_ebl_slot_39_diag
             name: "EBL (3,9) — grey water?"
             icon: mdi:help-circle-outline
           - entity: sensor.hymer_fresh_water_level
