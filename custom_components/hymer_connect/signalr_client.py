@@ -58,6 +58,7 @@ class HymerSignalRClient:
         self._signalr_token: str = ""
         self._connected_at: float = 0.0  # monotonic timestamp of connection
         self._last_data_received: float = 0.0  # monotonic timestamp of last data
+        self._last_send_failed: bool = False
 
     @property
     def connected(self) -> bool:
@@ -449,9 +450,17 @@ class HymerSignalRClient:
             "target": "PiaRequest",
             "type": MSG_TYPE_INVOCATION,
         }
-        await self._ws.send_str(
-            json.dumps(msg) + SIGNALR_RECORD_SEPARATOR
-        )
+        try:
+            await self._ws.send_str(
+                json.dumps(msg) + SIGNALR_RECORD_SEPARATOR
+            )
+        except Exception:
+            _LOGGER.error(
+                "Failed to send PiaRequest — marking connection as dead for reconnect",
+                exc_info=True,
+            )
+            self._connected = False
+            self._last_send_failed = True
 
     async def send_light_command(
         self,

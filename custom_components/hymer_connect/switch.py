@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import logging
 import time
 from dataclasses import dataclass
@@ -122,6 +123,35 @@ class HymerConnectSwitch(
         }
         self._optimistic_on: bool | None = None
         self._optimistic_set_at: float = 0.0  # monotonic timestamp of last command
+        self._verify_task: asyncio.Task | None = None
+
+    async def _verify_send(self, expected_on: bool) -> None:
+        """Verify the SCU acknowledged the command after a delay.
+
+        If the readback doesn't match the expected state after 15 seconds,
+        the SignalR connection is likely stale. Force a reconnect by marking
+        the client as disconnected so the coordinator reconnects on next poll.
+        """
+        await asyncio.sleep(15)
+        # Read the actual SCU readback (not optimistic)
+        if self.coordinator.data is None:
+            return
+        value = _resolve_path(
+            self.coordinator.data, self.entity_description.value_path
+        )
+        if value is None:
+            return
+        actual_on = value == self.entity_description.on_value
+        if actual_on != expected_on:
+            _LOGGER.warning(
+                "Switch %s: SCU readback (%s) doesn't match commanded (%s) "
+                "after 15s — SignalR send channel likely dead, forcing reconnect",
+                self.entity_description.key, value, expected_on,
+            )
+            client = self.coordinator.signalr_client
+            if client:
+                client._connected = False
+                _LOGGER.info("Marked SignalR as disconnected — will reconnect on next poll")
 
     @property
     def is_on(self) -> bool | None:
@@ -159,6 +189,10 @@ class HymerConnectSwitch(
         self._optimistic_on = True
         self._optimistic_set_at = time.monotonic()
         self.async_write_ha_state()
+        # Schedule send verification — detect stale SignalR connections
+        if self._verify_task and not self._verify_task.done():
+            self._verify_task.cancel()
+        self._verify_task = asyncio.ensure_future(self._verify_send(True))
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
@@ -183,6 +217,10 @@ class HymerConnectSwitch(
         self._optimistic_on = False
         self._optimistic_set_at = time.monotonic()
         self.async_write_ha_state()
+        # Schedule send verification — detect stale SignalR connections
+        if self._verify_task and not self._verify_task.done():
+            self._verify_task.cancel()
+        self._verify_task = asyncio.ensure_future(self._verify_send(False))
 
     def _handle_coordinator_update(self) -> None:
         """Clear optimistic state when SCU confirms the commanded value.
