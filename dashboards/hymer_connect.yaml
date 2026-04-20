@@ -159,7 +159,7 @@ views:
             name: Voltage
             icon: mdi:sine-wave
           - entity: sensor.hymer_battery_current
-            name: Current
+            name: Load Draw
             icon: mdi:current-dc
           - entity: sensor.hymer_battery_level
             name: SOC
@@ -213,7 +213,7 @@ views:
             name: BMS Voltage
             icon: mdi:battery-charging
           - entity: sensor.hymer_bms_current
-            name: BMS Current
+            name: Net Battery Current
             icon: mdi:current-dc
           - entity: sensor.hymer_bms_temperature
             name: BMS Temperature

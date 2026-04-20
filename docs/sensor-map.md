@@ -237,6 +237,48 @@ may have different slot assignments on buses 1, 3, 8, 30, and 99 — see the
 | `div3600` | Convert seconds to hours |
 | `invert100` | `100 - value` (inverted percentage) |
 
+## Power Flow — Understanding the Three Current Sensors
+
+The S600 reports current from three independent measurement points:
+
+```
+Solar Panel (19V)
+      │
+      ▼
+┌─────────────┐
+│  Voltronic   │  solar_current (bus 8)  → raw panel output
+│  MPPT 260CI  │  e.g. 2.1 A @ 19.4V = 40.7W
+└──────┬──────┘
+       │  MPPT converts to battery voltage
+       ▼
+┌─────────────┐
+│  BOS LUX     │  bms_current (bus 99)   → net flow at battery
+│  LiFePO4 BMS │  positive = charging, negative = discharging
+│  4×80Ah      │  e.g. +1.54 A (net charge into cells)
+└──────┬──────┘
+       │
+       ▼
+┌─────────────┐
+│  CBE EBL402  │  battery_current (bus 3) → habitation load draw
+│  Habitation  │  negative = consuming power
+│  Controller  │  e.g. -0.37 A (SCU, fridge ECU, standby loads)
+└─────────────┘
+```
+
+**Key relationships:**
+
+- **Solar current** is measured at the panel side (higher voltage, lower
+  current). After MPPT conversion the power stays the same but current
+  increases at the lower battery voltage.
+- **BMS current** is the net result: solar input minus habitation load.
+  Positive means the battery is charging.
+- **Battery current** (EBL) shows what the habitation system draws.
+  This is always negative when loads are connected, even while solar is
+  charging — it measures downstream of the battery, not the net flow.
+
+A negative habitation current while BMS current is positive is normal —
+the solar more than compensates for the load.
+
 ## S700 Conflicts Legend
 
 Slots marked with ⚠️ have **different meanings on the Grand Canyon S700**.
