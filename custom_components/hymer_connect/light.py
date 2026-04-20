@@ -211,42 +211,24 @@ class HymerConnectLight(
             + val * (MAX_COLOR_TEMP_KELVIN - MIN_COLOR_TEMP_KELVIN) / 100
         )
 
-    async def _ensure_connected(self) -> None:
-        """Ensure SignalR is connected, attempt reconnect if not."""
-        client = self.coordinator.signalr_client
-        if client and client.connected:
-            return
-        _LOGGER.info("SignalR not connected — attempting reconnect before light command")
-        await self.coordinator.start_signalr()
-        client = self.coordinator.signalr_client
-        if not client or not client.connected:
-            raise HomeAssistantError(
-                "Cannot control light — SignalR not connected. "
-                "Try reloading the integration."
-            )
-
     async def async_turn_on(self, **kwargs: Any) -> None:
-        await self._ensure_connected()
-        client = self.coordinator.signalr_client
         bus = self.entity_description.bus_id
-        await client.send_light_command(bus, 1, bool_value=True)
+        await self.coordinator.async_send_light_command(bus, 1, bool_value=True)
         self._optimistic_on = True
         if ATTR_BRIGHTNESS in kwargs and self.entity_description.brightness_path:
             pct = min(100, max(0, int(kwargs[ATTR_BRIGHTNESS] * 100 / 255)))
-            await client.send_light_command(bus, 2, uint_value=pct)
+            await self.coordinator.async_send_light_command(bus, 2, uint_value=pct)
             self._optimistic_brightness = kwargs[ATTR_BRIGHTNESS]
         if ATTR_COLOR_TEMP_KELVIN in kwargs:
             kelvin = kwargs[ATTR_COLOR_TEMP_KELVIN]
             pct = min(100, max(0, int((kelvin - MIN_COLOR_TEMP_KELVIN) * 100 / (MAX_COLOR_TEMP_KELVIN - MIN_COLOR_TEMP_KELVIN))))
-            await client.send_light_command(bus, 3, uint_value=pct)
+            await self.coordinator.async_send_light_command(bus, 3, uint_value=pct)
             self._optimistic_color_temp = kelvin
         self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
-        await self._ensure_connected()
-        client = self.coordinator.signalr_client
         bus = self.entity_description.bus_id
-        await client.send_light_command(bus, 1, bool_value=False)
+        await self.coordinator.async_send_light_command(bus, 1, bool_value=False)
         self._optimistic_on = False
         self.async_write_ha_state()
 

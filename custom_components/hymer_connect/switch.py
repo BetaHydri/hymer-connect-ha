@@ -168,33 +168,17 @@ class HymerConnectSwitch(
             return None
         return value == self.entity_description.on_value
 
-    async def _ensure_connected(self) -> None:
-        """Ensure SignalR is connected, attempt reconnect if not."""
-        client = self.coordinator.signalr_client
-        if client and client.connected:
-            return
-        _LOGGER.info("SignalR not connected — attempting reconnect before switch command")
-        await self.coordinator.start_signalr()
-        client = self.coordinator.signalr_client
-        if not client or not client.connected:
-            raise HomeAssistantError(
-                "Cannot control switch — SignalR not connected. "
-                "Try reloading the integration."
-            )
-
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
-        await self._ensure_connected()
-        client = self.coordinator.signalr_client
         on_val = self.entity_description.on_value
         if isinstance(on_val, str):
-            await client.send_light_command(
+            await self.coordinator.async_send_light_command(
                 self.entity_description.bus_id,
                 self.entity_description.sensor_id,
                 str_value=on_val,
             )
         else:
-            await client.send_light_command(
+            await self.coordinator.async_send_light_command(
                 self.entity_description.bus_id,
                 self.entity_description.sensor_id,
                 bool_value=True,
@@ -204,6 +188,7 @@ class HymerConnectSwitch(
         # Optimistically update main_switch in SignalR sensor_data so the
         # standby bypass in needs_reconnect doesn't block auto-recovery
         # if the connection dies during the SCU reboot after 12V toggle.
+        client = self.coordinator.signalr_client
         if self.entity_description.key == "main_switch_ctrl" and client:
             client._sensor_data["main_switch"] = on_val if isinstance(on_val, str) else "On"
         self.async_write_ha_state()
@@ -214,18 +199,16 @@ class HymerConnectSwitch(
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
-        await self._ensure_connected()
-        client = self.coordinator.signalr_client
         on_val = self.entity_description.on_value
         if isinstance(on_val, str):
             off_val = "Off" if on_val == "On" else "False"
-            await client.send_light_command(
+            await self.coordinator.async_send_light_command(
                 self.entity_description.bus_id,
                 self.entity_description.sensor_id,
                 str_value=off_val,
             )
         else:
-            await client.send_light_command(
+            await self.coordinator.async_send_light_command(
                 self.entity_description.bus_id,
                 self.entity_description.sensor_id,
                 bool_value=False,
@@ -234,6 +217,7 @@ class HymerConnectSwitch(
         self._optimistic_set_at = time.monotonic()
         # Optimistically update main_switch in SignalR sensor_data so the
         # standby bypass in needs_reconnect reflects the commanded state.
+        client = self.coordinator.signalr_client
         if self.entity_description.key == "main_switch_ctrl" and client:
             client._sensor_data["main_switch"] = "Off" if isinstance(on_val, str) else False
         self.async_write_ha_state()

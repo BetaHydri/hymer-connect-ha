@@ -28,8 +28,12 @@ MSG_TYPE_PING = 6
 
 # Connection health constants
 MAX_CONNECTION_AGE = 50 * 60  # 50 min — reconnect before Azure token expires (~1h)
-STALE_DATA_TIMEOUT = 10 * 60  # 10 min — no data = connection is likely dead
+STALE_DATA_TIMEOUT = 3 * 60   # 3 min — no data = connection is likely dead
 STANDBY_MAX_SILENCE = 30 * 60  # 30 min — even in standby, reconnect after this
+
+# WebSocket keepalive — detect dead connections faster than STALE_DATA_TIMEOUT
+KEEPALIVE_INTERVAL = 30  # seconds between client-side pings
+KEEPALIVE_TIMEOUT = 90   # seconds with zero WebSocket activity = connection dead
 
 
 class HymerSignalRClient:
@@ -395,17 +399,58 @@ class HymerSignalRClient:
                     self._on_sensor_update(self._sensor_data)
 
     async def listen(self) -> None:
-        """Listen for incoming messages on the WebSocket."""
+        """Listen for incoming messages on the WebSocket.
+
+        Uses a receive-with-timeout loop to send periodic keepalive pings
+        and detect dead connections within KEEPALIVE_TIMEOUT seconds,
+        instead of hanging forever on a half-open socket.
+        """
         if not self._ws:
             return
 
         self._running = True
         _LOGGER.info("SignalR listen loop started for %s", self._vehicle_urn)
         msg_count = 0
+        last_activity = time.monotonic()
+        last_ping_sent = time.monotonic()
         try:
-            async for msg in self._ws:
-                if not self._running:
+            while self._running and self._ws and not self._ws.closed:
+                now = time.monotonic()
+
+                # Check inactivity timeout — no data at all means dead
+                if now - last_activity > KEEPALIVE_TIMEOUT:
+                    _LOGGER.warning(
+                        "No WebSocket activity for %.0fs — connection dead",
+                        now - last_activity,
+                    )
                     break
+
+                # Send client-side keepalive ping periodically.
+                # This also detects dead sockets fast: writing to a broken
+                # TCP connection raises immediately.
+                if now - last_ping_sent >= KEEPALIVE_INTERVAL:
+                    try:
+                        await self._ws.send_str(
+                            json.dumps({"type": MSG_TYPE_PING})
+                            + SIGNALR_RECORD_SEPARATOR
+                        )
+                        last_ping_sent = now
+                    except Exception:
+                        _LOGGER.warning(
+                            "Failed to send keepalive ping — connection dead"
+                        )
+                        break
+
+                # Wait for next message with timeout
+                try:
+                    msg = await asyncio.wait_for(
+                        self._ws.receive(), timeout=KEEPALIVE_INTERVAL
+                    )
+                except asyncio.TimeoutError:
+                    continue  # loop back to check timeout + send ping
+
+                last_activity = time.monotonic()
+
                 if msg.type == aiohttp.WSMsgType.TEXT:
                     for part in msg.data.split(SIGNALR_RECORD_SEPARATOR):
                         part = part.strip()
@@ -416,11 +461,18 @@ class HymerSignalRClient:
                         except json.JSONDecodeError:
                             continue
                         if parsed.get("type") == MSG_TYPE_PING:
-                            # Respond to ping with ping
-                            await self._ws.send_str(
-                                json.dumps({"type": MSG_TYPE_PING})
-                                + SIGNALR_RECORD_SEPARATOR
-                            )
+                            # Respond to server ping
+                            try:
+                                await self._ws.send_str(
+                                    json.dumps({"type": MSG_TYPE_PING})
+                                    + SIGNALR_RECORD_SEPARATOR
+                                )
+                            except Exception:
+                                _LOGGER.warning(
+                                    "Failed to respond to server ping — "
+                                    "connection dead"
+                                )
+                                break
                         else:
                             msg_count += 1
                             try:
@@ -436,7 +488,8 @@ class HymerSignalRClient:
                     aiohttp.WSMsgType.ERROR,
                 ):
                     _LOGGER.warning(
-                        "SignalR WebSocket closed/error after %d messages", msg_count
+                        "SignalR WebSocket closed/error after %d messages",
+                        msg_count,
                     )
                     break
         except Exception:
@@ -447,7 +500,8 @@ class HymerSignalRClient:
             )
         finally:
             _LOGGER.warning(
-                "SignalR listen loop ended after %d messages — requesting immediate reconnect",
+                "SignalR listen loop ended after %d messages — "
+                "requesting immediate reconnect",
                 msg_count,
             )
             self._connected = False
@@ -457,11 +511,14 @@ class HymerSignalRClient:
             if self._on_connection_lost:
                 self._on_connection_lost()
 
-    async def send_pia_request(self, b64_payload: str) -> None:
-        """Send a PiaRequest message to the SCU."""
+    async def send_pia_request(self, b64_payload: str) -> bool:
+        """Send a PiaRequest message to the SCU.
+
+        Returns True if the message was sent, False on failure.
+        """
         if not self._ws or self._ws.closed:
             _LOGGER.warning("Cannot send PiaRequest — not connected")
-            return
+            return False
 
         msg = {
             "arguments": [b64_payload],
@@ -472,6 +529,7 @@ class HymerSignalRClient:
             await self._ws.send_str(
                 json.dumps(msg) + SIGNALR_RECORD_SEPARATOR
             )
+            return True
         except Exception:
             _LOGGER.error(
                 "Failed to send PiaRequest — marking connection as dead for reconnect",
@@ -479,6 +537,7 @@ class HymerSignalRClient:
             )
             self._connected = False
             self._last_send_failed = True
+            return False
 
     async def send_light_command(
         self,
@@ -488,7 +547,7 @@ class HymerSignalRClient:
         bool_value: bool | None = None,
         uint_value: int | None = None,
         str_value: str | None = None,
-    ) -> None:
+    ) -> bool:
         """Send a light/switch control command to the SCU.
 
         Args:
@@ -497,6 +556,8 @@ class HymerSignalRClient:
             bool_value: True/False for on/off.
             uint_value: 0-100 for brightness/color_temp.
             str_value: String value (e.g. "On"/"Off" for main switch).
+
+        Returns True if sent successfully, False on failure.
         """
         payload = build_light_command(
             bus_id, sensor_id,
@@ -506,23 +567,25 @@ class HymerSignalRClient:
             "Sending light command: bus=%d sid=%d bool=%s uint=%s str=%s",
             bus_id, sensor_id, bool_value, uint_value, str_value,
         )
-        await self.send_pia_request(payload)
+        return await self.send_pia_request(payload)
 
     async def send_multi_sensor_command(
         self,
         sensors: list[dict],
-    ) -> None:
+    ) -> bool:
         """Send a multi-sensor command to the SCU.
 
         Args:
             sensors: List of sensor dicts with bus_id, sensor_id, and value.
+
+        Returns True if sent successfully, False on failure.
         """
         payload = build_multi_sensor_command(sensors)
         _LOGGER.info(
             "Sending multi-sensor command: %s",
             [(s.get("bus_id"), s.get("sensor_id")) for s in sensors],
         )
-        await self.send_pia_request(payload)
+        return await self.send_pia_request(payload)
 
     async def start(self) -> None:
         """Connect and start listening in the background."""

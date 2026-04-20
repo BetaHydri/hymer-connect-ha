@@ -167,32 +167,15 @@ class HymerHeaterClimate(
                 return val
         return "Diesel"
 
-    async def _ensure_connected(self) -> None:
-        """Ensure SignalR is connected, attempt reconnect if not."""
-        client = self.coordinator.signalr_client
-        if client and client.connected:
-            return
-        _LOGGER.info("SignalR not connected — attempting reconnect before heater command")
-        await self.coordinator.start_signalr()
-        client = self.coordinator.signalr_client
-        if not client or not client.connected:
-            raise HomeAssistantError(
-                "Cannot control heater — SignalR not connected. "
-                "Try reloading the integration."
-            )
-
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set HVAC mode (heat or off)."""
-        await self._ensure_connected()
-        client = self.coordinator.signalr_client
-
         if hvac_mode == HVACMode.HEAT:
             # Turn on with default 20°C
             temp = self._optimistic_temp or self._get_setpoint() or 20.0
             if temp <= HEATER_OFF_SETPOINT:
                 temp = 20.0
             fuel = self._get_fuel_type()
-            await client.send_multi_sensor_command([
+            await self.coordinator.async_send_multi_sensor_command([
                 {"bus_id": 58, "sensor_id": 8, "float_value": temp},
                 {"bus_id": 58, "sensor_id": 6, "str_value": fuel},
             ])
@@ -200,7 +183,7 @@ class HymerHeaterClimate(
             self._optimistic_temp = temp
         else:
             fuel = self._get_fuel_type()
-            await client.send_multi_sensor_command([
+            await self.coordinator.async_send_multi_sensor_command([
                 {"bus_id": 58, "sensor_id": 8, "float_value": HEATER_OFF_SETPOINT},
                 {"bus_id": 58, "sensor_id": 6, "str_value": fuel},
             ])
@@ -215,11 +198,8 @@ class HymerHeaterClimate(
         if temp is None:
             return
 
-        await self._ensure_connected()
-        client = self.coordinator.signalr_client
-
         fuel = self._get_fuel_type()
-        await client.send_multi_sensor_command([
+        await self.coordinator.async_send_multi_sensor_command([
             {"bus_id": 58, "sensor_id": 8, "float_value": float(temp)},
             {"bus_id": 58, "sensor_id": 6, "str_value": fuel},
         ])
@@ -239,11 +219,7 @@ class HymerHeaterClimate(
             _LOGGER.warning("Unknown fan mode: %s", fan_mode)
             return
 
-        await self._ensure_connected()
-        client = self.coordinator.signalr_client
-        fuel = self._get_fuel_type()
-        _LOGGER.info("Setting heater fan to %s", mode_str)
-        await client.send_multi_sensor_command([
+        await self.coordinator.async_send_multi_sensor_command([
             {"bus_id": 58, "sensor_id": 5, "str_value": mode_str},
             {"bus_id": 58, "sensor_id": 4, "str_value": fuel},
         ])

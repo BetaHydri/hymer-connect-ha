@@ -109,26 +109,15 @@ class HymerFridgeSelect(
 
     async def async_select_option(self, option: str) -> None:
         """Set the fridge mode."""
-        client = self.coordinator.signalr_client
-        if not client or not client.connected:
-            _LOGGER.info("SignalR not connected — attempting reconnect before fridge command")
-            await self.coordinator.start_signalr()
-            client = self.coordinator.signalr_client
-            if not client or not client.connected:
-                raise HomeAssistantError(
-                    "Cannot control fridge — SignalR not connected. "
-                    "Try reloading the integration."
-                )
-
         import asyncio
 
         if option == "Off":
-            await client.send_light_command(34, 1, bool_value=False)
+            await self.coordinator.async_send_light_command(34, 1, bool_value=False)
         elif option in ("1", "2", "3", "4", "5"):
             # Power on first, wait, then set cooling step
-            await client.send_light_command(34, 1, bool_value=True)
+            await self.coordinator.async_send_light_command(34, 1, bool_value=True)
             await asyncio.sleep(0.5)
-            await client.send_light_command(34, 3, uint_value=int(option))
+            await self.coordinator.async_send_light_command(34, 3, uint_value=int(option))
         else:
             _LOGGER.warning("Unknown fridge option: %s", option)
             return
@@ -203,17 +192,6 @@ class HymerBoilerSelect(
 
     async def async_select_option(self, option: str) -> None:
         """Set the boiler mode."""
-        client = self.coordinator.signalr_client
-        if not client or not client.connected:
-            _LOGGER.info("SignalR not connected — attempting reconnect before boiler command")
-            await self.coordinator.start_signalr()
-            client = self.coordinator.signalr_client
-            if not client or not client.connected:
-                raise HomeAssistantError(
-                    "Cannot control boiler — SignalR not connected. "
-                    "Try reloading the integration."
-                )
-
         mode_map = {"Off": "OFF", "ECO": "ECO", "Turbo": "HOT"}
         mode_str = mode_map.get(option)
         if mode_str is None:
@@ -221,7 +199,7 @@ class HymerBoilerSelect(
             return
 
         fuel = self._get_fuel_type()
-        await client.send_multi_sensor_command([
+        await self.coordinator.async_send_multi_sensor_command([
             {"bus_id": 58, "sensor_id": 5, "str_value": mode_str},
             {"bus_id": 58, "sensor_id": 4, "str_value": fuel},
         ])
@@ -321,42 +299,31 @@ class HymerHeaterEnergySelect(
 
     async def async_select_option(self, option: str) -> None:
         """Set the heater energy source."""
-        client = self.coordinator.signalr_client
-        if not client or not client.connected:
-            _LOGGER.info("SignalR not connected — attempting reconnect before heater energy command")
-            await self.coordinator.start_signalr()
-            client = self.coordinator.signalr_client
-            if not client or not client.connected:
-                raise HomeAssistantError(
-                    "Cannot control heater energy — SignalR not connected. "
-                    "Try reloading the integration."
-                )
-
         if option == "Diesel":
-            await client.send_multi_sensor_command([
+            await self.coordinator.async_send_multi_sensor_command([
                 {"bus_id": 58, "sensor_id": 4, "str_value": "Diesel"},
                 {"bus_id": 58, "sensor_id": 6, "str_value": "Diesel"},
             ])
         elif option == "Electric 900W":
-            await client.send_multi_sensor_command([
+            await self.coordinator.async_send_multi_sensor_command([
                 {"bus_id": 58, "sensor_id": 4, "str_value": "Electric"},
                 {"bus_id": 58, "sensor_id": 6, "str_value": "Electric"},
                 {"bus_id": 58, "sensor_id": 9, "uint_value": 900},
             ])
         elif option == "Electric 1800W":
-            await client.send_multi_sensor_command([
+            await self.coordinator.async_send_multi_sensor_command([
                 {"bus_id": 58, "sensor_id": 4, "str_value": "Electric"},
                 {"bus_id": 58, "sensor_id": 6, "str_value": "Electric"},
                 {"bus_id": 58, "sensor_id": 9, "uint_value": 1800},
             ])
         elif option == "Mix 900W":
-            await client.send_multi_sensor_command([
+            await self.coordinator.async_send_multi_sensor_command([
                 {"bus_id": 58, "sensor_id": 4, "str_value": "Both"},
                 {"bus_id": 58, "sensor_id": 6, "str_value": "Both"},
                 {"bus_id": 58, "sensor_id": 9, "uint_value": 900},
             ])
         elif option == "Mix 1800W":
-            await client.send_multi_sensor_command([
+            await self.coordinator.async_send_multi_sensor_command([
                 {"bus_id": 58, "sensor_id": 4, "str_value": "Both"},
                 {"bus_id": 58, "sensor_id": 6, "str_value": "Both"},
                 {"bus_id": 58, "sensor_id": 9, "uint_value": 1800},

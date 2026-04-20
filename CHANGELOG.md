@@ -5,6 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.19.0] - 2026-04-20
+
+### Fixed
+
+- **SignalR keepalive and dead-connection detection** — Replaced the blocking WebSocket listen loop with a timeout-based loop that sends client-side pings every 30 seconds. Dead/half-open connections are now detected within ~90 seconds instead of ~10 minutes. Reduces `STALE_DATA_TIMEOUT` from 10 min → 3 min as a secondary safety net
+- **Automatic reconnect + retry on command failure** — All controllable entities (lights, switches, climate, fridge, boiler, heater energy) now route commands through a central retry mechanism. If a send fails, the integration reconnects and retries once before raising an error. No more silent command drops on zombie connections
+- **Unified connection health check** — Consolidated 4 duplicated `_ensure_connected()` methods (light, switch, climate, select) into a single `async_ensure_signalr_healthy()` on the coordinator that checks both connection state and staleness
+
+### Changed
+
+- **Entity translation cleanup** — Synced `strings.json` with actual sensor definitions: removed stale entries (BMS, EBL diagnostic slots, fuel/outside-temp/service-distance, parking brake, cruise control, standby heater, fridge ECO switch, heater energy select), added missing entries (odometer, speed, coolant temp, sliding/rear doors)
+
 ## [2.18.0] - 2026-04-20
 
 ### Added

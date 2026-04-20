@@ -15,7 +15,7 @@ import aiohttp
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .api import HymerConnectApi, HymerConnectApiError, HymerConnectAuthError
@@ -145,6 +145,78 @@ class HymerConnectCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         if self._signalr:
             await self._signalr.stop()
             self._signalr = None
+
+    async def async_ensure_signalr_healthy(self) -> None:
+        """Ensure SignalR is connected and healthy, reconnecting if needed.
+
+        Checks both the WebSocket connection state and whether the connection
+        is stale (needs_reconnect).  If unhealthy, attempts to reconnect.
+        Raises HomeAssistantError if reconnection fails.
+        """
+        client = self._signalr
+        if client and client.connected and not client.needs_reconnect:
+            return
+        reason = "stale" if (client and client.connected) else "disconnected"
+        _LOGGER.info("SignalR %s — reconnecting before command", reason)
+        await self.start_signalr()
+        if not self._signalr or not self._signalr.connected:
+            raise HomeAssistantError(
+                "Cannot send command — SignalR not connected. "
+                "Try reloading the integration."
+            )
+
+    async def _send_with_retry(
+        self, method_name: str, *args: Any, **kwargs: Any
+    ) -> None:
+        """Send a command with automatic reconnect + single retry.
+
+        Args:
+            method_name: Name of the method on HymerSignalRClient
+                         (e.g. 'send_light_command').
+            *args, **kwargs: Forwarded to the client method.
+
+        Raises HomeAssistantError if both attempts fail.
+        """
+        for attempt in range(2):
+            await self.async_ensure_signalr_healthy()
+            method = getattr(self._signalr, method_name)
+            ok = await method(*args, **kwargs)
+            if ok:
+                return
+            if attempt == 0:
+                _LOGGER.warning(
+                    "%s send failed — reconnecting for retry", method_name
+                )
+                # Force disconnected state so ensure_healthy reconnects
+                if self._signalr:
+                    self._signalr._connected = False
+        raise HomeAssistantError(
+            "Command failed after reconnect+retry. "
+            "Try reloading the integration."
+        )
+
+    async def async_send_light_command(
+        self,
+        bus_id: int,
+        sensor_id: int,
+        **kwargs: Any,
+    ) -> None:
+        """Send a light/switch command with reconnect + retry."""
+        await self._send_with_retry(
+            "send_light_command", bus_id, sensor_id, **kwargs
+        )
+
+    async def async_send_multi_sensor_command(
+        self, sensors: list[dict]
+    ) -> None:
+        """Send a multi-sensor command with reconnect + retry."""
+        await self._send_with_retry("send_multi_sensor_command", sensors)
+
+    async def async_send_pia_request(
+        self, payload: str
+    ) -> None:
+        """Send a raw PIA request with reconnect + retry."""
+        await self._send_with_retry("send_pia_request", payload)
 
     async def _async_update_data(self) -> dict[str, Any]:
         """Fetch data from the REST API and merge with SignalR data."""
