@@ -469,7 +469,7 @@ views:
             icon: mdi:door-sliding-open
           - entity: binary_sensor.hymer_rear_door
             name: Rear
-            icon: mdi:tailgate
+            icon: mdi:car-door
           - entity: binary_sensor.hymer_lock
             name: Lock
             icon: mdi:lock
