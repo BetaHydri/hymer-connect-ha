@@ -47,14 +47,14 @@
       "odometer": {
         "name": "Odometer"
       },
-      "speed": {
-        "name": "Speed"
+      "fuel_level": {
+        "name": "Fuel level"
       },
       "adblue_level": {
         "name": "AdBlue level"
       },
-      "coolant_temp": {
-        "name": "Coolant temperature"
+      "outside_temperature": {
+        "name": "Outside temperature"
       },
       "lock_status": {
         "name": "Lock status"
@@ -128,8 +128,8 @@
       "current_gear": {
         "name": "Current gear"
       },
-      "rpm": {
-        "name": "Engine RPM"
+      "distance_to_service": {
+        "name": "Distance to next service"
       },
       "engine_hours": {
         "name": "Engine hours"

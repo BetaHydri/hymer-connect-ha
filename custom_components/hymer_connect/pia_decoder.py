@@ -18,15 +18,19 @@ _LOGGER = logging.getLogger(__name__)
 # value_transform: None=raw, "div10"=divide by 10, "div100"=divide by 100, "div1000"=divide by 1000, "div3600"=seconds to hours
 SENSOR_MAP: dict[tuple[int, int], tuple[str, str | None, str | None]] = {
     # can0 — Vehicle CAN bus
+    # Note: Bus 1 slot assignments confirmed via EHG app correlation (2026-04-20).
+    # (1,2) reads 72.72 while parked = EHG app shows "Dieselfüllstand 73%" = fuel level.
+    # (1,5) reads 167040 div100 = 1670 = km to next service, not RPM.
+    # (1,9) reads ~9°C while parked cold = outside temp, not coolant.
     (1, 1): ("odometer", "km", "div1000"),
-    (1, 2): ("speed", "km/h", None),
+    (1, 2): ("fuel_level", "%", None),
     (1, 3): ("lock_status", None, None),
     (1, 4): ("handbrake", None, None),
-    (1, 5): ("rpm", "rpm", "div100"),
+    (1, 5): ("distance_to_service", "km", "div100"),
     (1, 6): ("adblue_level", "%", None),
     (1, 7): ("engine_hours", "h", "div3600"),
     (1, 8): ("vin_text", None, None),
-    (1, 9): ("coolant_temp", "\u00b0C", None),
+    (1, 9): ("outside_temperature", "°C", None),
     (1, 10): ("engine_running", None, None),
     (1, 11): ("door_driver", None, None),
     (1, 12): ("door_passenger", None, None),

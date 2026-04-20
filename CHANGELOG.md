@@ -5,6 +5,24 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.11.0] - 2026-04-20
+
+### Fixed
+
+- **Bus 1 slots 2, 5, 9 remapped** — Confirmed via EHG app correlation:
+  - (1,2) `speed` → `fuel_level` (%) — EHG app shows "Dieselfüllstand 73%", sensor read 72.72 (fixes #16)
+  - (1,5) `rpm` → `distance_to_service` (km) — reads 1670 km to next service, not RPM
+  - (1,9) `coolant_temp` → `outside_temperature` (°C) — reads 9°C while parked cold = ambient, not coolant
+
+### Removed
+
+- **Old sensor entities** — `speed`, `rpm`, `coolant_temp` removed (mislabelled). Old entities show unavailable until deleted
+
+### Added
+
+- **New sensors** — `fuel_level`, `distance_to_service`, `outside_temperature`
+- **Dashboard** — Fuel level added to Vehicle > Driving section
+
 ## [2.10.1] - 2026-04-20
 
 ### Fixed

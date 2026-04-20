@@ -376,6 +376,15 @@ views:
           - entity: sensor.hymer_odometer
             name: Odometer
             icon: mdi:counter
+          - entity: sensor.hymer_fuel_level
+            name: Fuel Level
+            icon: mdi:fuel
+          - entity: sensor.hymer_outside_temperature
+            name: Outside Temp
+            icon: mdi:thermometer
+          - entity: sensor.hymer_distance_to_next_service
+            name: Next Service
+            icon: mdi:wrench-clock
           - entity: sensor.hymer_speed_corrected
             name: Speed
             icon: mdi:speedometer
@@ -385,9 +394,6 @@ views:
           - entity: sensor.hymer_current_gear
             name: Gear
             icon: mdi:car-shift-pattern
-          - entity: sensor.hymer_coolant_temperature
-            name: Coolant
-            icon: mdi:coolant-temperature
           - entity: sensor.hymer_engine_hours
             name: Engine Hours
             icon: mdi:clock-outline

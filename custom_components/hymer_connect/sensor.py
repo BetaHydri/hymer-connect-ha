@@ -74,13 +74,12 @@ SIGNALR_SENSORS: tuple[HymerSensorEntityDescription, ...] = (
         icon="mdi:counter",
     ),
     HymerSensorEntityDescription(
-        key="speed",
-        translation_key="speed",
-        native_unit_of_measurement=UnitOfSpeed.KILOMETERS_PER_HOUR,
-        device_class=SensorDeviceClass.SPEED,
+        key="fuel_level",
+        translation_key="fuel_level",
+        native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
-        value_path="signalr_sensors.speed",
-        icon="mdi:speedometer",
+        value_path="signalr_sensors.fuel_level",
+        icon="mdi:fuel",
     ),
     HymerSensorEntityDescription(
         key="adblue_level",
@@ -91,13 +90,13 @@ SIGNALR_SENSORS: tuple[HymerSensorEntityDescription, ...] = (
         icon="mdi:car-coolant-level",
     ),
     HymerSensorEntityDescription(
-        key="coolant_temp",
-        translation_key="coolant_temp",
+        key="outside_temperature",
+        translation_key="outside_temperature",
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
-        value_path="signalr_sensors.coolant_temp",
-        icon="mdi:coolant-temperature",
+        value_path="signalr_sensors.outside_temperature",
+        icon="mdi:thermometer",
     ),
     HymerSensorEntityDescription(
         key="ignition_state",
@@ -237,14 +236,14 @@ SIGNALR_SENSORS: tuple[HymerSensorEntityDescription, ...] = (
         value_path="signalr_sensors.current_gear",
         icon="mdi:car-shift-pattern",
     ),
-    # --- Engine (can0) ---
+    # --- Vehicle service (can0) ---
     HymerSensorEntityDescription(
-        key="rpm",
-        translation_key="rpm",
-        native_unit_of_measurement="rpm",
+        key="distance_to_service",
+        translation_key="distance_to_service",
+        native_unit_of_measurement="km",
         state_class=SensorStateClass.MEASUREMENT,
-        value_path="signalr_sensors.rpm",
-        icon="mdi:engine",
+        value_path="signalr_sensors.distance_to_service",
+        icon="mdi:wrench-clock",
     ),
     HymerSensorEntityDescription(
         key="engine_hours",
