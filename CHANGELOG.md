@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.19.1] - 2026-04-20
+
+### Fixed
+
+- **Outside LED bar light fixed** — Bus 24 uses brightness-only control (no bool on/off). The EHG app sends `(24,2)=brightness` and `(24,3)=color_temp` only, never a `(24,1)=bool` toggle. Sending `(24,1)=true` previously activated the "all Wohnen" group, turning on all living area lights. Now uses `brightness=0` for off and `brightness>0` for on, matching the EHG app behavior (confirmed via mitmproxy trace 2026-04-05)
+- **Brightness clamping** — SCU reports brightness=10000 on bus 24 when off (sentinel value). Values >100 are now clamped to 100 to prevent 2550% brightness display
+
 ## [2.19.0] - 2026-04-20
 
 ### Fixed

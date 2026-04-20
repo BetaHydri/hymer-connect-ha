@@ -36,6 +36,7 @@ class HymerLightEntityDescription(LightEntityDescription):
     on_off_path: str
     brightness_path: str | None = None
     color_temp_path: str | None = None
+    brightness_only: bool = False  # True = no bool on/off, use brightness 0/>0
 
 
 LIGHT_DESCRIPTIONS: tuple[HymerLightEntityDescription, ...] = (
@@ -106,13 +107,19 @@ LIGHT_DESCRIPTIONS: tuple[HymerLightEntityDescription, ...] = (
         brightness_path="signalr_sensors.light_bedroom_overhead_brightness",
         icon="mdi:ceiling-light",
     ),
+    # Outside LED bar (bus 24) — brightness-only control.
+    # EHG app never sends (24,1) bool toggle; it controls via brightness
+    # (24,2) and color_temp (24,3).  The (24,1) readback mirrors the
+    # "all wohnen" group state, not the outside light's own state.
+    # Confirmed via mitmproxy trace (2026-04-05 cap2).
     HymerLightEntityDescription(
         key="light_outside",
         translation_key="light_outside",
         bus_id=24,
-        on_off_path="signalr_sensors.light_outside",
+        on_off_path="signalr_sensors.light_outside_brightness",  # >0 = on
         brightness_path="signalr_sensors.light_outside_brightness",
         color_temp_path="signalr_sensors.light_outside_color_temp",
+        brightness_only=True,
         icon="mdi:outdoor-lamp",
     ),
 )
@@ -176,6 +183,12 @@ class HymerConnectLight(
         val = _resolve_path(self.coordinator.data, self.entity_description.on_off_path)
         if val is None:
             return None
+        if self.entity_description.brightness_only:
+            # For brightness-only lights, on = brightness > 0
+            try:
+                return int(val) > 0
+            except (ValueError, TypeError):
+                return None
         return bool(val)
 
     @property
@@ -191,7 +204,9 @@ class HymerConnectLight(
         )
         if val is None or not isinstance(val, (int, float)):
             return None
-        return min(255, max(0, int(val * 255 / 100)))
+        # Clamp SCU values >100 to 100 (bus 24 reports 10000 when off)
+        pct = min(100, max(0, int(val)))
+        return min(255, max(0, int(pct * 255 / 100)))
 
     @property
     def color_temp_kelvin(self) -> int | None:
@@ -213,12 +228,20 @@ class HymerConnectLight(
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         bus = self.entity_description.bus_id
-        await self.coordinator.async_send_light_command(bus, 1, bool_value=True)
-        self._optimistic_on = True
-        if ATTR_BRIGHTNESS in kwargs and self.entity_description.brightness_path:
-            pct = min(100, max(0, int(kwargs[ATTR_BRIGHTNESS] * 100 / 255)))
+        if self.entity_description.brightness_only:
+            # Brightness-only: turn on by setting brightness (default 100%)
+            pct = 100
+            if ATTR_BRIGHTNESS in kwargs:
+                pct = min(100, max(1, int(kwargs[ATTR_BRIGHTNESS] * 100 / 255)))
             await self.coordinator.async_send_light_command(bus, 2, uint_value=pct)
-            self._optimistic_brightness = kwargs[ATTR_BRIGHTNESS]
+            self._optimistic_brightness = min(255, max(1, int(pct * 255 / 100)))
+        else:
+            await self.coordinator.async_send_light_command(bus, 1, bool_value=True)
+            if ATTR_BRIGHTNESS in kwargs and self.entity_description.brightness_path:
+                pct = min(100, max(0, int(kwargs[ATTR_BRIGHTNESS] * 100 / 255)))
+                await self.coordinator.async_send_light_command(bus, 2, uint_value=pct)
+                self._optimistic_brightness = kwargs[ATTR_BRIGHTNESS]
+        self._optimistic_on = True
         if ATTR_COLOR_TEMP_KELVIN in kwargs:
             kelvin = kwargs[ATTR_COLOR_TEMP_KELVIN]
             pct = min(100, max(0, int((kelvin - MIN_COLOR_TEMP_KELVIN) * 100 / (MAX_COLOR_TEMP_KELVIN - MIN_COLOR_TEMP_KELVIN))))
@@ -228,7 +251,12 @@ class HymerConnectLight(
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         bus = self.entity_description.bus_id
-        await self.coordinator.async_send_light_command(bus, 1, bool_value=False)
+        if self.entity_description.brightness_only:
+            # Brightness-only: turn off by setting brightness to 0
+            await self.coordinator.async_send_light_command(bus, 2, uint_value=0)
+            self._optimistic_brightness = 0
+        else:
+            await self.coordinator.async_send_light_command(bus, 1, bool_value=False)
         self._optimistic_on = False
         self.async_write_ha_state()
 
