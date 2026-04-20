@@ -84,8 +84,8 @@ views:
           - entity: binary_sensor.hymer_scu_connected
             name: SCU Online
             icon: mdi:access-point
-          - entity: sensor.hymer_ambient_temperature
-            name: Ambient Temp
+          - entity: sensor.hymer_outside_temperature
+            name: Outside Temp
             icon: mdi:thermometer
 
       # ── Heater ──
@@ -194,12 +194,6 @@ views:
           - entity: sensor.hymer_solar_power
             name: Solar Power
             icon: mdi:flash
-          - entity: binary_sensor.hymer_solar_panel
-            name: Panel Connected
-            icon: mdi:solar-panel-large
-          - entity: binary_sensor.hymer_charger
-            name: Shore Charger
-            icon: mdi:ev-plug-type2
           - entity: sensor.hymer_charge_phase
             name: Charge Phase
             icon: mdi:sine-wave
@@ -240,8 +234,8 @@ views:
         title: "🌡️ Temperature"
         show_header_toggle: false
         entities:
-          - entity: sensor.hymer_ambient_temperature
-            name: Ambient
+          - entity: sensor.hymer_outside_temperature
+            name: Outside Temp
             icon: mdi:thermometer
 
       # ── Heater Control ──
@@ -406,24 +400,6 @@ views:
           - entity: sensor.hymer_distance_to_next_service
             name: Next Service
             icon: mdi:wrench-clock
-          - entity: sensor.hymer_speed_corrected
-            name: Speed
-            icon: mdi:speedometer
-          - entity: sensor.hymer_rpm_corrected
-            name: RPM
-            icon: mdi:engine
-          - entity: sensor.hymer_engine_hours
-            name: Engine Hours
-            icon: mdi:clock-outline
-          - entity: sensor.hymer_engine_torque_corrected
-            name: Engine Torque
-            icon: mdi:dumbbell
-
-      # ── Fuel & AdBlue ──
-      - type: entities
-        title: "⛽ Fuel & AdBlue"
-        show_header_toggle: false
-        entities:
           - entity: sensor.hymer_fuel_level
             name: Fuel Level
             icon: mdi:fuel
@@ -442,7 +418,7 @@ views:
           - entity: sensor.hymer_ignition
             name: Ignition
             icon: mdi:key
-          - entity: binary_sensor.hymer_engine_running_corrected
+          - entity: binary_sensor.hymer_engine
             name: Engine Running
             icon: mdi:engine
 
@@ -617,26 +593,14 @@ views:
           - entity: sensor.hymer_gps_coordinates
             name: Coordinates
             icon: mdi:crosshairs-gps
-          - entity: sensor.hymer_altitude
-            name: Altitude
-            icon: mdi:image-filter-hdr
-          - entity: sensor.hymer_gps_heading
-            name: Heading
-            icon: mdi:compass
 
       - type: entities
         title: "📡 Signal"
         show_header_toggle: false
         entities:
-          - entity: sensor.hymer_gps_satellites
-            name: Satellites
-            icon: mdi:satellite-variant
-          - entity: sensor.hymer_gps_signal
-            name: Signal Quality
-            icon: mdi:signal
-          - entity: binary_sensor.hymer_gps_fix
-            name: GPS Fix
-            icon: mdi:crosshairs-gps
+          - entity: binary_sensor.hymer_scu_connected
+            name: SCU Online
+            icon: mdi:access-point
 
   # ══════════════════════════════════════════════════════════
   # System
@@ -661,9 +625,6 @@ views:
           - entity: sensor.hymer_truma_firmware
             name: Truma Firmware
             icon: mdi:chip
-          - entity: sensor.hymer_tyre_pressure
-            name: Tire Pressure
-            icon: mdi:tire
           - entity: update.hymer_connect_update
             name: Integration Update
             icon: mdi:update
