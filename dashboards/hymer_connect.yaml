@@ -412,9 +412,6 @@ views:
           - entity: sensor.hymer_rpm_corrected
             name: RPM
             icon: mdi:engine
-          - entity: sensor.hymer_current_gear
-            name: Gear
-            icon: mdi:car-shift-pattern
           - entity: sensor.hymer_engine_hours
             name: Engine Hours
             icon: mdi:clock-outline
