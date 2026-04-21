@@ -85,8 +85,11 @@ group is missed (e.g., after a reconnect where the initial subscription partiall
 
 ### Why the SCU Goes Silent
 
+> **Note:** This is an educated guess based on observed behaviour, not confirmed
+> by Hymer/EHG documentation.
+
 The SCU firmware implements a request/response model rather than continuous
-streaming — primarily to conserve the **cellular data plan** included with the
+streaming — likely to conserve the **cellular data plan** included with the
 vehicle. The LTE data cost is covered by Hymer (not the owner), so the SCU
 minimises upstream traffic by only reporting values when explicitly asked.
 
