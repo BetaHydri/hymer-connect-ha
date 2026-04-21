@@ -14,22 +14,9 @@ Custom integration to connect your HYMER / Erwin Hymer Group motorhome or carava
 
 > **v2.19.5** — **Persistent command control!** Remote-access commands (lights, heater, fridge) no longer stop working after ~30 minutes. Periodic token refresh, SCU reconnect detection, and OAuth2 token fix. ~100 entities including odometer, GPS, battery, temperatures, door/lock status, Truma heater, fridge, and more.
 
-<details>
-<summary><strong>Integration Screenshots</strong> (click to expand)</summary>
-
 <p align="center">
-  <img src="https://raw.githubusercontent.com/BetaHydri/hymer-connect-ha/master/images/ha-screenshot_1.png" alt="HYMER Connect — Entities" width="45%">
-  <img src="https://raw.githubusercontent.com/BetaHydri/hymer-connect-ha/master/images/ha-screenshot_2.png" alt="HYMER Connect — Sensors" width="45%">
+  <img src="https://raw.githubusercontent.com/BetaHydri/hymer-connect-ha/master/images/solar-energy-view.png" alt="HYMER Connect — Energy View" width="90%">
 </p>
-<p align="center">
-  <img src="https://raw.githubusercontent.com/BetaHydri/hymer-connect-ha/master/images/ha-screenshot_3.png" alt="HYMER Connect — Controls" width="45%">
-  <img src="https://raw.githubusercontent.com/BetaHydri/hymer-connect-ha/master/images/ha-screenshot_4.png" alt="HYMER Connect — Climate" width="45%">
-</p>
-<p align="center">
-  <img src="https://raw.githubusercontent.com/BetaHydri/hymer-connect-ha/master/images/ha-screenshot_5.png" alt="HYMER Connect — Device" width="45%">
-</p>
-
-</details>
 
 ### Dashboard Demo
 
