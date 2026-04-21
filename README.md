@@ -398,6 +398,8 @@ graph TD
 | **Remote access refresh** | **`access-refresh`** | **Never** | **BLE pairing** | **Exchange for access token (this is what you capture)** |
 | Remote access | `access` | 15 min | `/remoteAccessToken` API | SignalR UpdateTokens |
 
+> **Deep dive:** For detailed documentation on connection lifecycle, token refresh strategy, reconnection logic, traffic budgets, and troubleshooting, see [docs/signalr-connection.md](docs/signalr-connection.md).
+
 ## Dashboard Setup
 
 1. Go to **Settings > Dashboards > + Add Dashboard**
