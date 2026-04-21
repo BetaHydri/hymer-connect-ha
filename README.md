@@ -14,8 +14,12 @@ Custom integration to connect your HYMER / Erwin Hymer Group motorhome or carava
 
 > **v2.19.5** — **Persistent command control!** Remote-access commands (lights, heater, fridge) no longer stop working after ~30 minutes. Periodic token refresh, SCU reconnect detection, and OAuth2 token fix. ~100 entities including odometer, GPS, battery, temperatures, door/lock status, Truma heater, fridge, and more.
 
+### Energy Dashboard
+
+Monitor your motorhome's complete power flow at a glance — solar production, lithium battery state (SOC, SoH, voltage, temperature), habitation load draw, and charging status. All data comes directly from the vehicle's SCU via SignalR, updated every 60 seconds.
+
 <p align="center">
-  <img src="https://raw.githubusercontent.com/BetaHydri/hymer-connect-ha/master/images/solar-energy-view.png" alt="HYMER Connect — Energy View" width="90%">
+  <img src="https://raw.githubusercontent.com/BetaHydri/hymer-connect-ha/master/images/solar-energy-view.png" alt="HYMER Connect — Energy Dashboard" width="90%">
 </p>
 
 ### Dashboard Demo
