@@ -27,7 +27,9 @@ _LOGGER = logging.getLogger(__name__)
 # Reconnection backoff constants
 _INITIAL_BACKOFF = 60  # 1 minute
 _MAX_BACKOFF = 900  # 15 minutes
+_MAX_CONSECUTIVE_FAILURES = 5  # force re-auth after this many failures
 _REST_METADATA_INTERVAL = 600  # 10 minutes between full REST metadata refreshes
+_RESUBSCRIBE_INTERVAL = 600  # 10 minutes — only resubscribe periodically, not every poll
 
 
 class HymerConnectCoordinator(DataUpdateCoordinator[dict[str, Any]]):
@@ -55,7 +57,9 @@ class HymerConnectCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self._signalr_data: dict[str, Any] = {}
         self._reconnect_backoff: int = _INITIAL_BACKOFF
         self._last_reconnect_attempt: float = 0.0
+        self._consecutive_failures: int = 0
         self._last_rest_metadata_refresh: float = 0.0
+        self._last_resubscribe: float = 0.0
         self._cached_rest_data: dict[str, Any] = {}
         super().__init__(
             hass,
@@ -93,11 +97,9 @@ class HymerConnectCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         _LOGGER.warning("SignalR connection lost — scheduling immediate reconnect")
         self._reconnect_backoff = _INITIAL_BACKOFF
         self._last_reconnect_attempt = 0.0
-        # Schedule an async coordinator refresh from sync context
-        self.hass.loop.call_soon_threadsafe(
-            self.hass.async_create_task,
-            self.async_request_refresh(),
-        )
+        # Schedule an async coordinator refresh — listen loop runs on the
+        # HA event loop (asyncio.ensure_future), so async_create_task is safe.
+        self.hass.async_create_task(self.async_request_refresh())
 
     async def start_signalr(self) -> None:
         """Start the SignalR WebSocket connection."""
@@ -127,15 +129,35 @@ class HymerConnectCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         try:
             await self._signalr.start()
             _LOGGER.info("SignalR connected for %s", self._vehicle_urn)
-            # Reset backoff on successful connection
+            # Reset backoff and failure counter on successful connection
             self._reconnect_backoff = _INITIAL_BACKOFF
+            self._consecutive_failures = 0
         except HymerConnectApiError as err:
-            _LOGGER.warning("SignalR connection failed: %s", err)
-            self._signalr = None
-            # Increase backoff (exponential, capped)
-            self._reconnect_backoff = min(
-                self._reconnect_backoff * 2, _MAX_BACKOFF
+            self._consecutive_failures += 1
+            _LOGGER.warning(
+                "SignalR connection failed (%d/%d): %s",
+                self._consecutive_failures, _MAX_CONSECUTIVE_FAILURES, err,
             )
+            self._signalr = None
+
+            # After too many consecutive failures, force OAuth2 token refresh
+            if self._consecutive_failures >= _MAX_CONSECUTIVE_FAILURES:
+                _LOGGER.warning(
+                    "SignalR failed %d times in a row — forcing OAuth2 token refresh",
+                    self._consecutive_failures,
+                )
+                try:
+                    await self.api._refresh_access_token()
+                    _LOGGER.info("OAuth2 token refreshed after consecutive failures")
+                except Exception:
+                    _LOGGER.error("OAuth2 token refresh failed", exc_info=True)
+                self._consecutive_failures = 0
+                self._reconnect_backoff = _INITIAL_BACKOFF
+            else:
+                # Increase backoff (exponential, capped)
+                self._reconnect_backoff = min(
+                    self._reconnect_backoff * 2, _MAX_BACKOFF
+                )
             _LOGGER.info(
                 "Next SignalR reconnect attempt in %ds", self._reconnect_backoff
             )
@@ -300,17 +322,26 @@ class HymerConnectCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                     _LOGGER.warning("SignalR connect attempt failed", exc_info=True)
             else:
                 remaining = self._reconnect_backoff - since_last_attempt
-                _LOGGER.debug(
-                    "SignalR reconnect backoff: %.0fs remaining", remaining
+                _LOGGER.warning(
+                    "SignalR reconnect backoff: %.0fs remaining (attempt %d/%d)",
+                    remaining, self._consecutive_failures, _MAX_CONSECUTIVE_FAILURES,
                 )
         else:
-            # Re-send PIA subscriptions on every poll to get fresh sensor data.
-            # The SCU only pushes updated values in response to subscription
-            # requests — without re-subscribing, data goes stale.
-            try:
-                await self._signalr.resubscribe()
-            except Exception:
-                _LOGGER.debug("PIA re-subscription failed", exc_info=True)
+            # Re-send PIA subscriptions periodically (not every poll) to
+            # avoid excessive traffic that can cause server-side disconnects.
+            # The SCU pushes changes automatically; resubscribe only refreshes
+            # stale values like battery SOC and solar current.
+            since_last_resub = now - self._last_resubscribe
+            if since_last_resub >= _RESUBSCRIBE_INTERVAL:
+                try:
+                    await self._signalr.resubscribe()
+                    self._last_resubscribe = now
+                    _LOGGER.debug(
+                        "PIA re-subscription sent (interval=%.0fs)",
+                        since_last_resub,
+                    )
+                except Exception:
+                    _LOGGER.debug("PIA re-subscription failed", exc_info=True)
 
         # Merge REST + SignalR data
         signalr_ok = self._signalr.connected if self._signalr else False

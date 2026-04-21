@@ -5,6 +5,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.23.0] - 2026-04-21
+
+### Fixed
+
+- **SignalR connection drops due to excessive traffic** — Reduced PIA resubscribe frequency from every 60 seconds to every 10 minutes; the SCU pushes state changes automatically, resubscribe only refreshes slow-changing values (battery SOC, solar current). This cuts outbound traffic from ~480 to ~48 messages/hour, preventing server-side disconnects.
+- **SignalR reconnection stuck in exponential backoff** — After 5 consecutive connection failures, forces an OAuth2 token refresh and resets backoff instead of silently retrying every 15 minutes.
+- **Race condition in connection-lost handler** — Replaced `call_soon_threadsafe` with direct `async_create_task` since the listen loop already runs on the HA event loop; prevents silently swallowed reconnect errors.
+- **Potential infinite 401 retry loop** — Added recursion guard to API `_request()` to prevent endless token refresh cycles when the refresh token itself is expired.
+
+### Changed
+
+- **Reconnect backoff logging** — Upgraded from debug to warning level so reconnect-skipped events are visible in HA logs with attempt count.
+
 ## [2.22.0] - 2026-04-21
 
 ### Added

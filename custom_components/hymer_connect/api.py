@@ -110,6 +110,7 @@ class HymerConnectApi:
         data: str | None = None,
         json_data: dict[str, Any] | None = None,
         headers: dict[str, str] | None = None,
+        _retried: bool = False,
     ) -> dict[str, Any] | list[Any]:
         """Make an API request."""
         try:
@@ -117,14 +118,15 @@ class HymerConnectApi:
                 method, url, headers=headers, data=data, json=json_data
             ) as resp:
                 if resp.status == 401:
-                    if self._refresh_token:
+                    if self._refresh_token and not _retried:
                         await self._refresh_access_token()
                         if headers and HEADER_ACCESS_TOKEN in headers:
                             headers[HEADER_ACCESS_TOKEN] = self._access_token
                         elif headers and "Authorization" in headers:
                             headers["Authorization"] = f"Bearer {self._access_token}"
                         return await self._request(
-                            method, url, data=data, json_data=json_data, headers=headers
+                            method, url, data=data, json_data=json_data,
+                            headers=headers, _retried=True,
                         )
                     raise HymerConnectAuthError("Authentication failed")
                 if resp.status == 403:
