@@ -10,6 +10,23 @@
 
 Custom integration to connect your HYMER / Erwin Hymer Group motorhome or caravan to [Home Assistant](https://www.home-assistant.io/).
 
+Unlike the official EHG app, this integration gives you **full Home Assistant power** over your vehicle:
+
+| | EHG App | HYMER Connect for HA |
+|---|:---:|:---:|
+| View sensor data (battery, GPS, temps, water) | ✅ | ✅ |
+| Control lights, heater, fridge, boiler | ✅ | ✅ |
+| 12V main switch on/off | ✅ | ✅ |
+| **Automations & scripts** (e.g. turn off 12V at 10 PM) | ❌ | ✅ |
+| **Energy dashboard** (solar kWh, battery history, voltage trends) | ❌ | ✅ |
+| **Notifications** (door left open, battery low, SCU offline) | ❌ | ✅ |
+| **History & statistics** (long-term sensor data) | ❌ | ✅ |
+| **Custom dashboards** (desktop + mobile optimized) | ❌ | ✅ |
+| **Combine with other HA devices** (home, weather, calendar) | ❌ | ✅ |
+| **Template sensors** (corrected engine status, computed solar power) | ❌ | ✅ |
+| **Always-on monitoring** (24/7, not just while app is open) | ❌ | ✅ |
+| **~100 entities** (vs ~20 in the EHG app) | ❌ | ✅ |
+
 > **⚠️ Important:** Real-time sensor data (70+ entities: GPS, battery, doors, heater, fridge, etc.) requires an **EHG Remote Access Refresh Token**. This token must be captured **once** from your phone using mitmproxy during the initial setup. Without it, only basic vehicle metadata (model, VIN, year) is available. See [Obtaining the EHG Refresh Token](#obtaining-the-ehg-refresh-token) for the step-by-step guide.
 
 > **v2.23.1** — **Stable connection & Energy dashboard!** Optimized SignalR traffic to prevent server-side disconnects. Two-tier polling: lightweight refresh every 60s + full resubscribe every 10 min. Auto-recovery after 5 consecutive failures with OAuth2 token refresh. ~100 entities with persistent command control for lights, heater, fridge, 12V switch, and more. See [SignalR connection architecture](docs/signalr-connection.md) for details.
