@@ -5,266 +5,276 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [2.19.5] - 2026-04-21
+## [2.22.0] - 2026-04-21
+
+### Added
+
+- **12V main switch availability guard** — All light entities and the water pump switch become unavailable in HA when the 12V main switch is off, preventing interaction with components that won't respond without habitation power. The main switch itself, fridge, boiler, and heater remain controllable regardless of 12V state.
+
+## [2.21.1] - 2026-04-21
 
 ### Fixed
 
-- **UpdateTokens ACCESS_DENIED after token refresh** — The OAuth2 `accessToken` sent in `UpdateTokens` was read at the start of the method, before `get_remote_access_token()` which could trigger a 401 → auto-refresh of the OAuth2 token. The `accessToken` in the UpdateTokens message was then stale/expired. Now reads `api.access_token` **after** the remote-access-token exchange, ensuring it always contains the freshly refreshed value. This was the root cause of commands failing after ~30 minutes
+- **`bt_connected` → `scu_flag_5`** — slot 30/12 is not BT connected (phones were remote while value was `True`); reverted to unknown flag pending identification
 
-## [2.19.4] - 2026-04-21
+## [2.21.0] - 2026-04-21
 
-### Fixed
+### Changed
 
-- **RuntimeError: Concurrent call to receive()** — The periodic `UpdateTokens` refresh and SCU-reconnect re-auth tried to wait for the server response while the listen loop was already reading from the WebSocket. Now uses fire-and-forget mode (`wait_response=False`) when the listen loop is active. The completion response is handled by the listen loop instead
-- **UpdateTokens completion logging** — The `_handle_message` handler now processes `MSG_TYPE_COMPLETION` responses, so `UpdateTokens SUCCESS` is properly logged even in fire-and-forget mode
+- **SCU diagnostic sensors renamed** — bus 30 slots 8-14 renamed from generic `gps_sensor_N` to descriptive names based on observed S600 values and S700 mapping (unconfirmed best-guess, pending vehicle validation):
+  - `(30, 8)` → `scu_flag_1` — unknown flag (observed: `False`)
+  - `(30, 9)` → `lte_connected` — likely LTE connection state (observed: `True`)
+  - `(30, 10)` → `scu_flag_2` — unknown flag (observed: `False`)
+  - `(30, 11)` → `paired_bt_devices` — likely paired BT device count (observed: `3`)
+  - `(30, 12)` → `bt_connected` — likely BT device connected (observed: `True`)
+  - `(30, 13)` → `scu_flag_3` — unknown flag (observed: `False`)
+  - `(30, 14)` → `scu_flag_4` — unknown flag (observed: `False`)
+
+## [2.20.0] - 2026-04-21
+
+### Added
+
+- **GPS UTC time sensor** — `sensor.hymer_gps_utc_time` (bus 30, slot 2) exposes SCU internal time
+- **SCU diagnostic sensors (bus 30, slots 8-14)** — 7 new sensors (`SCU slot 30/8` through `30/14`) disabled by default; enable to discover potential LTE/SCU telemetry data
 
 ## [2.19.3] - 2026-04-21
 
 ### Fixed
 
-- **Remote-access commands stop working after ~30 minutes** — The `ehgAccessToken` sent via `UpdateTokens` at connection time expires after ~30 minutes. System commands (12V switch) kept working, but remote-access commands (lights, heater, fridge, boiler) were silently rejected by the Azure SignalR hub. Now refreshes `UpdateTokens` every 15 minutes to keep the token valid. No more integration reload needed after extended use
-- **Components not controllable after 12V ON** — After toggling 12V ON, the SCU reboots and registers a new session at the Azure hub. The integration's old `UpdateTokens` routing became stale, causing all remote-access commands to fail silently. Now detects SCU reconnect (`scu_connected` false→true) and automatically re-sends `UpdateTokens` + PIA subscriptions within ~5 seconds
-
-### Added
-
-- **`UPDATE_TOKENS_INTERVAL` constant** (15 min) — Configurable interval for periodic `UpdateTokens` refresh, well below the ~30 min expiry window
-- **SCU reconnect detection** — Tracks `scu_connected` sensor transitions and triggers automatic re-authentication when the SCU comes back online after a 12V power cycle
-
-## [2.19.2] - 2026-04-20
-
-### Fixed
-
-- **Reverted outside LED bar entity** — Bus 24 is the DALI master brightness/color_temp channel, not the outside light. The EHG app sends `(24,2)` and `(24,3)` alongside every individual light toggle as a global brightness/color_temp context. Sending commands to bus 24 has no effect on the outside LED bar. The outside light entity is removed until a dedicated mitmproxy trace captures the real bus ID
-
-### Removed
-
-- **`light.hymer_outside_light` entity** — temporarily removed pending discovery of the correct bus ID via EHG app trace
-
-## [2.19.1] - 2026-04-20
-
-### Fixed
-
-- **Outside LED bar light fixed** — Bus 24 uses brightness-only control (no bool on/off). The EHG app sends `(24,2)=brightness` and `(24,3)=color_temp` only, never a `(24,1)=bool` toggle. Sending `(24,1)=true` previously activated the "all Wohnen" group, turning on all living area lights. Now uses `brightness=0` for off and `brightness>0` for on, matching the EHG app behavior (confirmed via mitmproxy trace 2026-04-05)
-- **Brightness clamping** — SCU reports brightness=10000 on bus 24 when off (sentinel value). Values >100 are now clamped to 100 to prevent 2550% brightness display
-
-## [2.19.0] - 2026-04-20
-
-### Fixed
-
-- **SignalR keepalive and dead-connection detection** — Replaced the blocking WebSocket listen loop with a timeout-based loop that sends client-side pings every 30 seconds. Dead/half-open connections are now detected within ~90 seconds instead of ~10 minutes. Reduces `STALE_DATA_TIMEOUT` from 10 min → 3 min as a secondary safety net
-- **Automatic reconnect + retry on command failure** — All controllable entities (lights, switches, climate, fridge, boiler, heater energy) now route commands through a central retry mechanism. If a send fails, the integration reconnects and retries once before raising an error. No more silent command drops on zombie connections
-- **Unified connection health check** — Consolidated 4 duplicated `_ensure_connected()` methods (light, switch, climate, select) into a single `async_ensure_signalr_healthy()` on the coordinator that checks both connection state and staleness
-
-### Changed
-
-- **Entity translation cleanup** — Synced `strings.json` with actual sensor definitions: removed stale entries (BMS, EBL diagnostic slots, fuel/outside-temp/service-distance, parking brake, cruise control, standby heater, fridge ECO switch, heater energy select), added missing entries (odometer, speed, coolant temp, sliding/rear doors)
+- **Remote-access commands stop working after ~30 minutes** — Periodic `UpdateTokens` refresh every 15 min
+- **Components not controllable after 12V ON** — Auto re-auth on SCU reconnect (`scu_connected` false→true)
 
 ## [2.18.0] - 2026-04-20
 
 ### Added
 
-- **Shore power binary sensor** — New `binary_sensor.hymer_shoreline_connected` exposes the EBL 402 shore power detection (bus 3, sid 22). Shows whether the 230V Landstrom cable is plugged in. Added to the Power section of the dashboard
+- **Shore power binary sensor** — `binary_sensor.hymer_shoreline_connected` (bus 3, sid 22, EBL 402)
 
 ### Changed
 
-- **Sensor rename** — `switch_22` renamed to `shoreline_connected` in the PIA decoder to match the S700 registry and actual function (EBL 402 shore power input)
+- **`switch_22` → `shoreline_connected`** — renamed in PIA decoder
 
 ## [2.17.0] - 2026-04-20
 
 ### Fixed
 
-- **SignalR auto-recovery after 12V toggle** — When commanding 12V ON from HA, the SCU reboots as habitation power comes up, killing the SignalR WebSocket. Previously, the dead-connection detector was bypassed indefinitely because `main_switch` in sensor data was still `"Off"` (the confirmation never arrived). Now:
-  - **Optimistic `main_switch` update** — Immediately sets `main_switch` to `"On"`/`"Off"` in SignalR sensor data when commanding the 12V switch, so the standby bypass cannot block the 10-minute stale-data reconnect
-  - **Standby safety cap (30 min)** — Even in genuine standby (`main_switch == "Off"`), forces reconnect after 30 minutes of silence as a safety net (fixes #46)
-- **No more manual integration reload** required after 12V toggle — the integration self-heals within 10 minutes
+- **SignalR auto-recovery after 12V toggle** — optimistic `main_switch` update prevents standby bypass from blocking reconnect; 30-min safety cap added (fixes #46)
 
 ## [2.16.0] - 2026-04-20
 
 ### Changed
 
-- **Slots (1,11) and (1,14) remapped from doors to vehicle warnings** per S700 PR #44:
-  - (1,11) `door_sliding` → `wiping_water_empty` — washer fluid low warning
-  - (1,14) `door_rear` → `motor_oil_warning` — engine oil warning
-  - These slots never updated as doors on S600; warning indicators match the S700 decompiled registry
-- **Dashboard: new “⚠️ Vehicle Warnings” section** — washer fluid, motor oil, coolant grouped together
-- **Dashboard: Doors section** cleaned to only Driver + Passenger + Lock
-
-### Removed
-
-- **`door_sliding` and `door_rear` binary sensors** — replaced by warning indicators
+- **(1,11) and (1,14) remapped** from doors to vehicle warnings per S700 PR #44
+- **Dashboard: Vehicle Warnings section** added, Doors cleaned up
 
 ## [2.15.2] - 2026-04-20
 
 ### Added
 
-- **Discovery logging for unmapped PIA sensors** — tracks value changes for all sensors. Unmapped slots log at INFO level (`DISCOVERY unmapped (bus,sensor): old → new`), mapped sensors at DEBUG level. Enable via `configuration.yaml`:
-  ```yaml
-  logger:
-    logs:
-      custom_components.hymer_connect.pia_decoder: info
-  ```
+- **Discovery logging for unmapped PIA sensors** — enable via logger config at `info` level
 
 ### Fixed
 
-- **Dashboard cleanup** — removed ~15 stale entity references (ambient_temperature, speed, rpm, engine_hours, GPS satellites/heading/altitude, tire_pressure, etc.)
-- **BMS Time Remaining removed from dashboard** — value (19 min at 259Ah) doesn’t correspond to any meaningful metric
-
-### Documentation
-
-- **(1,9) outside_temperature confirmed** as Mercedes cockpit “Außentemperatur” (bumper sensor, verified 13→16°C tracking weather)
+- **Dashboard cleanup** — removed stale entity references, BMS Time Remaining
 
 ## [2.15.1] - 2026-04-20
 
 ### Fixed
 
-- **S600 door mapping corrected (take 2)** — v2.15.0 swapped the wrong direction. Correct mapping confirmed at vehicle:
-  - (1,12) = `door_driver` — the sensor previously labelled "Passenger" actually reacted to the driver door
-  - (1,13) = `door_passenger` — the sensor previously labelled "Sliding" actually reacted to the passenger door
-  - (1,11) `door_sliding` and (1,14) `door_rear` do NOT update on S600 (kept for other models)
-- **Dashboard restored** Driver door entity
+- **S600 door mapping corrected (take 2)** — v2.15.0 had the swap reversed. Correct mapping:
+  - (1,12) = `door_driver`, (1,13) = `door_passenger`
+  - (1,11) `door_sliding` and (1,14) `door_rear` don't update on S600
 
 ## [2.15.0] - 2026-04-20
 
 ### Fixed
 
 - **SignalR auto-reconnect on connection loss** — when the WebSocket listen loop ends unexpectedly, the coordinator now triggers an immediate reconnect (resets backoff, schedules refresh) instead of waiting up to 15 minutes for the next poll + exponential backoff cycle. Fixes the issue where the integration became unresponsive after a connection drop and required manual reload.
-- **Light/switch/climate/select commands auto-reconnect** — all controllable entities now attempt to reconnect SignalR before sending a command. If reconnection fails, a `HomeAssistantError` is raised with a user-visible toast message instead of silently failing. No more "press button, nothing happens" after a connection drop.
+- **Light/switch/climate/select commands auto-reconnect** — all controllable entities now attempt to reconnect SignalR before sending a command. If reconnection fails, a `HomeAssistantError` is raised with a user-visible toast message instead of silently failing.
 - **S600 door sensor mapping corrected** — confirmed at vehicle (2026-04-20):
-  - (1,11) `door_driver` → `door_passenger` — physically tested, was mislabelled
-  - (1,12) `door_passenger` → `door_sliding` — physically tested, was mislabelled
-  - (1,13) and (1,14) do not update on S600 (no rear door sensors via SCU)
-  - Note: S700 (PR #44) maps these slots differently — per-vehicle overlays needed
+  - (1,11) `door_driver` → `door_passenger` — physically tested
+  - (1,12) `door_passenger` → `door_sliding` — physically tested
+  - (1,13)/(1,14) do not update on S600 (no rear door sensors via SCU)
 
 ### Added
 
 - **Truma heater energy source: 5 modes** matching physical Truma Combi panel:
-  - `Diesel` (FUEL), `Mix 900W` (MIX 1), `Mix 1800W` (MIX 2), `Electric 900W` (EL 1), `Electric 1800W` (EL 2)
-  - Previously only had 4 options (Diesel, Both 900W, Both 1800W, Electric)
-- **VENT fan mode read-only display** — when VENT is set on the physical Truma panel, HA now shows `fan_mode: Vent` and `hvac_action: Fan`. VENT cannot be controlled via HA (EHG app also cannot control it — panel-only feature).
-- **`on_connection_lost` callback** in `HymerSignalRClient` — notifies coordinator immediately when WebSocket closes
+  - Diesel (FUEL), Mix 900W (MIX 1), Mix 1800W (MIX 2), Electric 900W (EL 1), Electric 1800W (EL 2)
+- **VENT fan mode read-only display** — when VENT is set on the physical Truma panel, HA shows `fan_mode: Vent` and `hvac_action: Fan`
+- **`on_connection_lost` callback** in `HymerSignalRClient`
 
 ### Changed
 
-- **Heater energy select labels** — renamed from technical names to match Truma panel: "Both 900W" → "Mix 900W", "Electric" → "Electric 900W"/"Electric 1800W"
-- **`heater_fan_speed` value labels** — added `VENT` → `Vent` mapping in PIA decoder
+- **Heater energy select labels** — renamed to match Truma panel display
+- **`heater_fan_speed` value labels** — added VENT mapping
 
 ## [2.14.0] - 2026-04-20
 
 ### Fixed
 
-- **Stale SignalR send channel auto-detection** — after sending a switch command, verify SCU readback after 15s. If readback doesn't match, marks connection as dead for automatic reconnect.
-- **SignalR send error handling** — catches send exceptions instead of silently failing.
-- **Dashboard: removed stale current_gear entity** from Vehicle tab.
+- **Stale SignalR send channel auto-detection** — after sending a switch command, verify SCU readback after 15s. If the readback doesn't match the commanded state, the connection is marked as dead and the coordinator reconnects automatically on the next poll. Fixes recurring issue where commands appeared to send but SCU ignored them.
+- **SignalR send error handling** — `send_pia_request` now catches send exceptions and marks the connection as dead instead of silently failing.
+- **Dashboard: removed stale `current_gear` entity** from Vehicle tab (remapped to `bms_state_of_health` in v2.12.0).
 
 ## [2.13.0] - 2026-04-20
 
 ### Changed
 
-- **Dashboard: BMS moved to Power tab**, current sensor labels clarified
-- **Diagnostic sensors for EBL slots (3,8)/(3,9)** — verify water level hypothesis
-- **Bus 3/8 documentation corrected** in sensor-map.md
-- **Power Flow diagram** added to docs
+- **Dashboard: BMS section moved to Power tab** — removed duplicate from Vehicle tab
+- **Dashboard: current sensor labels clarified** — "Load Draw" (EBL), "Net Battery Current" (BMS)
+- **Diagnostic sensors for EBL slots (3,8) and (3,9)** — temporary sensors to verify if these are water levels (compare with bus 22/25)
+
+### Documentation
+
+- **Power Flow diagram** added to sensor-map.md explaining Solar → BMS → EBL current relationship
+- **Bus 3 annotations corrected** — (3,8)/(3,9) flagged as unverified "light levels", likely water levels
+- **Bus 8 labels corrected** — all 7 slots are Voltronic MPPT solar data, not water/vents/tire
 
 ## [2.12.0] - 2026-04-20
 
 ### Fixed
 
-- **Bus 99 remapped from chassis CAN to BOS LUX BMS** — The S600 CrossOver has a BOS 2.0 LiFePO4 battery (4×80Ah), not AGM. Bus 99 is the battery management system, matching PR #44 S700 observations:
-  - (99,1) `adblue_temp` → `bms_voltage` (V) — reads 13.35V = lithium pack voltage
-  - (99,2) `engine_torque` → `bms_current` (A) — reads -0.38A = discharge current
-  - (99,3) `ambient_temp` → `bms_temperature` (°C) — pack cell temperature
-  - (99,5) `fuel_range` → `bms_time_remaining` (min) — estimated runtime (fixes #14)
-  - (99,6) `current_gear` → `bms_state_of_health` (%) — reads 100% = new battery
-  - (99,7) `total_fuel_used` → `bms_capacity_remaining` (Ah)
-  - (99,9) `cruise_control` → `bms_charge_detected`
-  - (99,10) `dpf_status` → `bms_device_failure`
-
-### Added
-
-- **BOS LUX BMS section** in dashboard Power tab with voltage, current, temperature, SoH, capacity, time remaining
-
-### Removed
-
-- **Old bus 99 sensors** — adblue_temp, engine_torque, fuel_range, current_gear, total_fuel_used, dpf_status removed
+- **Bus 99 remapped to BOS LUX BMS** — bms_voltage, bms_current, bms_temperature, bms_time_remaining, bms_state_of_health, bms_capacity_remaining (fixes #14)
 
 ## [2.11.0] - 2026-04-20
 
 ### Fixed
 
-- **Bus 1 slots 2, 5, 9 remapped** — Confirmed via EHG app correlation:
-  - (1,2) `speed` → `fuel_level` (%) — EHG app shows "Dieselfüllstand 73%", sensor read 72.72 (fixes #16)
-  - (1,5) `rpm` → `distance_to_service` (km) — reads 1670 km to next service, not RPM
-  - (1,9) `coolant_temp` → `outside_temperature` (°C) — reads 9°C while parked cold = ambient, not coolant
-
-### Removed
-
-- **Old sensor entities** — `speed`, `rpm`, `coolant_temp` removed (mislabelled). Old entities show unavailable until deleted
-
-### Added
-
-- **New sensors** — `fuel_level`, `distance_to_service`, `outside_temperature`
-- **Dashboard** — Fuel level added to Vehicle > Driving section
+- **Bus 1 slots 2, 5, 9 remapped** — speed→fuel_level, rpm→distance_to_service, coolant_temp→outside_temperature (fixes #16)
 
 ## [2.10.1] - 2026-04-20
 
 ### Fixed
 
-- **SignalR stays alive during 12V standby** — When 12V is off, the SCU enters standby (chassis battery, no sensor data). The dead-connection detector (10 min no data) no longer recycles the WebSocket during standby, preventing exponential backoff and connection loss. Commands like 12V-ON can still reach the SCU through the idle connection (fixes #45)
-- **12V switch confirmation dialog** — Toggle confirmation on both on/off actions: "Toggle 12V main switch? This controls all habitation devices."
-- **Dashboard Standheizung entity IDs** — Fixed entity references to match HA-generated IDs from translation keys (`auxiliary_heater_available`, `auxiliary_heater`)
+- **SignalR stays alive during 12V standby** — Dead-connection detector skips recycling when main_switch="Off" (fixes #45)
+- **12V switch confirmation dialog** — Bidirectional toggle confirmation
+- **Dashboard Standheizung entity IDs** — Fixed to match HA translation-based IDs
 
 ## [2.10.0] - 2026-04-20
 
 ### Fixed
 
-- **Bus 1 slots 17-22 remapped from vehicle lights to chassis state flags** — Slots (1,17)-(1,22) were mislabelled as headlamp/high beam/parking light/fog lights/turn signal. They are actually chassis CAN state flags: parking brake, auxiliary heater (Standheizung), cruise control, downhill assist, and coolant warning. Confirmed by (1,18) reading "ON" while parked with engine off = parking brake engaged, not headlamp. Matches PR #44 S700 observations — bus 1 layout is identical on S600 and S700
-- **12V main switch OFF stays off in HA** — 30s holdoff prevents stale "On" readback from overwriting commanded OFF during SCU reconnection (v2.9.9)
+- **Bus 1 slots 17-22 remapped** — Were vehicle lights, actually chassis state flags (parking brake, aux heater, cruise control, etc.). Confirmed by (1,18)="ON" while parked = parking brake
 
 ### Removed
 
-- **Vehicle lights section removed from dashboard** — Replaced by "Chassis State" section with the correctly labelled sensors (parking brake, aux heater, cruise control, downhill assist, coolant warning)
-- **Old binary sensors** — `headlamp`, `high_beam`, `parking_light`, `fog_front`, `fog_rear`, `turn_signal` entities removed. Users will see these as "unavailable" until deleted from the entity registry
+- **Vehicle light binary sensors** — headlamp, high_beam, parking_light, fog_front, fog_rear, turn_signal removed (mislabelled)
 
 ### Added
 
-- **New chassis state binary sensors** — `parking_brake`, `standheizung_available`, `standheizung_state`, `cruise_control_can`, `downhill_assist`, `coolant_warning`
+- **Chassis state sensors** — parking_brake, standheizung_available/state, cruise_control_can, downhill_assist, coolant_warning
 
 ## [2.9.9] - 2026-04-20
 
 ### Fixed
 
-- **12V main switch OFF stays off in HA** — After commanding OFF, the SCU briefly disconnects (it runs on chassis battery), reconnects after ~5s, and pushes a stale cached `"On"` value that overwrote the commanded OFF state. The switch now holds the optimistic OFF for 30 seconds to ride through this bounce-back, matching the EHG app behavior. Confirmed via mitmproxy trace: OFF at 19:56:02 → SCU disconnect 19:56:03 → stale "On" readback 19:56:08. The EHG app ignores this readback and shows OFF (fixes #40 for 12V switch)
+- **12V switch OFF holds state through SCU reconnection** — 30s holdoff prevents stale "On" readback from overwriting commanded OFF (fixes #40 for 12V switch)
 
 ## [2.9.8] - 2026-04-19
 
 ### Changed
 
-- **Dashboard redesigned with clear visual hierarchy** — Section headers now use styled markdown banners (colored emoji + bold titles) that are visually distinct from actionable controls and read-only status tiles. Controls (switches, selects, climate) are grouped under "Controls" sub-headers; status-only sensors under "Status" sub-headers. Every view follows the same pattern: header → controls → status. Fixes the problem where headers, buttons, and info tiles all looked identical on mobile
+- **Dashboard redesigned with clear visual hierarchy** — Section headers, controls, and status tiles are now visually distinct
 
 ## [2.9.7] - 2026-04-19
 
 ### Fixed
 
-- **Fridge status shows door state** — Changed labels from Running/Off/Standby to Open/Closed matching EHG app's Geschlossen/Offen
-- **Energy Source tile shows 'entity not found'** — Dashboard corrected from `select.hymer_heater_energy_source` to `select.hymer` (HA truncated the entity ID)
-- **Fresh water level inverted** — Tank showing 100% when empty, 0% when full (fixes #43)
-- **Grey water level inverted** — Same inversion issue as fresh water (fixes #41)
+- **Fridge status shows door state** — Labels changed to Open/Closed matching EHG app
+- **Energy Source dashboard tile** — Corrected entity ID to `select.hymer`
+- **Fresh water level inverted** — 100% when empty fixed (fixes #43)
+- **Grey water level inverted** — Same inversion fix (fixes #41)
 
 ## [2.9.0] - 2026-04-19
 
 ### Fixed
 
-- **12V main switch now works** — The switch was sending `bool_value=True/False` but the SCU expects `str_value="On"/"Off"` on bus 3, sid 1. Confirmed via mitmproxy capture. The switch now correctly sends string values matching the EHG app protocol (fixes #39)
+- **12V main switch now works** — Switch sends `str_value="On"/"Off"` instead of `bool_value` (fixes #39)
 
 ### Added
 
-- **Heater energy source select** — New `select.hymer_heater_energy_source` entity with options: Diesel, Both 900W, Both 1800W, Electric. Sends the correct multi-sensor command: (58,4) + (58,6) as paired strings, plus (58,9) uint for watt when in "Both" mode. Note: "Electric" only works with shore power connected (fixes #42)
-- **String value support for commands** — `build_light_command` and `send_light_command` now support `str_value` parameter for switches that use string-based on/off
-- **Modern tile-based dashboard** — Complete dashboard redesign using HA tile cards for mobile-friendly, touch-optimized layout. New Overview tab with at-a-glance gauges, switches, thermostat, and map. Zero HACS frontend dependencies
+- **Heater energy source select** — Diesel / Both 900W / Both 1800W / Electric (fixes #42)
+- **String value support for switch commands**
+- **Modern tile-based dashboard**
+
+## [2.8.8] - 2026-04-19
+
+### Added
+
+- **Refresh command after subscription** — Sends a PIA poll/refresh command (field 9) after subscribing to sensor data, matching the EHG app's "aktualisiere" behavior. This forces the SCU to re-report all current states including correct light on/off values, fixing stale cached states after HA restart
+
+## [2.8.7] - 2026-04-19
 
 ### Changed
 
-- **Dashboard reorganized** — 12V switch moved to Power tab, water pump to Water tab. Main switch separated from Solar section. Energy Source selector added to Climate tab
+- **Fridge ECO is now a separate switch** — `switch.hymer_fridge_eco_ctrl` (Leise) is an independent toggle that can be enabled on top of any cooling step, matching the EHG app behavior. Previously ECO was a mutually exclusive option in the select dropdown
+- **Fridge select simplified** — Options are now Off/1/2/3/4/5 only. ECO removed from the dropdown since it's an overlay, not a mode
+- **Dashboard** — Fridge section now shows: Cooling Step (Kühlstufe) select, Quiet Mode (Leise) toggle, Door (Tür) status — matching the EHG app layout
+
+## [2.8.6] - 2026-04-19
+
+### Fixed
+
+- **Fridge command timing** — Added 500ms delay between power-on and cooling step commands to give the SCU time to process. Removed unnecessary ECO-off command when setting cooling steps (matching EHG app behavior)
+
+## [2.8.5] - 2026-04-19
+
+### Added
+
+- **Heater fan speed control (experimental)** — Fan mode Eco/High available in the Truma heater climate entity. This sends `bus=58, sid=5` with `ECO` or `High` string values. Note: the EHG app does NOT expose this control — use at your own risk. Test at the vehicle before relying on it
+- **Thermostat card Heat/Off buttons** — Added explicit HVAC mode feature to the dashboard thermostat card
+
+## [2.8.4] - 2026-04-19
+
+### Fixed
+
+- **Dashboard entity ID alignment** — Fixed 14 entity IDs in the dashboard that didn't match HA's auto-generated names from translation keys (e.g. `sensor.hymer_battery_soc` → `sensor.hymer_battery_level`, `sensor.hymer_coolant_temp` → `sensor.hymer_coolant_temperature`, `binary_sensor.hymer_lock_status` → `binary_sensor.hymer_lock`)
+
+## [2.8.3] - 2026-04-19
+
+### Fixed
+
+- **Clean entity IDs** — Device name simplified from `HYMER HYMER Connect (HYMER)` to `HYMER`, producing clean entity IDs like `sensor.hymer_battery_voltage` instead of `sensor.hymer_hymer_connect_hymer_battery_voltage`. **Requires removing and re-adding the integration for existing installations**
+- **Dashboard** — All entity references updated to use clean `hymer_` prefix
+
+## [2.8.2] - 2026-04-19
+
+### Fixed
+
+- **Fridge select auto-powers on** — Selecting a cooling step (1-5) or ECO now automatically powers on the fridge first (bus 34, sid 1). Selecting Off disables ECO and powers off. Previously the fridge stayed off because only the cooling step was sent without the power-on command
+
+## [2.8.1] - 2026-04-19
+
+### Fixed
+
+- **Outside light** — Moved from switch (bus 25) to proper light entity (bus 24) with brightness and color temperature control, matching all other interior lights
+- **Removed duplicate** — Outside light no longer appears in both Lights and Controls sections of the dashboard
+- **Bus 25 sensor** — Reverted bus 25 sid 1 back to grey water sensor (was incorrectly mapped as outside light)
+
+## [2.8.0] - 2026-04-19
+
+### Added
+
+- **Climate entity for Truma heater** — `climate.truma_heater` with ON/OFF and target temperature (5-30°C). Sends multi-sensor PIA commands (setpoint + fuel type) matching the official EHG app protocol
+- **Select entity for fridge mode** — `select.fridge_mode_ctrl` with options: Off, 1-5 (cooling steps), ECO. Controls bus 34 sensors (sid 1=power, sid 2=ECO, sid 3=cooling step)
+- **Select entity for boiler mode** — `select.boiler_mode_ctrl` with options: Off, ECO, Turbo. Sends bus 58 sid 5 with values OFF/ECO/HOT + fuel type
+- **Outside light switch** — `switch.outside_light_ctrl` on bus 25, sid 1
+- **Multi-sensor PIA command builder** — `build_multi_sensor_command()` in pia_decoder.py supports string and float protobuf fields for heater/boiler commands
+- **New Controls view** in dashboard with all switches
+
+### Fixed
+
+- **Water pump switch** — Corrected from bus 22/sid 1 to bus 3/sid 3 (confirmed via mitmproxy capture)
+- **Sensor map** — Bus 34 correctly mapped as fridge control (sid 1=power, 2=ECO, 3=cooling step), bus 25 as outside light
+- **Heater fan speed labels** — Added "HOT" → "Hot" mapping for boiler turbo mode
+
+### Removed
+
+- **Heater switch** — Replaced by the new climate entity which provides proper thermostat controls
+
+### Changed
+
+- **Dashboard Climate view** — Replaced sensor-only heater display with thermostat card, boiler select, and fridge select controls
 
 ## [2.7.0] - 2026-04-19
 
@@ -293,6 +303,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - **Stale CAN sensor workaround documentation** — Added dashboard README section with HA template sensor workarounds for stale cached CAN values (engine running, speed, RPM, engine torque) and known limitations (DPF status, coolant temperature)
+
+## [2.6.1] - 2026-04-07
+
+### Fixed
+
+- **Solar/sensor data going stale** — Reverted resubscription throttle from 5min back to every poll (60s). The SCU only pushes fresh sensor data in response to subscription requests — throttling resubscriptions caused sensors like solar voltage/current to show outdated values
+
+## [2.6.0] - 2026-04-07
+
+### Fixed
+
+- **Stale data / silent disconnection** — SignalR WebSocket connections silently died when the Azure token expired (~1h) and reconnection could fail indefinitely without backoff, leaving the dashboard stuck on stale data until HA reboot
+- **Excessive API calls** — REST metadata (VIN, model, URNs) was re-fetched on every 60s poll despite being static; now cached and refreshed every 10 minutes
+
+### Added
+
+- **Proactive connection recycling** — SignalR connection is proactively recycled after 50 minutes (before Azure token expiry at ~1h)
+- **Dead connection detection** — If no sensor data arrives for 10 minutes on a "connected" WebSocket, the connection is flagged as dead and recycled
+- **Exponential reconnection backoff** — Failed reconnection attempts use exponential backoff (60s → 120s → … → 15min cap) to avoid hammering the API when the server is unavailable
+- **Improved `connected` property** — Now checks actual WebSocket state (`ws.closed`) in addition to the internal flag
 
 ## [2.5.4] - 2026-04-06
 
