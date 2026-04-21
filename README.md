@@ -457,6 +457,26 @@ If you have a different EHG vehicle and want to help expand compatibility:
      logs:
        custom_components.hymer_connect: debug
    ```
+
+   For production use, the recommended logger configuration is:
+   ```yaml
+   logger:
+     default: warning
+     logs:
+       custom_components.hymer_connect: warning
+       custom_components.hymer_connect.signalr_client: info
+       custom_components.hymer_connect.pia_decoder: warning
+       custom_components.hymer_connect.coordinator: warning
+   ```
+
+   | Logger | Level | What it shows |
+   |--------|-------|---------------|
+   | `hymer_connect` | `warning` | General integration warnings and errors |
+   | `signalr_client` | `info` | UpdateTokens refresh status (SUCCESS/ACCESS_DENIED), SCU reconnect events, connection lifecycle |
+   | `signalr_client` | `debug` | Every SignalR message (very verbose) |
+   | `pia_decoder` | `debug` | Every decoded PIA sensor value (very verbose) |
+   | `coordinator` | `info` | REST API polling, SignalR reconnect attempts |
+
 3. **Open a GitHub issue** with:
    - Your vehicle brand, model, and base vehicle (Sprinter/Ducato/Transit)
    - Which sensors work and which show "Unavailable"
