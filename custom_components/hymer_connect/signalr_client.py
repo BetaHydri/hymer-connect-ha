@@ -277,7 +277,7 @@ class HymerSignalRClient:
                 UPDATE_TOKENS_INTERVAL,
             )
             try:
-                await self._send_update_tokens()
+                await self._send_update_tokens(wait_response=False)
                 self._last_update_tokens = time.monotonic()
             except Exception:
                 _LOGGER.warning("Periodic UpdateTokens refresh failed", exc_info=True)
@@ -307,7 +307,7 @@ class HymerSignalRClient:
         await asyncio.sleep(2)
 
         try:
-            await self._send_update_tokens()
+            await self._send_update_tokens(wait_response=False)
             self._last_update_tokens = time.monotonic()
             _LOGGER.info("UpdateTokens refreshed after SCU reconnect")
         except Exception:
@@ -326,12 +326,19 @@ class HymerSignalRClient:
                 "Resubscribe after SCU reconnect failed", exc_info=True
             )
 
-    async def _send_update_tokens(self) -> None:
+    async def _send_update_tokens(self, wait_response: bool = True) -> None:
         """Send UpdateTokens invocation to authenticate the SignalR connection.
 
         Uses the EHG refresh token (ett=access-refresh) to obtain a fresh
         short-lived access token (ett=access) via the remoteAccessToken API,
         then sends it in the UpdateTokens invocation.
+
+        Args:
+            wait_response: If True, wait for the completion response from the
+                server (used during initial connect when the listen loop is not
+                running).  If False, fire-and-forget — the listen loop will
+                receive the completion message (used during periodic refresh
+                and SCU-reconnect re-auth while the listen loop is active).
         """
         if not self._ws:
             return
@@ -383,7 +390,11 @@ class HymerSignalRClient:
             json.dumps(msg) + SIGNALR_RECORD_SEPARATOR
         )
 
-        # Wait for completion response
+        if not wait_response:
+            _LOGGER.info("UpdateTokens sent (fire-and-forget, listen loop will handle response)")
+            return
+
+        # Wait for completion response (only during initial connect)
         async for raw_msg in self._ws:
             if raw_msg.type == aiohttp.WSMsgType.TEXT:
                 for part in raw_msg.data.split(SIGNALR_RECORD_SEPARATOR):
@@ -435,6 +446,25 @@ class HymerSignalRClient:
         msg_type = msg.get("type")
 
         if msg_type == MSG_TYPE_PING:
+            return
+
+        # Handle UpdateTokens completion responses (fire-and-forget mode)
+        if msg_type == MSG_TYPE_COMPLETION:
+            error = msg.get("error")
+            result_data = msg.get("result", {})
+            if error:
+                _LOGGER.error("UpdateTokens completion: error=%s", error)
+            else:
+                response = (
+                    result_data.get("response", {})
+                    if isinstance(result_data, dict)
+                    else {}
+                )
+                status = response.get("status", "UNKNOWN")
+                if status in ("OK", "SUCCESS", "ACCEPTED"):
+                    _LOGGER.info("UpdateTokens completion: SUCCESS")
+                else:
+                    _LOGGER.warning("UpdateTokens completion: status=%s", status)
             return
 
         target = msg.get("target", "")

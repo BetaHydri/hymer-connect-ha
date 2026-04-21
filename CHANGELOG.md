@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.19.4] - 2026-04-21
+
+### Fixed
+
+- **RuntimeError: Concurrent call to receive()** — The periodic `UpdateTokens` refresh and SCU-reconnect re-auth tried to wait for the server response while the listen loop was already reading from the WebSocket. Now uses fire-and-forget mode (`wait_response=False`) when the listen loop is active. The completion response is handled by the listen loop instead
+- **UpdateTokens completion logging** — The `_handle_message` handler now processes `MSG_TYPE_COMPLETION` responses, so `UpdateTokens SUCCESS` is properly logged even in fire-and-forget mode
+
 ## [2.19.3] - 2026-04-21
 
 ### Fixed
