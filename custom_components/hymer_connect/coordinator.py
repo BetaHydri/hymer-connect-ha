@@ -327,17 +327,23 @@ class HymerConnectCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                     remaining, self._consecutive_failures, _MAX_CONSECUTIVE_FAILURES,
                 )
         else:
-            # Re-send PIA subscriptions periodically (not every poll) to
-            # avoid excessive traffic that can cause server-side disconnects.
-            # The SCU pushes changes automatically; resubscribe only refreshes
-            # stale values like battery SOC and solar current.
+            # Send lightweight refresh every poll to keep SCU data flowing.
+            # The SCU stops pushing data after ~2-3 min of silence.
+            # This sends 1 message per poll (vs 8 for full resubscribe).
+            try:
+                await self._signalr.send_refresh()
+            except Exception:
+                _LOGGER.debug("PIA refresh failed", exc_info=True)
+
+            # Full resubscribe less frequently — reinitialises all sensor
+            # groups to pick up any missed subscriptions after reconnects.
             since_last_resub = now - self._last_resubscribe
             if since_last_resub >= _RESUBSCRIBE_INTERVAL:
                 try:
                     await self._signalr.resubscribe()
                     self._last_resubscribe = now
                     _LOGGER.debug(
-                        "PIA re-subscription sent (interval=%.0fs)",
+                        "Full PIA re-subscription sent (interval=%.0fs)",
                         since_last_resub,
                     )
                 except Exception:

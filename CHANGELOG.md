@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.23.1] - 2026-04-21
+
+### Fixed
+
+- **SCU data goes stale after 3 minutes** — The SCU stops pushing sensor data without periodic prodding. Restored a lightweight refresh command (1 message) every 60s poll to keep data flowing, while keeping the full 7-subscription resubscribe at every 10 min. Traffic: ~108 messages/hour (vs 480 pre-v2.23.0, vs 48 in v2.23.0 which was too low).
+
 ## [2.23.0] - 2026-04-21
 
 ### Fixed

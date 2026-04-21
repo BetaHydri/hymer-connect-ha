@@ -254,16 +254,16 @@ class HymerSignalRClient:
         _LOGGER.info("Sending refresh command to force SCU state update")
         await self.send_pia_request(refresh)
 
-    async def resubscribe(self) -> None:
-        """Re-send PIA subscriptions to trigger fresh sensor data from the SCU.
+    async def send_refresh(self) -> None:
+        """Send a lightweight refresh command to keep SCU data flowing.
 
-        The SCU only pushes updated values in response to subscription
-        requests.  Without periodic re-subscribing, many sensors (battery SOC,
-        solar current, fuel range, etc.) stay at their initial cached values.
+        The SCU stops pushing sensor data after ~2-3 minutes of silence.
+        This single-message refresh (field 9 = poll) prods the SCU to
+        re-report all current values without the overhead of re-sending
+        all 7 subscription requests.
 
         Also periodically refreshes UpdateTokens (every UPDATE_TOKENS_INTERVAL)
-        to keep the ehgAccessToken valid.  Without this, remote-access commands
-        stop working after ~30 minutes while the 12V switch keeps working.
+        to keep the ehgAccessToken valid.
         """
         if not self._ws or self._ws.closed or not self._connected:
             return
@@ -282,12 +282,24 @@ class HymerSignalRClient:
             except Exception:
                 _LOGGER.warning("Periodic UpdateTokens refresh failed", exc_info=True)
 
+        refresh = build_refresh_command()
+        await self.send_pia_request(refresh)
+
+    async def resubscribe(self) -> None:
+        """Re-send full PIA subscriptions + refresh to reinitialise all sensor groups.
+
+        Heavier than send_refresh() — sends all 7 subscription requests plus
+        a refresh command.  Use sparingly (every 10 min) to avoid excessive
+        traffic that can cause server-side disconnects.
+        """
+        if not self._ws or self._ws.closed or not self._connected:
+            return
+
         requests = build_subscription_requests()
         _LOGGER.debug("Re-sending %d PiaRequest subscriptions", len(requests))
         for payload in requests:
             await self.send_pia_request(payload)
 
-        # Send refresh command on resubscribe too
         refresh = build_refresh_command()
         await self.send_pia_request(refresh)
 
