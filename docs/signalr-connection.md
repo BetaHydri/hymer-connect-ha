@@ -126,8 +126,12 @@ When the 12V main switch is off, the SCU enters standby:
 - The WebSocket stays open but no sensor data is pushed
 - The stale-data timeout (`STALE_DATA_TIMEOUT = 3 min`) is **skipped** to avoid
   unnecessary reconnections during standby
-- A safety cap (`STANDBY_MAX_SILENCE = 30 min`) forces reconnect even in standby
-  to handle edge cases (e.g., 12V toggled back ON but `main_switch` sensor still cached as "Off")
+- A safety cap (`STANDBY_MAX_SILENCE = 30 min`) forces a **WebSocket reconnect**
+  even in standby. This only re-establishes the SignalR connection — it does
+  **NOT** send a 12V switch-on command. The 12V remains off until manually
+  switched back on by the user (via HA or EHG app). The reconnect handles the
+  edge case where 12V was physically toggled back ON at the vehicle but the
+  `main_switch` sensor is still cached as "Off" in HA
 
 ### SCU Reconnect (12V Off → On)
 
