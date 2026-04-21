@@ -31,6 +31,13 @@ MAX_CONNECTION_AGE = 50 * 60  # 50 min — reconnect before Azure token expires 
 STALE_DATA_TIMEOUT = 3 * 60   # 3 min — no data = connection is likely dead
 STANDBY_MAX_SILENCE = 30 * 60  # 30 min — even in standby, reconnect after this
 
+# UpdateTokens refresh — the ehgAccessToken sent via UpdateTokens expires
+# after ~30 min.  Without periodic refresh, remote-access commands (lights,
+# heater, fridge) are silently rejected while system commands (12V switch)
+# keep working.  The EHG app works around this by creating a fresh connection
+# every time it opens.  We refresh UpdateTokens proactively instead.
+UPDATE_TOKENS_INTERVAL = 15 * 60  # 15 min — refresh well before 30 min expiry
+
 # WebSocket keepalive — detect dead connections faster than STALE_DATA_TIMEOUT
 KEEPALIVE_INTERVAL = 30  # seconds between client-side pings
 KEEPALIVE_TIMEOUT = 90   # seconds with zero WebSocket activity = connection dead
@@ -66,6 +73,8 @@ class HymerSignalRClient:
         self._connected_at: float = 0.0  # monotonic timestamp of connection
         self._last_data_received: float = 0.0  # monotonic timestamp of last data
         self._last_send_failed: bool = False
+        self._last_update_tokens: float = 0.0  # monotonic timestamp of last UpdateTokens
+        self._scu_was_disconnected: bool = False  # tracks scu_connected false→true transitions
 
     @property
     def connected(self) -> bool:
@@ -219,6 +228,8 @@ class HymerSignalRClient:
         self._connected = True
         self._connected_at = time.monotonic()
         self._last_data_received = time.monotonic()
+        self._last_update_tokens = time.monotonic()
+        self._scu_was_disconnected = False
         _LOGGER.info("SignalR connected to datahub for %s", self._vehicle_urn)
 
         # Step 6: Send PiaRequest subscription to start receiving sensor data
@@ -249,9 +260,27 @@ class HymerSignalRClient:
         The SCU only pushes updated values in response to subscription
         requests.  Without periodic re-subscribing, many sensors (battery SOC,
         solar current, fuel range, etc.) stay at their initial cached values.
+
+        Also periodically refreshes UpdateTokens (every UPDATE_TOKENS_INTERVAL)
+        to keep the ehgAccessToken valid.  Without this, remote-access commands
+        stop working after ~30 minutes while the 12V switch keeps working.
         """
         if not self._ws or self._ws.closed or not self._connected:
             return
+
+        # Periodically refresh UpdateTokens to prevent ehgAccessToken expiry
+        token_age = time.monotonic() - self._last_update_tokens
+        if token_age >= UPDATE_TOKENS_INTERVAL:
+            _LOGGER.info(
+                "UpdateTokens age %.0fs exceeds %ds — refreshing",
+                token_age,
+                UPDATE_TOKENS_INTERVAL,
+            )
+            try:
+                await self._send_update_tokens()
+                self._last_update_tokens = time.monotonic()
+            except Exception:
+                _LOGGER.warning("Periodic UpdateTokens refresh failed", exc_info=True)
 
         requests = build_subscription_requests()
         _LOGGER.debug("Re-sending %d PiaRequest subscriptions", len(requests))
@@ -261,6 +290,41 @@ class HymerSignalRClient:
         # Send refresh command on resubscribe too
         refresh = build_refresh_command()
         await self.send_pia_request(refresh)
+
+    async def _refresh_tokens_and_resubscribe(self) -> None:
+        """Re-send UpdateTokens + resubscribe after SCU reconnect.
+
+        Called when scu_connected transitions false→true (12V OFF→ON).
+        The SCU reboots and registers a new session at the Azure SignalR hub.
+        Without re-sending UpdateTokens, the hub's routing table is stale
+        and remote-access commands (lights, heater, fridge) are silently
+        rejected — while the 12V system command keeps working.
+        """
+        if not self._ws or self._ws.closed or not self._connected:
+            return
+
+        # Small delay — let SCU finish its boot sequence
+        await asyncio.sleep(2)
+
+        try:
+            await self._send_update_tokens()
+            self._last_update_tokens = time.monotonic()
+            _LOGGER.info("UpdateTokens refreshed after SCU reconnect")
+        except Exception:
+            _LOGGER.warning(
+                "UpdateTokens refresh after SCU reconnect failed",
+                exc_info=True,
+            )
+            return
+
+        # Re-subscribe to get fresh sensor data from the rebooted SCU
+        try:
+            await self._send_subscription()
+            _LOGGER.info("Resubscribed after SCU reconnect")
+        except Exception:
+            _LOGGER.warning(
+                "Resubscribe after SCU reconnect failed", exc_info=True
+            )
 
     async def _send_update_tokens(self) -> None:
         """Send UpdateTokens invocation to authenticate the SignalR connection.
@@ -395,6 +459,26 @@ class HymerSignalRClient:
                     len(sensor_data),
                     list(sensor_data.keys())[:20],
                 )
+
+                # Detect SCU reconnect (scu_connected false→true).
+                # After 12V OFF→ON the SCU reboots and gets a new session
+                # at the Azure SignalR hub.  Our old UpdateTokens routing
+                # becomes stale → remote-access commands (lights, heater,
+                # fridge) are silently rejected.  Re-sending UpdateTokens
+                # + resubscribe restores command delivery immediately.
+                if "scu_connected" in sensor_data:
+                    scu_now = sensor_data["scu_connected"]
+                    if scu_now is True and self._scu_was_disconnected:
+                        _LOGGER.info(
+                            "SCU reconnected (scu_connected false→true) — "
+                            "re-sending UpdateTokens + resubscribe"
+                        )
+                        self._scu_was_disconnected = False
+                        asyncio.ensure_future(self._refresh_tokens_and_resubscribe())
+                    elif scu_now is False:
+                        self._scu_was_disconnected = True
+                        _LOGGER.info("SCU disconnected (scu_connected=false)")
+
                 if self._on_sensor_update:
                     self._on_sensor_update(self._sensor_data)
 

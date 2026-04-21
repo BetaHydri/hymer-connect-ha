@@ -5,6 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.19.3] - 2026-04-21
+
+### Fixed
+
+- **Remote-access commands stop working after ~30 minutes** — The `ehgAccessToken` sent via `UpdateTokens` at connection time expires after ~30 minutes. System commands (12V switch) kept working, but remote-access commands (lights, heater, fridge, boiler) were silently rejected by the Azure SignalR hub. Now refreshes `UpdateTokens` every 15 minutes to keep the token valid. No more integration reload needed after extended use
+- **Components not controllable after 12V ON** — After toggling 12V ON, the SCU reboots and registers a new session at the Azure hub. The integration's old `UpdateTokens` routing became stale, causing all remote-access commands to fail silently. Now detects SCU reconnect (`scu_connected` false→true) and automatically re-sends `UpdateTokens` + PIA subscriptions within ~5 seconds
+
+### Added
+
+- **`UPDATE_TOKENS_INTERVAL` constant** (15 min) — Configurable interval for periodic `UpdateTokens` refresh, well below the ~30 min expiry window
+- **SCU reconnect detection** — Tracks `scu_connected` sensor transitions and triggers automatic re-authentication when the SCU comes back online after a 12V power cycle
+
 ## [2.19.2] - 2026-04-20
 
 ### Fixed

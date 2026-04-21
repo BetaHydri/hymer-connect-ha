@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.19.3] - 2026-04-21
+
+### Fixed
+
+- **Remote-access commands stop working after ~30 minutes** — Periodic `UpdateTokens` refresh every 15 min
+- **Components not controllable after 12V ON** — Auto re-auth on SCU reconnect (`scu_connected` false→true)
+
 ## [2.18.0] - 2026-04-20
 
 ### Added
