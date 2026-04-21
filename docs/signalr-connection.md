@@ -1,6 +1,6 @@
 # SignalR Connection Architecture
 
-> **Last updated:** 2026-04-21 (v2.23.0)
+> **Last updated:** 2026-04-21 (v2.23.1)
 
 This document explains how the HYMER Connect integration maintains its real-time
 connection to the vehicle SCU (Smart Connectivity Unit) through Azure SignalR Service.
@@ -58,7 +58,38 @@ The integration manages **4 different tokens** — confusing them causes silent 
 
 - **OAuth2 access token**: Auto-refreshed on 401 responses via `_request()` retry
 - **SignalR negotiate JWT**: Not refreshable — connection must be recycled before expiry
-- **EHG remote access token**: Refreshed every 15 min via `resubscribe()` → `_send_update_tokens()`
+- **EHG remote access token**: Refreshed every 15 min via `send_refresh()` → `_send_update_tokens()`
+
+## SCU Data Freshness
+
+The SCU does **not** continuously push sensor data on its own. After the initial
+subscription response, it goes silent within **2–3 minutes** unless periodically
+prodded. Without prodding, the stale-data detector (`STALE_DATA_TIMEOUT = 3 min`)
+triggers a reconnect — which is wasteful and causes unnecessary churn.
+
+### Two-Tier Polling Strategy (v2.23.1+)
+
+| Tier | Method | Frequency | Messages | Purpose |
+|------|--------|-----------|----------|---------|
+| **Lightweight refresh** | `send_refresh()` | Every 60s (each poll) | 1 | Prod SCU to re-report current values |
+| **Full resubscribe** | `resubscribe()` | Every 10 min | 7 + 1 | Reinitialise all sensor groups |
+
+The **refresh command** (protobuf field 9 = empty) is the same "aktualisiere" command
+the EHG app sends when the user swipes between views (Dashboard, Licht, Wasser, etc.)
+or pulls to refresh. Each view change triggers a single refresh to get fresh values.
+It triggers a full state report from the SCU without the overhead of re-sending all
+7 subscription requests.
+
+The **full resubscribe** re-sends all 7 PIA subscription requests to ensure no sensor
+group is missed (e.g., after a reconnect where the initial subscription partially failed).
+
+### Why the SCU Goes Silent
+
+The SCU firmware appears to implement a request/response model rather than continuous
+streaming. It reports values in response to subscription requests and then waits for
+the next request. Values that change (e.g., light toggled) are pushed immediately,
+but slow-changing values (battery SOC, solar current, temperatures) require periodic
+prodding to get fresh readings.
 
 ## Connection Lifecycle
 
@@ -67,7 +98,8 @@ The integration manages **4 different tokens** — confusing them causes silent 
 ```
 connect → listen loop (receives PiaResponse messages)
                 ↕ send commands (PiaRequest for lights, heater, etc.)
-                ↕ resubscribe every 10 min (refresh stale sensor values)
+                ↔ refresh every 60s (1 msg — prod SCU to push fresh data)
+                ↔ full resubscribe every 10 min (8 msgs — reinit sensor groups)
                 ↕ UpdateTokens every 15 min (keep EHG access token valid)
     ~50 min → proactive disconnect (before negotiate JWT expires)
                 → reconnect (new negotiate → new WebSocket → new subscriptions)
@@ -153,17 +185,30 @@ The Azure SignalR Service (and/or the EHG backend) enforces connection limits.
 Excessive message volume causes **server-side disconnects** without explicit error messages —
 the WebSocket simply closes.
 
-### Message Breakdown (v2.23.0)
+### Message Breakdown (v2.23.1)
+
+| Source | Frequency | Messages | Per Hour |
+|--------|-----------|----------|----------|
+| PIA refresh (lightweight) | Every 60s | 1 | ~60 |
+| PIA full resubscribe | Every 10 min | 7 + 1 refresh | ~48 |
+| UpdateTokens refresh | Every 15 min | 1 | ~4 |
+| Client keepalive ping | Every 30s | 1 | ~120 |
+| Server pings (responded to) | Variable | ~1/min | ~60 |
+| **Total outbound** | | | **~292** |
+
+### v2.23.0 — Too Little Traffic (Caused Stale Data)
 
 | Source | Frequency | Messages | Per Hour |
 |--------|-----------|----------|----------|
 | PIA resubscribe | Every 10 min | 7 + 1 refresh | ~48 |
 | UpdateTokens refresh | Every 15 min | 1 | ~4 |
 | Client keepalive ping | Every 30s | 1 | ~120 |
-| Server pings (responded to) | Variable | ~1/min | ~60 |
-| **Total outbound** | | | **~232** |
+| **Total outbound** | | | **~172** |
 
-### Previous Traffic (pre-v2.23.0) — Caused Disconnects
+The SCU went silent after ~3 min without prodding, triggering `STALE_DATA_TIMEOUT`
+and unnecessary reconnects every ~10 min (matching the resubscribe interval).
+
+### Pre-v2.23.0 — Too Much Traffic (Caused Server Disconnects)
 
 | Source | Frequency | Messages | Per Hour |
 |--------|-----------|----------|----------|
@@ -178,10 +223,12 @@ after 4-5 hours of continuous operation.
 
 ### Lesson Learned
 
-> **Do not poll/resubscribe more frequently than the mobile app.**
-> The SCU pushes state changes automatically after the initial subscription.
-> Resubscribe only refreshes slow-changing values (battery SOC, solar current)
-> that the SCU doesn''t push proactively. 10-minute intervals are sufficient.
+> **The SCU needs regular prodding but not heavy resubscription.**
+> A single lightweight refresh command (field 9) every 60 seconds is enough to
+> keep data flowing. The full 7-subscription resubscribe should only run every
+> 10 minutes. Sending all 8 messages every 60 seconds (~480/hr) triggers
+> server-side disconnects; sending nothing for 10 minutes causes the SCU to
+> go silent and triggers stale-data reconnects.
 
 ## Troubleshooting
 
@@ -230,11 +277,13 @@ Azure SignalR JWTs expire after ~1 hour. Rather than waiting for a mid-command
 failure, we proactively disconnect at 50 minutes and reconnect with a fresh token.
 This ensures commands always have a valid connection.
 
-### Why Not Use the HA Poll Interval for Resubscribe?
+### Why Not Use the HA Poll Interval for Full Resubscribe?
 
 The HA coordinator polls every 60s for REST metadata updates. Initially, we piggybacked
-PIA resubscriptions on this poll — sending 8 messages every 60s. This caused server-side
-disconnects after 4-5 hours. The fix was decoupling resubscribe to its own 10-minute timer.
+full PIA resubscriptions (8 messages) on this poll. This caused server-side
+disconnects after 4-5 hours (~480 msgs/hr). Reducing to 10-min-only caused
+the SCU to go silent after ~3 min. The solution is a **two-tier approach**:
+lightweight refresh (1 msg) every poll, full resubscribe every 10 min.
 
 ### Why Fire-and-Forget for Periodic UpdateTokens?
 
