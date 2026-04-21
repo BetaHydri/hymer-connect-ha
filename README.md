@@ -33,7 +33,9 @@ Custom integration to connect your HYMER / Erwin Hymer Group motorhome or carava
 
 ### Dashboard Demo
 
-https://github.com/BetaHydri/hymer-connect-ha/raw/master/images/Hymer%20Connect%20Dashboard.mp4
+<p align="center">
+  <video src="https://github.com/BetaHydri/hymer-connect-ha/raw/master/images/Hymer%20Connect%20Dashboard.mp4" autoplay loop muted playsinline width="100%"></video>
+</p>
 
 ## Supported Brands
 
