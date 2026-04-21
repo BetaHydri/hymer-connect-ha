@@ -151,16 +151,19 @@ on the outside light. The outside light bus ID is unknown.
 
 ## Bus 30 — ScuSignals (GPS + SCU telemetry)
 
+Slots 1-2 are shared across S600/S700. Slots 3-7 carry GPS data on the S600
+(confirmed via live traces 2026-04-19) but LTE/BT telemetry on the S700.
+
 | Slot | Sensor Name | Unit | Notes |
 |------|------------|------|-------|
 | (30, 1) | `gps_coordinates` | — | Lat,Lng string (shared S600/S700) |
 | (30, 2) | `gps_utc_time` | — | SCU internal time (shared S600/S700) |
-| (30, 3) | `gps_signal_quality` | — | ⚠️ S700: lte_connection_quality |
-| (30, 4) | `gps_fix` | — | ⚠️ S700: lte_connection_state |
-| (30, 5) | `gps_altitude` | m | ⚠️ S700: scu_voltage (V) |
-| (30, 6) | `gps_satellites` | — | ⚠️ S700: paired_bt_devices |
-| (30, 7) | `gps_heading` | ° | ⚠️ S700: connected_bt_devices |
-| (30, 8–14) | `gps_sensor_8..14` | — | Unmapped SCU state flags |
+| (30, 3) | `gps_signal_quality` | — | Confirmed "excellent" on S600. S700: `lte_connection_quality` |
+| (30, 4) | `gps_fix` | — | Confirmed `true` on S600. S700: `lte_connection_state` |
+| (30, 5) | `gps_altitude` | m | Confirmed 13.1m on S600. S700: `scu_voltage` (V) |
+| (30, 6) | `gps_satellites` | — | Confirmed 3 on S600. S700: `paired_bt_devices` |
+| (30, 7) | `gps_heading` | ° | Confirmed 0° on S600. S700: `connected_bt_devices` |
+| (30, 8-14) | `gps_sensor_8..14` | — | Unmapped SCU state flags |
 
 ## Bus 34 — Thetford N4112A fridge (shared S600/S700)
 
