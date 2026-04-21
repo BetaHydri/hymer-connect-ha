@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.22.0] - 2026-04-21
+
+### Added
+
+- **12V main switch availability guard** — All light entities and the water pump switch become unavailable in HA when the 12V main switch is off, preventing interaction with components that won't respond without habitation power. The main switch itself, fridge, boiler, and heater remain controllable regardless of 12V state.
+
 ## [2.21.1] - 2026-04-21
 
 ### Fixed

@@ -164,6 +164,16 @@ class HymerConnectLight(
         self._optimistic_color_temp: int | None = None
 
     @property
+    def available(self) -> bool:
+        """Lights require the 12V main switch to be on."""
+        if self.coordinator.data is None:
+            return False
+        main = _resolve_path(self.coordinator.data, "signalr_sensors.main_switch")
+        if main is not None and str(main) != "On":
+            return False
+        return super().available
+
+    @property
     def is_on(self) -> bool | None:
         if self._optimistic_on is not None:
             return self._optimistic_on
