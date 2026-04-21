@@ -500,6 +500,84 @@ If you have a different EHG vehicle and want to help expand compatibility:
 
 A complete slot-by-slot reference for the S600 is available in [`docs/sensor-map.md`](docs/sensor-map.md). This documents every `(bus_id, sensor_id)` mapping with units, transforms, and known S700 conflicts.
 
+## Stale CAN Sensor Workarounds
+
+The Mercedes Sprinter CAN bus goes silent when the engine is turned off — **without sending a final "off" or "0" update**. The SCU caches the last received value, causing `binary_sensor.hymer_engine` to show "On" even while parked with ignition off.
+
+### Required: Engine Running (Corrected) template sensor
+
+Create this template sensor to fix the stale engine state. Without it, the dashboard shows the engine as running while parked.
+
+**Via HA UI (recommended):** Settings > Helpers > + Create Helper > Template > Template a binary sensor
+
+- **Name:** Hymer Engine Running (Corrected)
+- **Device class:** Running
+- **Icon:** `mdi:engine`
+- **State template:**
+
+```jinja
+{% set ignition = states('sensor.hymer_ignition') %}
+{% set locked = is_state('binary_sensor.hymer_lock', 'on') %}
+{% set engine_raw = is_state('binary_sensor.hymer_engine', 'on') %}
+{% if ignition in ['Off', 'Accessory'] or locked %}false{% else %}{{ engine_raw }}{% endif %}
+```
+
+- **Availability template:**
+
+```jinja
+{{ states('sensor.hymer_ignition') not in ['unknown', 'unavailable'] }}
+```
+
+**Via configuration.yaml:**
+
+```yaml
+template:
+  - binary_sensor:
+      - name: "Hymer Engine Running (Corrected)"
+        unique_id: hymer_engine_running_corrected
+        device_class: running
+        icon: mdi:engine
+        state: >
+          {% set ignition = states('sensor.hymer_ignition') %}
+          {% set locked = is_state('binary_sensor.hymer_lock', 'on') %}
+          {% set engine_raw = is_state('binary_sensor.hymer_engine', 'on') %}
+          {% if ignition in ['Off', 'Accessory'] or locked %}
+            false
+          {% else %}
+            {{ engine_raw }}
+          {% endif %}
+        availability: >
+          {{ states('sensor.hymer_ignition') not in ['unknown', 'unavailable'] }}
+```
+
+Then use `binary_sensor.hymer_engine_running_corrected` in your dashboard instead of `binary_sensor.hymer_engine`. The [dashboard YAML](dashboards/hymer_connect.yaml) already references the corrected entity.
+
+| Condition | Result |
+|-----------|--------|
+| Ignition is "Off" or "Accessory" | Engine forced to **Off** |
+| Vehicle is locked | Engine forced to **Off** |
+| Otherwise | Uses the raw `engine_running` value |
+
+### Recommended: Solar Energy (Riemann Sum) helper
+
+The HA Energy dashboard requires a cumulative energy sensor (kWh). Create a Riemann Sum helper to convert `sensor.hymer_solar_power` (W) into `sensor.hymer_solar_energy` (kWh):
+
+**Via HA UI:** Settings > Helpers > + Create Helper > Integration - Riemann sum integral sensor
+
+- **Input sensor:** `sensor.hymer_solar_power`
+- **Integration method:** Left Riemann sum
+- **Metric prefix:** k (kilo)
+- **Time unit:** Hours
+- **Name:** Hymer Solar Energy
+
+> See [`dashboards/README.md`](dashboards/README.md#energy-dashboard-integration) for detailed setup instructions.
+
+### Speed, RPM, and Engine Torque — not available on S600
+
+On the Grand Canyon S600, the CAN bus slots that carry speed, RPM, and engine torque on other models (e.g. S700) are mapped to different sensors (`fuel_level`, `distance_to_service`). These driving sensors are **not currently available** in the integration for the S600.
+
+> See [`dashboards/README.md`](dashboards/README.md#stale-can-sensor-workarounds) for additional details on stale CAN sensor workarounds.
+
 ## Key Terminology
 
 | Term | Description |

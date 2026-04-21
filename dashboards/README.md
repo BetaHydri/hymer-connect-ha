@@ -136,16 +136,16 @@ template:
         device_class: running
         icon: mdi:engine
         state: >
-          {% set ignition = states('sensor.hymer_hymer_connect_hymer_6') %}
-          {% set locked = is_state('binary_sensor.hymer_hymer_connect_hymer_lock', 'on') %}
-          {% set engine_raw = is_state('binary_sensor.hymer_hymer_connect_hymer_betriebszustand', 'on') %}
+          {% set ignition = states('sensor.hymer_ignition') %}
+          {% set locked = is_state('binary_sensor.hymer_lock', 'on') %}
+          {% set engine_raw = is_state('binary_sensor.hymer_engine', 'on') %}
           {% if ignition in ['Off', 'Accessory'] or locked %}
             false
           {% else %}
             {{ engine_raw }}
           {% endif %}
         availability: >
-          {{ states('sensor.hymer_hymer_connect_hymer_6') not in ['unknown', 'unavailable'] }}
+          {{ states('sensor.hymer_ignition') not in ['unknown', 'unavailable'] }}
 ```
 
 **How it works:**
@@ -159,112 +159,28 @@ template:
 Then replace the entity in your dashboard:
 
 ```yaml
-# Before
-- entity: binary_sensor.hymer_hymer_connect_hymer_betriebszustand
+# Before (shows stale "on" while parked)
+- entity: binary_sensor.hymer_engine
   name: Engine Running
 
-# After
+# After (correctly shows "off" when ignition is off)
 - entity: binary_sensor.hymer_engine_running_corrected
   name: Engine Running
 ```
 
-### Corrected speed, RPM, and engine torque templates
-
-The same caching issue affects driving sensors. Speed, RPM, and engine
-torque keep their last CAN value after the engine is turned off
-(for example, showing 73 km/h and 1670 RPM while parked).
-
-These can be created either via `configuration.yaml` or via the HA UI
-(**Settings > Devices & Services > Helpers > Template**).
-
-> **Important:** When creating template sensors via the HA UI, you must
-> use compact single-line templates. The multiline YAML `>` format
-> causes whitespace in the output, making numeric sensors show
-> "Unknown" (Unbekannt).
-
-#### Option A: HA UI helpers (recommended)
-
-Create each sensor via **Settings > Helpers > + Create Helper >
-Template > Template a sensor**. Use the following single-line
-templates:
-
-**Hymer Speed (Corrected):**
-
-- Unit of measurement: `km/h`
-- Device class: Speed
-- State template:
-
-```jinja
-{% if states('sensor.hymer_hymer_connect_hymer_6') in ['Off', 'Accessory'] %}0{% else %}{{ states('sensor.hymer_hymer_connect_hymer_geschwindigkeit') }}{% endif %}
-```
-
-**Hymer RPM (Corrected):**
-
-- Unit of measurement: `rpm`
-- State template:
-
-```jinja
-{% if states('sensor.hymer_hymer_connect_hymer_6') in ['Off', 'Accessory'] %}0{% else %}{{ states('sensor.hymer_hymer_connect_hymer_5') }}{% endif %}
-```
-
-**Hymer Engine Torque (Corrected):**
-
-- Unit of measurement: `%`
-- State template:
-
-```jinja
-{% if states('sensor.hymer_hymer_connect_hymer_6') in ['Off', 'Accessory'] %}0{% else %}{{ states('sensor.hymer_hymer_connect_hymer_25') }}{% endif %}
-```
-
-**Availability template** (same for all three):
-
-```jinja
-{{ states('sensor.hymer_hymer_connect_hymer_6') not in ['unknown', 'unavailable'] }}
-```
-
-#### Option B: configuration.yaml
-
-If you prefer YAML configuration, add these to your
-`configuration.yaml`. Note the compact template format without extra
-whitespace:
-
-```yaml
-template:
-  - sensor:
-      - name: "Hymer Speed (Corrected)"
-        unique_id: hymer_speed_corrected
-        device_class: speed
-        unit_of_measurement: "km/h"
-        icon: mdi:speedometer
-        state: "{% if states('sensor.hymer_hymer_connect_hymer_6') in ['Off', 'Accessory'] %}0{% else %}{{ states('sensor.hymer_hymer_connect_hymer_geschwindigkeit') }}{% endif %}"
-        availability: "{{ states('sensor.hymer_hymer_connect_hymer_6') not in ['unknown', 'unavailable'] }}"
-
-      - name: "Hymer RPM (Corrected)"
-        unique_id: hymer_rpm_corrected
-        unit_of_measurement: "rpm"
-        icon: mdi:engine
-        state: "{% if states('sensor.hymer_hymer_connect_hymer_6') in ['Off', 'Accessory'] %}0{% else %}{{ states('sensor.hymer_hymer_connect_hymer_5') }}{% endif %}"
-        availability: "{{ states('sensor.hymer_hymer_connect_hymer_6') not in ['unknown', 'unavailable'] }}"
-
-      - name: "Hymer Engine Torque (Corrected)"
-        unique_id: hymer_engine_torque_corrected
-        unit_of_measurement: "%"
-        icon: mdi:engine
-        state: "{% if states('sensor.hymer_hymer_connect_hymer_6') in ['Off', 'Accessory'] %}0{% else %}{{ states('sensor.hymer_hymer_connect_hymer_25') }}{% endif %}"
-        availability: "{{ states('sensor.hymer_hymer_connect_hymer_6') not in ['unknown', 'unavailable'] }}"
-```
-
-Then replace the entities in your dashboard:
-
-| Original entity | Corrected entity |
-|-----------------|------------------|
-| `sensor.hymer_hymer_connect_hymer_geschwindigkeit` | `sensor.hymer_speed_corrected` |
-| `sensor.hymer_hymer_connect_hymer_5` | `sensor.hymer_rpm_corrected` |
-| `sensor.hymer_hymer_connect_hymer_25` | `sensor.hymer_engine_torque_corrected` |
-
-> **Tip:** You can hide the original stale entities via
+> **Tip:** You can hide the original stale `binary_sensor.hymer_engine` via
 > **Settings > Devices & Services > Entities** (toggle "Visible" off)
-> so they do not clutter your UI.
+> so it does not clutter your UI.
+
+### Speed, RPM, and engine torque — not available on S600
+
+On the Grand Canyon S600, the CAN bus slots that carry speed, RPM,
+and engine torque on other models (e.g. S700) are mapped to different
+sensors (`fuel_level`, `distance_to_service`). These driving sensors
+are **not currently available** in the integration for the S600. If
+they are identified and added in a future version, corrected template
+sensors (like the engine running template above) should be created to
+handle the stale CAN caching issue.
 
 ### Known stale CAN sensors without workaround
 
