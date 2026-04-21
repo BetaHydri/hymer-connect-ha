@@ -12,9 +12,9 @@ Custom integration to connect your HYMER / Erwin Hymer Group motorhome or carava
 
 > **⚠️ Important:** Real-time sensor data (70+ entities: GPS, battery, doors, heater, fridge, etc.) requires an **EHG Remote Access Refresh Token**. This token must be captured **once** from your phone using mitmproxy during the initial setup. Without it, only basic vehicle metadata (model, VIN, year) is available. See [Obtaining the EHG Refresh Token](#obtaining-the-ehg-refresh-token) for the step-by-step guide.
 
-> **v2.9.8** — **Dashboard redesign with clear visual hierarchy!** Controls vs. status info visually distinct. Heater energy source, 12V switch fix, fridge door labels, water level inversion fix. All controls (switches, selects, climate, lights) now work reliably.
+> **v2.19.5** — **Persistent command control!** Remote-access commands (lights, heater, fridge) no longer stop working after ~30 minutes. Periodic token refresh, SCU reconnect detection, and OAuth2 token fix. 190+ entities.
 
-> **v2.8** — **Full climate/appliance controls!** Truma heater thermostat, fridge cooling steps + ECO switch, boiler mode, energy source select. SignalR refresh command forces SCU to re-report states.
+> **v2.19.0** — **SignalR keepalive, command retry, and reconnect improvements.** Dead connections detected within 90s. All commands retry once on failure.
 
 <details>
 <summary><strong>Integration Screenshots</strong> (click to expand)</summary>
@@ -59,15 +59,16 @@ Control your vehicle's electrical systems from Home Assistant:
 
 ### 💡 Light Controls
 
-Control 8 interior lights + 1 outside light with on/off, brightness, and color temperature:
+Control 8 interior lights with on/off, brightness, and color temperature:
 
 | Group | Lights | Features |
 |-------|--------|----------|
 | **Wohnen** (Living) | Ceiling, Ambient, Kitchen, Seating Overhead | On/Off, Brightness, Color Temp* |
 | **Privat** (Private) | Bedroom Ambient, Night Light, Bathroom Ceiling, Bedroom Overhead | On/Off, Brightness, Color Temp* |
-| **Outside** | Outside Light | On/Off, Brightness |
 
 *Color temperature supported on Ambient and Kitchen lights.
+
+> **Note:** The outside LED bar is not yet supported — its bus ID is unknown.
 
 ### 🌡️ Climate Controls
 
@@ -108,7 +109,7 @@ Real-time data from the **Voltronic MPP260CI** MPPT solar charger:
 | **Heating** | Truma connected/status/firmware, fan speed, fuel type, electric power (0/900/1800W), setpoint, operating mode |
 | **Fridge** | Mode (cooling step), door status (Open/Closed), ECO/Quiet mode |
 | **System** | SCU connected/firmware, Truma firmware, tyre pressure |
-| **Total** | **140+ sensors** from CAN bus, LIN bus, GPS, and connected components |
+| **Total** | **190+ entities** (sensors, binary sensors, lights, switches, climate, selects) from CAN bus, LIN bus, GPS, and connected components |
 
 ## Installation
 
@@ -133,7 +134,7 @@ Real-time data from the **Voltronic MPP260CI** MPPT solar charger:
 4. Paste your **EHG Remote Access Refresh Token** (see below)
 5. The integration creates sensor entities for your vehicle
 
-> **Without the refresh token**, the integration provides only REST API data (vehicle model, VIN, year). **With the refresh token**, you get 130+ real-time sensors via SignalR.
+> **Without the refresh token**, the integration provides only REST API data (vehicle model, VIN, year). **With the refresh token**, you get 190+ real-time entities via SignalR.
 
 > **⏳ Sensors show "unknown" until the vehicle connects.** The SCU (Smart Interface Unit) in your vehicle must establish a SignalR WebSocket connection to the cloud before sensor data flows. This happens automatically when:
 > - The vehicle's 12V main switch is ON, and
@@ -316,7 +317,7 @@ sequenceDiagram
     HA->>Cloud: SignalR connect + UpdateTokens
     Cloud->>SCU: Forward via cellular
     SCU->>Cloud: PiaResponse (sensor data)
-    Cloud->>HA: Real-time sensor data (130+ sensors)
+    Cloud->>HA: Real-time sensor data (190+ entities)
 ```
 
 ### Architecture
