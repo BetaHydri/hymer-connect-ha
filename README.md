@@ -129,22 +129,6 @@ A ready-to-use tile-based Lovelace dashboard optimized for mobile and desktop:
 
 **Prerequisites:** Home Assistant 2022.11+ (tile cards). No HACS frontend cards required — 100% stock HA.
 
-## Upgrading
-
-### v2.10.0 — Breaking: Bus 1 sensor remapping
-
-v2.10.0 remaps bus 1 slots 17-22 from vehicle lights (headlamp, fog, etc.) to chassis state flags (parking brake, auxiliary heater, cruise control, downhill assist, coolant warning). This was a sensor mislabelling — the "headlamp always on" bug was actually the parking brake being correctly engaged.
-
-**Migration steps:**
-
-1. Update via HACS
-2. **Remove and re-add** the HYMER Connect integration (Settings > Devices & Services > Delete > Add again with your credentials + EHG refresh token)
-3. Restart Home Assistant
-4. Re-paste the latest [dashboard YAML](dashboards/hymer_connect.yaml)
-5. Delete old unavailable entities (Settings > Entities > filter "unavailable" > delete headlamp, high_beam, parking_light, fog_front, fog_rear, turn_signal)
-
-> **Why remove+re-add?** HA caches binary sensor descriptions. A simple restart doesn't register the new entities (standheizung, parking_brake, etc.) — you need a clean integration reload.
-
 ## Installation
 
 ### HACS (recommended)
