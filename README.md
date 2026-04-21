@@ -31,6 +31,10 @@ Custom integration to connect your HYMER / Erwin Hymer Group motorhome or carava
 
 </details>
 
+### Dashboard Demo
+
+<video src="images/Hymer%20Connect%20Dashboard.mp4" controls width="100%"></video>
+
 ## Supported Brands
 
 All Erwin Hymer Group brands equipped with a **Smart Interface Unit (SIU)**:
