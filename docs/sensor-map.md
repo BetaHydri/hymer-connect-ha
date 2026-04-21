@@ -61,21 +61,21 @@ may have different slot assignments on buses 1, 3, 8, 30, and 99 — see the
 
 ## Bus 8 — Voltronic MPP260CI (MPPT solar charger)
 
-All 7 slots are solar charger data. The S600 code has legacy placeholder labels
-(`gray_water_sensor`, `vent_1..3`, `tire_pressure`) that are wrong — the S700
-labels from PR #44 reflect the actual Voltronic register layout. The S600 works
-around the mislabelling by computing `solar_active` and `solar_power` from
-`solar_voltage × solar_current` instead of reading the raw slots.
+All 7 slots are solar charger data. Some code labels in `pia_decoder.py` still
+carry legacy names from an earlier S700-based sensor map where bus 8 was the
+grey water / ventilation bus. The actual sensor values are from the Voltronic
+MPPT charger. Solar power is computed as `voltage × current` instead of reading
+the raw slot (8, 7) directly.
 
-| Slot | Code label (S600) | Actual meaning | Unit | Notes |
-|------|-------------------|---------------|------|-------|
-| (8, 1) | `gray_water_sensor` | `solar_active` | — | ⚠️ S600 label wrong — this is the MPPT's "charging active" flag. S600 computes `solar_active` from `solar_current > 0` instead. |
-| (8, 2) | `solar_voltage` | `solar_voltage` | V | Panel voltage — confirmed 19.9V live |
-| (8, 3) | `solar_current` | `solar_current` | A | Charge current — confirmed 2.1A live |
-| (8, 4) | `vent_1` | `solar_error` | — | ⚠️ S600 label wrong — MPPT error flag |
-| (8, 5) | `vent_2` | `solar_reduced_power` | — | ⚠️ S600 label wrong — MPPT reduced power flag |
-| (8, 6) | `vent_3` | `solar_aes_active` | — | ⚠️ S600 label wrong — MPPT AES mode flag |
-| (8, 7) | `tire_pressure` | `solar_power` | W | ⚠️ S600 label wrong — MPPT power output. Shows 0.0 because S600 computes solar_power as V×I instead. |
+| Slot | Sensor Name | Unit | Notes |
+|------|------------|------|-------|
+| (8, 1) | `solar_active` | — | MPPT "charging active" flag. Computed from `solar_current > 0`. Legacy code label: `gray_water_sensor` |
+| (8, 2) | `solar_voltage` | V | Panel voltage — confirmed 19.9V live |
+| (8, 3) | `solar_current` | A | Charge current — confirmed 2.1A live |
+| (8, 4) | `solar_error` | — | MPPT error flag. Legacy code label: `vent_1` |
+| (8, 5) | `solar_reduced_power` | — | MPPT reduced power flag. Legacy code label: `vent_2` |
+| (8, 6) | `solar_aes_active` | — | MPPT AES mode flag. Legacy code label: `vent_3` |
+| (8, 7) | `solar_power` | W | MPPT power output. Computed as V×I instead. Legacy code label: `tire_pressure` |
 
 ## Bus 11 — Living ceiling light
 
