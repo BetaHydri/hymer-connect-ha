@@ -124,8 +124,8 @@ SENSOR_MAP: dict[tuple[int, int], tuple[str, str | None, str | None]] = {
     (30, 8): ("scu_flag_1", None, None),          # False — unknown flag
     (30, 9): ("lte_connected", None, None),         # True — LTE connection state
     (30, 10): ("scu_flag_2", None, None),           # False — unknown flag
-    (30, 11): ("paired_bt_devices", None, None),    # 3 — BT paired device count
-    (30, 12): ("bt_connected", None, None),         # True — BT device connected
+    (30, 11): ("paired_bt_devices", None, None),    # 3 — BT paired device count (confirmed)
+    (30, 12): ("scu_flag_5", None, None),           # True — unknown flag (not BT connected, phones are remote)
     (30, 13): ("scu_flag_3", None, None),           # False — unknown flag
     (30, 14): ("scu_flag_4", None, None),           # False — unknown flag
     # Heating / Fridge control (34)

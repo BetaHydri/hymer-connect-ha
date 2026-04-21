@@ -221,8 +221,8 @@
       "paired_bt_devices": {
         "name": "Paired BT devices"
       },
-      "bt_connected": {
-        "name": "BT connected"
+      "scu_flag_5": {
+        "name": "SCU flag 5 (30/12)"
       },
       "scu_flag_3": {
         "name": "SCU flag 3 (30/13)"

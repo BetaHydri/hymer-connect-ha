@@ -522,11 +522,11 @@ SIGNALR_SENSORS: tuple[HymerSensorEntityDescription, ...] = (
         icon="mdi:bluetooth-connect",
     ),
     HymerSensorEntityDescription(
-        key="bt_connected",
-        translation_key="bt_connected",
-        value_path="signalr_sensors.bt_connected",
+        key="scu_flag_5",
+        translation_key="scu_flag_5",
+        value_path="signalr_sensors.scu_flag_5",
         entity_registry_enabled_default=False,
-        icon="mdi:bluetooth",
+        icon="mdi:help-circle-outline",
     ),
     HymerSensorEntityDescription(
         key="scu_flag_3",
