@@ -12,7 +12,7 @@ Custom integration to connect your HYMER / Erwin Hymer Group motorhome or carava
 
 > **⚠️ Important:** Real-time sensor data (70+ entities: GPS, battery, doors, heater, fridge, etc.) requires an **EHG Remote Access Refresh Token**. This token must be captured **once** from your phone using mitmproxy during the initial setup. Without it, only basic vehicle metadata (model, VIN, year) is available. See [Obtaining the EHG Refresh Token](#obtaining-the-ehg-refresh-token) for the step-by-step guide.
 
-> **v2.19.5** — **Persistent command control!** Remote-access commands (lights, heater, fridge) no longer stop working after ~30 minutes. Periodic token refresh, SCU reconnect detection, and OAuth2 token fix. 190+ entities.
+> **v2.19.5** — **Persistent command control!** Remote-access commands (lights, heater, fridge) no longer stop working after ~30 minutes. Periodic token refresh, SCU reconnect detection, and OAuth2 token fix. ~100 entities.
 
 > **v2.19.0** — **SignalR keepalive, command retry, and reconnect improvements.** Dead connections detected within 90s. All commands retry once on failure.
 
@@ -109,7 +109,7 @@ Real-time data from the **Voltronic MPP260CI** MPPT solar charger:
 | **Heating** | Truma connected/status/firmware, fan speed, fuel type, electric power (0/900/1800W), setpoint, operating mode |
 | **Fridge** | Mode (cooling step), door status (Open/Closed), ECO/Quiet mode |
 | **System** | SCU connected/firmware, Truma firmware, tyre pressure |
-| **Total** | **190+ entities** (sensors, binary sensors, lights, switches, climate, selects) from CAN bus, LIN bus, GPS, and connected components |
+| **Total** | **~100 entities** (sensors, binary sensors, lights, switches, climate, selects) from CAN bus, LIN bus, GPS, and connected components |
 
 ## Installation
 
@@ -134,7 +134,7 @@ Real-time data from the **Voltronic MPP260CI** MPPT solar charger:
 4. Paste your **EHG Remote Access Refresh Token** (see below)
 5. The integration creates sensor entities for your vehicle
 
-> **Without the refresh token**, the integration provides only REST API data (vehicle model, VIN, year). **With the refresh token**, you get 190+ real-time entities via SignalR.
+> **Without the refresh token**, the integration provides only REST API data (vehicle model, VIN, year). **With the refresh token**, you get ~100 real-time entities via SignalR.
 
 > **⏳ Sensors show "unknown" until the vehicle connects.** The SCU (Smart Interface Unit) in your vehicle must establish a SignalR WebSocket connection to the cloud before sensor data flows. This happens automatically when:
 > - The vehicle's 12V main switch is ON, and
@@ -317,7 +317,7 @@ sequenceDiagram
     HA->>Cloud: SignalR connect + UpdateTokens
     Cloud->>SCU: Forward via cellular
     SCU->>Cloud: PiaResponse (sensor data)
-    Cloud->>HA: Real-time sensor data (190+ entities)
+    Cloud->>HA: Real-time sensor data (~100 entities)
 ```
 
 ### Architecture

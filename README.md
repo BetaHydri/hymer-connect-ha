@@ -12,7 +12,7 @@ Custom integration to connect your HYMER / Erwin Hymer Group motorhome or carava
 
 > **⚠️ Important:** Real-time sensor data (70+ entities: GPS, battery, doors, heater, fridge, etc.) requires an **EHG Remote Access Refresh Token**. This token must be captured **once** from your phone using mitmproxy during the initial setup. Without it, only basic vehicle metadata (model, VIN, year) is available. See [Obtaining the EHG Refresh Token](#obtaining-the-ehg-refresh-token) for the step-by-step guide.
 
-> **v2.19.5** — **Persistent command control!** Remote-access commands (lights, heater, fridge) no longer stop working after ~30 minutes. Periodic token refresh, SCU reconnect detection, and OAuth2 token fix. 190+ entities including odometer, GPS, battery, temperatures, door/lock status, Truma heater, fridge, and more.
+> **v2.19.5** — **Persistent command control!** Remote-access commands (lights, heater, fridge) no longer stop working after ~30 minutes. Periodic token refresh, SCU reconnect detection, and OAuth2 token fix. ~100 entities including odometer, GPS, battery, temperatures, door/lock status, Truma heater, fridge, and more.
 
 <details>
 <summary><strong>Integration Screenshots</strong> (click to expand)</summary>
@@ -95,7 +95,7 @@ Control 8 interior lights with on/off, brightness, and color temperature:
 | **Heating** | Truma connected/status/firmware, fan speed, fuel type, electric power (0/900/1800W), setpoint, operating mode |
 | **Fridge** | Mode (cooling step), door status (Open/Closed), ECO/Quiet mode |
 | **System** | SCU connected/firmware, Truma firmware, tyre pressure, alarm status/battery |
-| **Total** | **190+ entities** (sensors, binary sensors, lights, switches, climate, selects) from CAN bus, LIN bus, GPS, and connected components |
+| **Total** | **~100 entities** (sensors, binary sensors, lights, switches, climate, selects) from CAN bus, LIN bus, GPS, and connected components |
 
 ### 🗺️ Device Tracker
 
@@ -158,7 +158,7 @@ v2.10.0 remaps bus 1 slots 17-22 from vehicle lights (headlamp, fog, etc.) to ch
 4. Paste your **EHG Remote Access Refresh Token** (see below)
 5. The integration creates sensor entities for your vehicle
 
-> **Without the refresh token**, the integration provides only REST API data (vehicle model, VIN, year). **With the refresh token**, you get 190+ real-time entities via SignalR.
+> **Without the refresh token**, the integration provides only REST API data (vehicle model, VIN, year). **With the refresh token**, you get ~100 real-time entities via SignalR.
 
 > **⏳ Sensors show "unknown" until the vehicle connects.** The SCU (Smart Interface Unit) in your vehicle must establish a SignalR WebSocket connection to the cloud before sensor data flows. This happens automatically when:
 > - The vehicle's 12V main switch is ON, and
@@ -341,7 +341,7 @@ sequenceDiagram
     HA->>Cloud: SignalR connect + UpdateTokens
     Cloud->>SCU: Forward via cellular
     SCU->>Cloud: PiaResponse (sensor data)
-    Cloud->>HA: Real-time sensor data (190+ entities)
+    Cloud->>HA: Real-time sensor data (~100 entities)
 ```
 
 ### Architecture
