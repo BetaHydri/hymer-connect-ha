@@ -55,6 +55,8 @@ Control your vehicle's electrical systems from Home Assistant:
 | **Water Pump** | Water pump on/off | bus 3, sid 3 — `bool` |
 | **Fridge ECO (Leise)** | Quiet mode overlay | bus 34, sid 2 — `bool` |
 
+> **12V availability guard:** When the 12V main switch is off, all light entities and the water pump switch become **unavailable** in Home Assistant. Dashboard tile cards automatically gray them out and disable interaction, preventing commands to components that won't respond without habitation power. The fridge, boiler, heater, and the main switch itself remain controllable regardless of 12V state.
+
 ### 💡 Light Controls
 
 Control 8 interior lights with on/off, brightness, and color temperature:

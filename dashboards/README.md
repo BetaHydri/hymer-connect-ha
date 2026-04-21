@@ -19,6 +19,21 @@ The lights dashboard page must be configured manually in Home Assistant.
 
 > Replace `*` with your integration's unique ID (e.g. `hymer_hymer_connect_hymer`).
 
+### 12V Main Switch — Availability Guard
+
+When the **12V main switch** is turned off, all light entities and the water pump switch become **unavailable** in Home Assistant. Dashboard tile cards automatically gray them out and disable interaction — this prevents sending commands to components that won't respond without habitation power.
+
+| Entity | 12V Off | 12V On |
+|--------|---------|--------|
+| All lights (ceiling, ambient, kitchen, etc.) | Grayed out / unavailable | Active / controllable |
+| Water pump | Grayed out / unavailable | Active / controllable |
+| 12V main switch | **Always active** | Active |
+| Fridge (mode + ECO) | **Always active** | Active |
+| Boiler | **Always active** | Active |
+| Truma heater | **Always active** | Active |
+
+> The fridge, boiler, and heater operate independently of the habitation 12V circuit and remain controllable at all times.
+
 ### Creating Light Groups (optional)
 
 To control multiple lights at once, create HA light groups:
