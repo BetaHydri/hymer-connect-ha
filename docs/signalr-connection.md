@@ -7,6 +7,14 @@ connection to the vehicle SCU (Smart Connectivity Unit) through Azure SignalR Se
 It covers the connection lifecycle, token management, reconnection logic, and lessons
 learned from production issues.
 
+> **Important — 12V Safety:** The integration **never** automatically switches the
+> 12V main power on or off. All reconnects, refreshes, resubscribes, and backoff
+> retries are purely **connection-level** operations — they only manage the WebSocket
+> link to the cloud, no switch commands are sent. The 12V state only changes when
+> the user explicitly toggles it via HA or the EHG app. This is critical because
+> the 12V rail powers downstream devices (private router, local HA instance, etc.)
+> that would drain the battery if left on unintentionally.
+
 ## Overview
 
 ```
@@ -112,8 +120,9 @@ connect → listen loop (receives PiaResponse messages)
 ```
 
 The connection is **proactively recycled every 50 minutes** (`MAX_CONNECTION_AGE = 50 * 60`)
-to avoid hitting the Azure SignalR JWT expiry (~1 hour). This is by design and produces
-expected log messages:
+to avoid hitting the Azure SignalR JWT expiry (~1 hour). This is purely a
+**connection-level** operation — no device commands (12V, lights, etc.) are sent
+during reconnection. It produces expected log messages:
 
 ```
 SignalR connection lost — scheduling immediate reconnect
@@ -135,25 +144,26 @@ When the 12V main switch is off, the SCU enters standby:
 
 ### SCU Reconnect (12V Off → On)
 
-When 12V is toggled back ON, the SCU reboots and registers a new session at Azure SignalR.
+When 12V is toggled back ON **by the user**, the SCU reboots and registers a new session at Azure SignalR.
 The integration detects this via `scu_connected` transitioning `false → true` and automatically:
 1. Re-sends UpdateTokens (refreshes routing at the hub)
 2. Re-subscribes to all sensor data
 3. Waits 2 seconds for SCU boot before acting
 
-Without this, commands are silently rejected because the hub's routing table points
-to the old SCU session.
+This is a **read-only** recovery — it restores command delivery and data flow but
+does not send any switch commands. Without it, commands would be silently rejected
+because the hub's routing table points to the old SCU session.
 
 ## Reconnection Logic
 
 ### Trigger Sources
 
-| Trigger | Handler | Backoff |
-|---------|---------|---------|
-| WebSocket closed/error | `_on_connection_lost()` | Reset to 60s |
-| No WebSocket activity for 90s | Keepalive timeout in `listen()` | Reset to 60s |
-| Connection age > 50 min | `needs_reconnect` property | Immediate |
-| Send failure | `_send_with_retry()` | Immediate (1 retry) |
+| Trigger | Handler | Backoff | Sends commands? |
+|---------|---------|---------|----------------|
+| WebSocket closed/error | `_on_connection_lost()` | Reset to 60s | No — connection only |
+| No WebSocket activity for 90s | Keepalive timeout in `listen()` | Reset to 60s | No — connection only |
+| Connection age > 50 min | `needs_reconnect` property | Immediate | No — connection only |
+| Send failure | `_send_with_retry()` | Immediate (1 retry) | Only retries the user''s command |
 
 ### Backoff Strategy
 
@@ -303,10 +313,21 @@ and will receive the completion message. Waiting would block the coordinator pol
 
 ### Why Detect SCU Reconnect via `scu_connected`?
 
-When 12V is toggled OFF→ON, the SCU reboots and gets a new session at Azure SignalR.
+When 12V is toggled OFF→ON **by the user**, the SCU reboots and gets a new session at Azure SignalR.
 Our existing WebSocket stays open (it''s connected to the Azure hub, not directly to the SCU),
 but the hub''s routing table now points to the SCU''s new session. Without re-sending
 UpdateTokens, our commands go to the old (dead) session and are silently dropped.
+Note: this recovery only restores the connection — it never sends switch commands.
+
+### Why Does the Integration Never Auto-Switch 12V?
+
+The 12V main switch controls the habitation power rail. When 12V is on, downstream
+devices (private router, local HA instance, Truma heater standby, etc.) draw power
+from the lithium battery. Automatically switching 12V on would cause unintended
+battery drain when the owner is away. Therefore, all automatic operations in the
+integration (reconnects, refreshes, resubscribes, backoff retries, SCU reconnect
+detection) are strictly **connection-level** — they never send 12V or any other
+switch/light/device commands.
 
 ## File Reference
 
