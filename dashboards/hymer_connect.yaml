@@ -187,52 +187,60 @@ views:
           - entity: sensor.hymer_chassis_battery_voltage
             name: Chassis (Starter)
 
-      # ── Current Power State ──
-      - type: entities
-        title: "⚡ Current Power State"
-        show_header_toggle: false
-        entities:
-          - entity: sensor.hymer_solar_power
-            name: Solar Production
-            icon: mdi:solar-power
-          - entity: sensor.hymer_solar_voltage
-            name: Solar Voltage
-            icon: mdi:solar-panel
-          - entity: sensor.hymer_solar_current
-            name: Solar Current
-            icon: mdi:current-dc
-          - type: divider
-          - entity: sensor.hymer_bms_current
-            name: Net Battery (BMS)
-            icon: mdi:battery-charging
-          - entity: sensor.hymer_battery_current
-            name: Load Draw (EBL)
-            icon: mdi:power-plug
-          - entity: sensor.hymer_bms_voltage
-            name: BMS Voltage
-            icon: mdi:sine-wave
-          - entity: sensor.hymer_bms_temperature
-            name: BMS Temperature
-            icon: mdi:thermometer
-          - entity: sensor.hymer_bms_capacity_remaining
-            name: Capacity Remaining
-            icon: mdi:battery
-          - type: divider
-          - entity: sensor.hymer_power_source
-            name: Power Source
-            icon: mdi:power-plug-outline
-          - entity: sensor.hymer_charge_phase
-            name: Charge Phase
-            icon: mdi:ev-station
-          - entity: binary_sensor.hymer_stecker
-            name: Shore Power
-            icon: mdi:power-plug
-          - entity: binary_sensor.hymer_solar_active
-            name: Solar Active
-            icon: mdi:solar-power
-          - entity: sensor.hymer_heater_electric_power
-            name: Heater Electric
-            icon: mdi:radiator
+      # ── Current Power State (3-column layout) ──
+      - type: horizontal-stack
+        cards:
+          - type: entities
+            title: "☀️ Solar"
+            show_header_toggle: false
+            entities:
+              - entity: sensor.hymer_solar_power
+                name: Production
+                icon: mdi:solar-power
+              - entity: sensor.hymer_solar_voltage
+                name: Voltage
+                icon: mdi:solar-panel
+              - entity: sensor.hymer_solar_current
+                name: Current
+                icon: mdi:current-dc
+              - entity: binary_sensor.hymer_solar_active
+                name: Active
+                icon: mdi:solar-power
+          - type: entities
+            title: "🔋 Battery"
+            show_header_toggle: false
+            entities:
+              - entity: sensor.hymer_bms_current
+                name: Net Flow (BMS)
+                icon: mdi:battery-charging
+              - entity: sensor.hymer_battery_current
+                name: Load Draw (EBL)
+                icon: mdi:power-plug
+              - entity: sensor.hymer_bms_voltage
+                name: Voltage
+                icon: mdi:sine-wave
+              - entity: sensor.hymer_bms_temperature
+                name: Temperature
+                icon: mdi:thermometer
+              - entity: sensor.hymer_bms_capacity_remaining
+                name: Remaining
+                icon: mdi:battery
+          - type: entities
+            title: "🔌 Power Sources"
+            show_header_toggle: false
+            entities:
+              - entity: sensor.hymer_power_source
+                name: Source
+                icon: mdi:power-plug-outline
+              - entity: sensor.hymer_charge_phase
+                name: Charge Phase
+                icon: mdi:ev-station
+              - entity: binary_sensor.hymer_stecker
+                name: Shore Power
+                icon: mdi:power-plug
+              - entity: sensor.hymer_heater_electric_power
+                name: Heater Electric
+                icon: mdi:radiator
 
   # ══════════════════════════════════════════════════════════
   # Power & Electric
