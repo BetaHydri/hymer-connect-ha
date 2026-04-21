@@ -11,6 +11,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **12V main switch availability guard** — All light entities and the water pump switch become unavailable in HA when the 12V main switch is off, preventing interaction with components that won't respond without habitation power. The main switch itself, fridge, boiler, and heater remain controllable regardless of 12V state.
 
+### Documentation
+
+- **Energy Dashboard setup guide** — Step-by-step instructions for creating a Solar Energy (kWh) sensor from `solar_power` (W) using HA's Riemann Sum helper, plus guidance on which sensors are compatible with the Energy dashboard and their required attributes
+
 ## [2.21.1] - 2026-04-21
 
 ### Fixed

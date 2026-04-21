@@ -55,6 +55,65 @@ To control multiple lights at once, create HA light groups:
 > because they used SCU hardware toggles that behaved unpredictably. HA light
 > groups provide reliable, predictable group control.
 
+## Energy Dashboard Integration
+
+The HA [Energy dashboard](https://www.home-assistant.io/docs/energy/) requires sensors with specific attributes to appear in the entity picker ([FAQ](https://www.home-assistant.io/docs/energy/faq/#troubleshooting-missing-entities)):
+
+| Attribute | Power sensors | Energy sensors |
+|-----------|--------------|----------------|
+| `device_class` | `power` | `energy` |
+| `state_class` | `measurement` | `total_increasing` |
+| `unit_of_measurement` | `W` or `kW` | `Wh` or `kWh` |
+
+The integration provides **power** sensors (`solar_power` in W, `heater_electric_power` in W) but not energy sensors. The Energy dashboard's **Solar Panels** section requires an energy sensor (kWh).
+
+### Creating a Solar Energy sensor (Riemann Sum)
+
+Use HA's built-in [Integration - Riemann Sum](https://www.home-assistant.io/integrations/integration/) helper to convert `solar_power` (W) into cumulative energy (kWh):
+
+**Option A: HA UI (recommended)**
+
+1. Go to **Settings > Devices & Services > Helpers**
+2. Click **+ Create Helper > Integration - Riemann sum integral sensor**
+3. Configure:
+   - **Input sensor**: `sensor.hymer_solar_power`
+   - **Integration method**: Left Riemann sum
+   - **Metric prefix**: `k` (kilo)
+   - **Time unit**: Hours
+   - **Name**: Hymer Solar Energy
+
+The resulting `sensor.hymer_solar_energy` will have `device_class: energy`, `state_class: total_increasing`, and `unit: kWh` — ready for the Energy dashboard.
+
+**Option B: configuration.yaml**
+
+```yaml
+sensor:
+  - platform: integration
+    source: sensor.hymer_solar_power
+    name: Hymer Solar Energy
+    unique_id: hymer_solar_energy
+    unit_prefix: k
+    unit_time: h
+    method: left
+```
+
+### Adding to the Energy Dashboard
+
+1. Go to **Energy** (sidebar) > **Configure**
+2. Under **Solar Panels**, click **Add solar production**
+3. Select `sensor.hymer_solar_energy`
+
+> **Note:** The Energy dashboard needs several hours of data before it starts showing charts. Allow at least 24 hours after setup.
+
+### Available power sensors (ready for individual device tracking)
+
+These sensors already have the correct `device_class: power` and `state_class: measurement` attributes and can be used directly under **Individual Devices** in the Energy dashboard:
+
+| Sensor | Unit | Description |
+|--------|------|-------------|
+| `sensor.hymer_solar_power` | W | Solar panel output (voltage × current) |
+| `sensor.hymer_heater_electric_power` | W | Truma heater electric element (0/900/1800W) |
+
 ## Stale CAN sensor workarounds
 
 The Hymer SCU caches the last value received from the Mercedes CAN bus.
