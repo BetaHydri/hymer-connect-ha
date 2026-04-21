@@ -85,11 +85,14 @@ group is missed (e.g., after a reconnect where the initial subscription partiall
 
 ### Why the SCU Goes Silent
 
-The SCU firmware appears to implement a request/response model rather than continuous
-streaming. It reports values in response to subscription requests and then waits for
-the next request. Values that change (e.g., light toggled) are pushed immediately,
-but slow-changing values (battery SOC, solar current, temperatures) require periodic
-prodding to get fresh readings.
+The SCU firmware implements a request/response model rather than continuous
+streaming — primarily to conserve the **cellular data plan** included with the
+vehicle. The LTE data cost is covered by Hymer (not the owner), so the SCU
+minimises upstream traffic by only reporting values when explicitly asked.
+
+- **Event-driven values** (light toggled, door opened, 12V switched) are pushed immediately
+- **Slow-changing values** (battery SOC, solar current, temperatures) are only reported in response to refresh/subscription requests
+- Without periodic prodding, the SCU assumes no client is actively watching and stops sending data after ~2–3 minutes
 
 ## Connection Lifecycle
 
