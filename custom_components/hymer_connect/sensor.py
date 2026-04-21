@@ -470,6 +470,12 @@ SIGNALR_SENSORS: tuple[HymerSensorEntityDescription, ...] = (
     ),
     # --- GPS ---
     HymerSensorEntityDescription(
+        key="gps_utc_time",
+        translation_key="gps_utc_time",
+        value_path="signalr_sensors.gps_utc_time",
+        icon="mdi:clock-outline",
+    ),
+    HymerSensorEntityDescription(
         key="gps_satellites",
         translation_key="gps_satellites",
         state_class=SensorStateClass.MEASUREMENT,
@@ -483,6 +489,57 @@ SIGNALR_SENSORS: tuple[HymerSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         value_path="signalr_sensors.gps_heading",
         icon="mdi:compass",
+    ),
+    # --- SCU unmapped slots (bus 30, slots 8-14) ---
+    # Diagnostic: expose to discover what these carry (possibly LTE telemetry)
+    HymerSensorEntityDescription(
+        key="gps_sensor_8",
+        translation_key="gps_sensor_8",
+        value_path="signalr_sensors.gps_sensor_8",
+        entity_registry_enabled_default=False,
+        icon="mdi:help-circle-outline",
+    ),
+    HymerSensorEntityDescription(
+        key="gps_sensor_9",
+        translation_key="gps_sensor_9",
+        value_path="signalr_sensors.gps_sensor_9",
+        entity_registry_enabled_default=False,
+        icon="mdi:help-circle-outline",
+    ),
+    HymerSensorEntityDescription(
+        key="gps_sensor_10",
+        translation_key="gps_sensor_10",
+        value_path="signalr_sensors.gps_sensor_10",
+        entity_registry_enabled_default=False,
+        icon="mdi:help-circle-outline",
+    ),
+    HymerSensorEntityDescription(
+        key="gps_sensor_11",
+        translation_key="gps_sensor_11",
+        value_path="signalr_sensors.gps_sensor_11",
+        entity_registry_enabled_default=False,
+        icon="mdi:help-circle-outline",
+    ),
+    HymerSensorEntityDescription(
+        key="gps_sensor_12",
+        translation_key="gps_sensor_12",
+        value_path="signalr_sensors.gps_sensor_12",
+        entity_registry_enabled_default=False,
+        icon="mdi:help-circle-outline",
+    ),
+    HymerSensorEntityDescription(
+        key="gps_sensor_13",
+        translation_key="gps_sensor_13",
+        value_path="signalr_sensors.gps_sensor_13",
+        entity_registry_enabled_default=False,
+        icon="mdi:help-circle-outline",
+    ),
+    HymerSensorEntityDescription(
+        key="gps_sensor_14",
+        translation_key="gps_sensor_14",
+        value_path="signalr_sensors.gps_sensor_14",
+        entity_registry_enabled_default=False,
+        icon="mdi:help-circle-outline",
     ),
 )
 

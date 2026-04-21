@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.20.0] - 2026-04-21
+
+### Added
+
+- **GPS UTC time sensor** — `sensor.hymer_gps_utc_time` (bus 30, slot 2) exposes SCU internal time
+- **SCU diagnostic sensors (bus 30, slots 8-14)** — 7 new sensors (`SCU slot 30/8` through `30/14`) disabled by default; enable to discover potential LTE/SCU telemetry data
+
 ## [2.19.3] - 2026-04-21
 
 ### Fixed

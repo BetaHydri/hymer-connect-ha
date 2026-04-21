@@ -203,8 +203,32 @@
       "gps_satellites": {
         "name": "GPS satellites"
       },
+      "gps_utc_time": {
+        "name": "GPS UTC time"
+      },
       "gps_heading": {
         "name": "GPS heading"
+      },
+      "gps_sensor_8": {
+        "name": "SCU slot 30/8"
+      },
+      "gps_sensor_9": {
+        "name": "SCU slot 30/9"
+      },
+      "gps_sensor_10": {
+        "name": "SCU slot 30/10"
+      },
+      "gps_sensor_11": {
+        "name": "SCU slot 30/11"
+      },
+      "gps_sensor_12": {
+        "name": "SCU slot 30/12"
+      },
+      "gps_sensor_13": {
+        "name": "SCU slot 30/13"
+      },
+      "gps_sensor_14": {
+        "name": "SCU slot 30/14"
       },
       "heater_state": {
         "name": "Heater state"
