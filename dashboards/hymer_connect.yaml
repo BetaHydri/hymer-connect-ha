@@ -113,70 +113,81 @@ views:
     path: energy
     icon: mdi:solar-power-variant
     cards:
-      # ── Date selector ──
-      - type: energy-date-selection
-
-      # ── Power Flow + SOC Gauges ──
+      # ── SOC + SoH Gauges ──
       - type: horizontal-stack
         cards:
-          - type: energy-distribution
-            link_dashboard: true
-          - type: vertical-stack
-            cards:
-              - type: gauge
-                entity: sensor.hymer_battery_level
-                name: Lithium SOC
-                min: 0
-                max: 100
-                severity:
-                  green: 50
-                  yellow: 25
-                  red: 10
-                needle: true
-              - type: gauge
-                entity: sensor.hymer_bms_state_of_health
-                name: Battery SoH
-                min: 0
-                max: 100
-                severity:
-                  green: 80
-                  yellow: 60
-                  red: 40
-                needle: true
+          - type: gauge
+            entity: sensor.hymer_battery_level
+            name: Lithium SOC
+            min: 0
+            max: 100
+            severity:
+              green: 50
+              yellow: 25
+              red: 10
+            needle: true
+          - type: gauge
+            entity: sensor.hymer_bms_state_of_health
+            name: Battery SoH
+            min: 0
+            max: 100
+            severity:
+              green: 80
+              yellow: 60
+              red: 40
+            needle: true
 
-      # ── Power Usage (bar chart) ──
-      - type: energy-usage-graph
+      # ── Solar Production (24h graph) ──
+      - type: sensor
+        entity: sensor.hymer_solar_power
+        name: Solar Production
+        icon: mdi:solar-power
+        graph: line
+        hours_to_show: 24
+        detail: 2
 
-      # ── Solar Production (bar chart) ──
-      - type: energy-solar-graph
+      # ── Net Battery Flow (24h graph) ──
+      - type: sensor
+        entity: sensor.hymer_bms_current
+        name: Net Battery Flow (+ charge / − discharge)
+        icon: mdi:battery-charging
+        graph: line
+        hours_to_show: 24
+        detail: 2
 
-      # ── Sources Table ──
-      - type: energy-sources-table
+      # ── Load Draw (24h graph) ──
+      - type: sensor
+        entity: sensor.hymer_battery_current
+        name: Habitation Load Draw
+        icon: mdi:current-dc
+        graph: line
+        hours_to_show: 24
+        detail: 2
 
-      # ── Individual Device Consumption ──
-      - type: energy-devices-graph
+      # ── Solar Energy History (30 days, kWh) ──
+      - type: statistics-graph
+        title: "☀️ Solar Energy (kWh/day)"
+        entities:
+          - entity: sensor.hymer_solar_energy
+            name: Solar Energy
+        stat_types:
+          - change
+        period: day
+        days_to_show: 30
 
-      # ── Real-Time Power ──
-      - type: markdown
-        content: "## ⚡ Real-Time Power Flow"
-      - type: horizontal-stack
-        cards:
-          - type: sensor
-            entity: sensor.hymer_solar_power
-            name: Solar
-            icon: mdi:solar-power
-            graph: line
-            hours_to_show: 24
-            detail: 2
-          - type: sensor
-            entity: sensor.hymer_bms_current
-            name: Net Battery
-            icon: mdi:battery-charging
-            graph: line
-            hours_to_show: 24
-            detail: 2
+      # ── Battery Voltage History ──
+      - type: history-graph
+        title: "🔋 Battery Voltages (24h)"
+        hours_to_show: 24
+        entities:
+          - entity: sensor.hymer_battery_voltage
+            name: Habitation (EBL)
+          - entity: sensor.hymer_bms_voltage
+            name: Lithium (BMS)
+          - entity: sensor.hymer_chassis_battery_voltage
+            name: Chassis (Starter)
 
-      # ── Power Details ──
+      # ── Current Power State ──
       - type: entities
         title: "⚡ Current Power State"
         show_header_toggle: false
@@ -190,15 +201,23 @@ views:
           - entity: sensor.hymer_solar_current
             name: Solar Current
             icon: mdi:current-dc
-          - entity: sensor.hymer_battery_current
-            name: Load Draw (EBL)
-            icon: mdi:power-plug
+          - type: divider
           - entity: sensor.hymer_bms_current
             name: Net Battery (BMS)
             icon: mdi:battery-charging
+          - entity: sensor.hymer_battery_current
+            name: Load Draw (EBL)
+            icon: mdi:power-plug
           - entity: sensor.hymer_bms_voltage
             name: BMS Voltage
             icon: mdi:sine-wave
+          - entity: sensor.hymer_bms_temperature
+            name: BMS Temperature
+            icon: mdi:thermometer
+          - entity: sensor.hymer_bms_capacity_remaining
+            name: Capacity Remaining
+            icon: mdi:battery
+          - type: divider
           - entity: sensor.hymer_power_source
             name: Power Source
             icon: mdi:power-plug-outline
@@ -208,20 +227,12 @@ views:
           - entity: binary_sensor.hymer_stecker
             name: Shore Power
             icon: mdi:power-plug
+          - entity: binary_sensor.hymer_solar_active
+            name: Solar Active
+            icon: mdi:solar-power
           - entity: sensor.hymer_heater_electric_power
             name: Heater Electric
             icon: mdi:radiator
-
-      # ── Solar Energy History ──
-      - type: statistics-graph
-        title: "☀️ Solar Energy (kWh)"
-        entities:
-          - entity: sensor.hymer_solar_energy
-            name: Solar Energy
-        stat_types:
-          - change
-        period: day
-        days_to_show: 30
 
   # ══════════════════════════════════════════════════════════
   # Power & Electric
