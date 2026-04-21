@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.19.5] - 2026-04-21
+
+### Fixed
+
+- **UpdateTokens ACCESS_DENIED after token refresh** — The OAuth2 `accessToken` sent in `UpdateTokens` was read at the start of the method, before `get_remote_access_token()` which could trigger a 401 → auto-refresh of the OAuth2 token. The `accessToken` in the UpdateTokens message was then stale/expired. Now reads `api.access_token` **after** the remote-access-token exchange, ensuring it always contains the freshly refreshed value. This was the root cause of commands failing after ~30 minutes
+
 ## [2.19.4] - 2026-04-21
 
 ### Fixed

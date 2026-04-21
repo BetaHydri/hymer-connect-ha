@@ -343,7 +343,6 @@ class HymerSignalRClient:
         if not self._ws:
             return
 
-        access = self._api.access_token
         scu = self._scu_urn
         vehicle = self._vehicle_urn
 
@@ -358,7 +357,10 @@ class HymerSignalRClient:
             _LOGGER.warning("No vehicle URN — cannot request remote access token")
             return
 
-        # Exchange refresh token for a fresh short-lived access token
+        # Exchange refresh token for a fresh short-lived access token.
+        # This call goes through _request() which auto-refreshes the OAuth2
+        # access token on 401.  We read api.access_token AFTER this call
+        # to ensure we get the refreshed value.
         try:
             ehg_access_token = await self._api.get_remote_access_token(
                 vehicle, self._ehg_refresh_token
@@ -371,6 +373,10 @@ class HymerSignalRClient:
         except HymerConnectApiError as err:
             _LOGGER.error("Failed to get remote access token: %s", err)
             return
+
+        # Read OAuth2 access token AFTER get_remote_access_token() — it may
+        # have been refreshed during the API call (401 → auto-refresh).
+        access = self._api.access_token
 
         args = {
             "accessToken": access,
