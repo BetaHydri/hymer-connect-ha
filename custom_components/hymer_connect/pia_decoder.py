@@ -120,13 +120,14 @@ SENSOR_MAP: dict[tuple[int, int], tuple[str, str | None, str | None]] = {
     (30, 5): ("gps_altitude", "m", None),
     (30, 6): ("gps_satellites", None, None),
     (30, 7): ("gps_heading", "\u00b0", None),
-    (30, 8): ("gps_sensor_8", None, None),
-    (30, 9): ("gps_sensor_9", None, None),
-    (30, 10): ("gps_sensor_10", None, None),
-    (30, 11): ("gps_sensor_11", None, None),
-    (30, 12): ("gps_sensor_12", None, None),
-    (30, 13): ("gps_sensor_13", None, None),
-    (30, 14): ("gps_sensor_14", None, None),
+    # Slots 8-14: SCU/LTE/BT telemetry (unconfirmed — best-guess from S700 mapping + observed values)
+    (30, 8): ("scu_flag_1", None, None),          # False — unknown flag
+    (30, 9): ("lte_connected", None, None),         # True — LTE connection state
+    (30, 10): ("scu_flag_2", None, None),           # False — unknown flag
+    (30, 11): ("paired_bt_devices", None, None),    # 3 — BT paired device count
+    (30, 12): ("bt_connected", None, None),         # True — BT device connected
+    (30, 13): ("scu_flag_3", None, None),           # False — unknown flag
+    (30, 14): ("scu_flag_4", None, None),           # False — unknown flag
     # Heating / Fridge control (34)
     # sid=1: fridge power (bool), sid=2: fridge ECO mode (bool),
     # sid=3: fridge cooling step (uint 1-5)

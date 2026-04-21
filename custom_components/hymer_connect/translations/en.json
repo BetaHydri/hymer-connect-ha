@@ -209,26 +209,26 @@
       "gps_heading": {
         "name": "GPS heading"
       },
-      "gps_sensor_8": {
-        "name": "SCU slot 30/8"
+      "scu_flag_1": {
+        "name": "SCU flag 1 (30/8)"
       },
-      "gps_sensor_9": {
-        "name": "SCU slot 30/9"
+      "lte_connected": {
+        "name": "LTE connected"
       },
-      "gps_sensor_10": {
-        "name": "SCU slot 30/10"
+      "scu_flag_2": {
+        "name": "SCU flag 2 (30/10)"
       },
-      "gps_sensor_11": {
-        "name": "SCU slot 30/11"
+      "paired_bt_devices": {
+        "name": "Paired BT devices"
       },
-      "gps_sensor_12": {
-        "name": "SCU slot 30/12"
+      "bt_connected": {
+        "name": "BT connected"
       },
-      "gps_sensor_13": {
-        "name": "SCU slot 30/13"
+      "scu_flag_3": {
+        "name": "SCU flag 3 (30/13)"
       },
-      "gps_sensor_14": {
-        "name": "SCU slot 30/14"
+      "scu_flag_4": {
+        "name": "SCU flag 4 (30/14)"
       },
       "heater_state": {
         "name": "Heater state"

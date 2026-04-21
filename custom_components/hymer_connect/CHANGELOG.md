@@ -5,6 +5,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.21.0] - 2026-04-21
+
+### Changed
+
+- **SCU diagnostic sensors renamed** — bus 30 slots 8-14 renamed from generic `gps_sensor_N` to descriptive names based on observed S600 values and S700 mapping (unconfirmed best-guess, pending vehicle validation):
+  - `(30, 8)` → `scu_flag_1` — unknown flag (observed: `False`)
+  - `(30, 9)` → `lte_connected` — likely LTE connection state (observed: `True`)
+  - `(30, 10)` → `scu_flag_2` — unknown flag (observed: `False`)
+  - `(30, 11)` → `paired_bt_devices` — likely paired BT device count (observed: `3`)
+  - `(30, 12)` → `bt_connected` — likely BT device connected (observed: `True`)
+  - `(30, 13)` → `scu_flag_3` — unknown flag (observed: `False`)
+  - `(30, 14)` → `scu_flag_4` — unknown flag (observed: `False`)
+
 ## [2.20.0] - 2026-04-21
 
 ### Added
