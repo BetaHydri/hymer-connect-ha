@@ -129,13 +129,18 @@ the raw slot (8, 7) directly.
 | (22, 1) | `fresh_water_sensor` | — | — | Raw sensor |
 | (22, 2) | `fresh_water_level` | % | invert100 | 100=empty, 0=full (inverted) |
 
-## Bus 24 — Outside light
+## Bus 24 — DALI master (brightness/color_temp context)
+
+Bus 24 is **not** the outside LED bar. It is the DALI master channel that the
+EHG app sends alongside every individual light toggle as a global
+brightness/color_temp context. Sending commands to bus 24 has no effect
+on the outside light. The outside light bus ID is unknown.
 
 | Slot | Sensor Name | Unit | Notes |
 |------|------------|------|-------|
-| (24, 1) | `light_outside` | — | On/off |
-| (24, 2) | `light_outside_brightness` | % | Brightness |
-| (24, 3) | `light_outside_color_temp` | — | Color temperature |
+| (24, 1) | `screen_1` | — | DALI group toggle (sending true activates "all Wohnen") |
+| (24, 2) | `screen_2` | % | Global brightness context (sentinel: 10000 when off) |
+| (24, 3) | `unknown_24_3` | — | Global color temperature context |
 
 ## Bus 25 — Grey water
 
@@ -166,12 +171,12 @@ the raw slot (8, 7) directly.
 | (34, 3) | `fridge_cooling_step` | Cooling step 1–5 (uint write) |
 | (34, 4–7) | `heat_ctrl_4..7` | Heater control / fridge setpoint raw |
 
-## Bus 37 — Vehicle info (metadata)
+## Bus 37 — Vehicle metadata
 
 | Slot | Sensor Name | Notes |
 |------|------------|-------|
-| (37, 1) | `fridge_mode` | ⚠️ Likely VehicleType (static metadata, not fridge) |
-| (37, 2) | `fridge_status` | ⚠️ Likely VehicleBrand (static metadata) |
+| (37, 1) | `fridge_mode` | Static metadata (likely VehicleType). Legacy code label, not actually fridge-related |
+| (37, 2) | `fridge_status` | Static metadata (likely VehicleBrand). Legacy code label, not actually fridge-related |
 
 ## Bus 43 — Seating overhead light
 
@@ -220,18 +225,23 @@ the raw slot (8, 7) directly.
 
 ## Bus 99 — BOS LUX LiFePO4 BMS (4×80Ah)
 
-| Slot | Sensor Name | Unit | Transform | Notes |
-|------|------------|------|-----------|-------|
-| (99, 1) | `bms_voltage` | V | — | BMS pack voltage (was: adblue_temp) |
-| (99, 2) | `bms_current` | A | — | BMS current, negative = discharging (was: engine_torque) |
-| (99, 3) | `bms_temperature` | °C | — | Pack cell temperature (was: ambient_temp) |
-| (99, 4) | `lithium_soc` | % | — | Battery SOC (shared S600/S700) |
-| (99, 5) | `bms_time_remaining` | min | — | Estimated runtime (was: fuel_range) |
-| (99, 6) | `bms_state_of_health` | % | — | Battery SoH (was: current_gear) |
-| (99, 7) | `bms_capacity_remaining` | Ah | — | Remaining capacity (was: total_fuel_used) |
-| (99, 8) | `lithium_soc_2` | % | — | Relative capacity |
-| (99, 9) | `bms_charge_detected` | — | — | Charge active flag (was: cruise_control) |
-| (99, 10) | `bms_device_failure` | — | — | BMS error flag (was: dpf_status) |
+On the S600, bus 99 carries extended CAN data (AdBlue, ambient temp, fuel range,
+gear). On the S700, the same bus carries LiFePO4 BMS data. The sensor names
+below reflect the S700 BMS layout. Legacy S600 code labels are noted where
+they differ.
+
+| Slot | Sensor Name | Unit | Notes |
+|------|------------|------|-------|
+| (99, 1) | `bms_voltage` | V | BMS pack voltage. Legacy code label: `adblue_temp` |
+| (99, 2) | `bms_current` | A | BMS current, negative = discharging. Legacy code label: `engine_torque` |
+| (99, 3) | `bms_temperature` | °C | Pack cell temperature. Legacy code label: `ambient_temp` |
+| (99, 4) | `lithium_soc` | % | Battery SOC (shared S600/S700) |
+| (99, 5) | `bms_time_remaining` | min | Estimated runtime. Legacy code label: `fuel_range` |
+| (99, 6) | `bms_state_of_health` | % | Battery SoH. Legacy code label: `current_gear` |
+| (99, 7) | `bms_capacity_remaining` | Ah | Remaining capacity. Legacy code label: `total_fuel_used` |
+| (99, 8) | `lithium_soc_2` | % | Relative capacity |
+| (99, 9) | `bms_charge_detected` | — | Charge active flag. Legacy code label: `cruise_control` |
+| (99, 10) | `bms_device_failure` | — | BMS error flag. Legacy code label: `dpf_status` |
 
 ## Value Transforms
 
