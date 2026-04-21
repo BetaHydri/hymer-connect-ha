@@ -12,7 +12,7 @@ Custom integration to connect your HYMER / Erwin Hymer Group motorhome or carava
 
 > **⚠️ Important:** Real-time sensor data (70+ entities: GPS, battery, doors, heater, fridge, etc.) requires an **EHG Remote Access Refresh Token**. This token must be captured **once** from your phone using mitmproxy during the initial setup. Without it, only basic vehicle metadata (model, VIN, year) is available. See [Obtaining the EHG Refresh Token](#obtaining-the-ehg-refresh-token) for the step-by-step guide.
 
-> **v2.19.5** — **Persistent command control!** Remote-access commands (lights, heater, fridge) no longer stop working after ~30 minutes. Periodic token refresh, SCU reconnect detection, and OAuth2 token fix. ~100 entities including odometer, GPS, battery, temperatures, door/lock status, Truma heater, fridge, and more.
+> **v2.23.1** — **Stable connection & Energy dashboard!** Optimized SignalR traffic to prevent server-side disconnects. Two-tier polling: lightweight refresh every 60s + full resubscribe every 10 min. Auto-recovery after 5 consecutive failures with OAuth2 token refresh. ~100 entities with persistent command control for lights, heater, fridge, 12V switch, and more. See [SignalR connection architecture](docs/signalr-connection.md) for details.
 
 ### Energy Dashboard
 
