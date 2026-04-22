@@ -4,7 +4,7 @@
 > **Base:** Mercedes Sprinter 419 CDI
 > **SCU Firmware:** 1.12.0.0
 > **Validated:** April 2026 via mitmproxy captures + live HA correlation
-> **Discovery scan:** 2026-04-22 — 129 sensors, 126 mapped, 3 unmapped (Bus 27 = LED bar candidate)
+> **Discovery scan:** 2026-04-22 — 129 sensors, 126 mapped, 3 unmapped (Bus 25 = LED bar candidate)
 
 This document maps every known `(bus_id, sensor_id)` slot to its sensor name,
 unit, and value transform as observed on the S600. Other models (e.g. the S700)
