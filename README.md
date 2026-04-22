@@ -202,20 +202,19 @@ pip install mitmproxy
 
 #### 2. Patch the HYMER Connect APK (one-time)
 
-The app uses certificate pinning, which blocks proxy interception. Download your own copy of the APK and patch it:
+The app uses certificate pinning, which blocks proxy interception. You need to obtain the APK file of the HYMER Connect app and patch it to disable certificate pinning:
 
 ```bash
 # Install apk-mitm (requires Node.js)
 npm install -g apk-mitm
 
-# Download the APK from https://apkpure.com/de/hymer-connect/com.ehg.hymerconnect
-# Then patch it:
+# Patch the APK to disable certificate pinning:
 apk-mitm com.ehg.hymerconnect.apk
 ```
 
-This creates a patched APK with certificate pinning disabled.
+You can obtain the APK from your own phone using `adb shell pm path com.ehg.hymerconnect` and `adb pull`, or from a third-party APK mirror site. This creates a patched APK with certificate pinning disabled.
 
-> **⚠️ Legal note:** You must download and patch your own APK. Do not distribute patched APKs to others.
+> **⚠️ Note:** Patching is for personal use only to capture your own vehicle's token. You are responsible for complying with applicable laws in your jurisdiction. Do not distribute patched APKs.
 
 #### 3. Install the patched APK on your phone
 
