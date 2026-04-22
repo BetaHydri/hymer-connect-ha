@@ -178,17 +178,17 @@ A ready-to-use tile-based Lovelace dashboard optimized for mobile and desktop:
 
 The HYMER Connect cloud requires a special **EHG Remote Access Refresh Token** to stream real-time sensor data. This token is created during the initial Bluetooth (BLE) pairing between your phone and your vehicle's Smart Interface Unit (SIU). It is stored inside the Hymer Connect app and **never expires**.
 
-Since there is no public API to generate this token, you must capture it **once** from your phone's network traffic using a proxy tool. After that, the integration refreshes it automatically.
+Since there is no public API to generate this token, you must capture it **once** from your phone's network traffic using a proxy tool. This repo includes a **one-click capture script** that automates the process. After that, the integration refreshes it automatically.
 
 > **🔒 Security:** This token is personal and bound to your account and vehicle. **Never share it** with others. While access to the HYMER Connect cloud is still protected by your email and password, the refresh token could allow someone to obtain short-lived access tokens for your vehicle's sensor data. Treat it like a password.
 
 ### Prerequisites
 
 - A **PC** (Windows, Mac, or Linux) on the same WiFi as your phone
-- An **Android phone** with the HYMER Connect app (the phone you originally paired with your vehicle via Bluetooth)
-- **mitmproxy** installed on the PC ([download](https://mitmproxy.org/))
-- **apk-mitm** to patch the app for HTTPS interception ([GitHub](https://github.com/niklashigi/apk-mitm))
-- ~15 minutes
+- An **Android phone** with the HYMER Connect app already paired with your vehicle
+- **Python 3.10+** with **mitmproxy** installed: `pip install mitmproxy`
+- **apk-mitm** to patch the app (one-time): `npm install -g apk-mitm`
+- ~10 minutes
 
 > **iOS is not supported** for token capture. The HYMER Connect app uses certificate pinning, and iOS apps cannot be repackaged without a jailbreak. You need an Android device (even a borrowed one) for the one-time token capture. After that, the integration works independently of your phone.
 
@@ -197,115 +197,94 @@ Since there is no public API to generate this token, you must capture it **once*
 #### 1. Install mitmproxy on your PC
 
 ```bash
-# Windows (winget)
-winget install mitmproxy
-
-# macOS (Homebrew)
-brew install mitmproxy
-
-# Linux (pip)
 pip install mitmproxy
 ```
 
-#### 2. Patch the HYMER Connect APK
+#### 2. Patch the HYMER Connect APK (one-time)
 
-The app uses certificate pinning, which blocks proxy interception. Patch the APK to disable this:
+The app uses certificate pinning, which blocks proxy interception. Download your own copy of the APK and patch it:
 
 ```bash
 # Install apk-mitm (requires Node.js)
 npm install -g apk-mitm
 
-# Download the HYMER Connect APK from your phone or APKMirror, then patch it:
+# Download the APK from https://apkpure.com/de/hymer-connect/com.ehg.hymerconnect
+# Then patch it:
 apk-mitm com.ehg.hymerconnect.apk
 ```
 
-This creates `com.ehg.hymerconnect-patched.apk`.
+This creates a patched APK with certificate pinning disabled.
+
+> **⚠️ Legal note:** You must download and patch your own APK. Do not distribute patched APKs to others.
 
 #### 3. Install the patched APK on your phone
 
-1. Uninstall the original HYMER Connect app
-2. Enable "Install from unknown sources" in Android settings
+1. Uninstall the original HYMER Connect app (or install alongside if your phone allows it)
+2. Enable **"Install from unknown sources"** in Android settings
 3. Transfer the patched APK to your phone and install it
 4. Log in with your HYMER Connect credentials
 
 > **Important:** You do NOT need to re-pair via Bluetooth. The patched app reuses the BLE pairing tokens stored on your phone from the original pairing.
 
-#### 4. Start the proxy on your PC
-
-Find your PC's local IP address:
+#### 4. Run the capture script
 
 ```powershell
-# Windows
-Get-NetIPAddress -AddressFamily IPv4 | Where-Object { $_.InterfaceAlias -match 'Wi-Fi|WLAN|Ethernet' }
+# Clone this repo (if not already)
+git clone https://github.com/BetaHydri/hymer-connect-ha.git
+cd hymer-connect-ha
 
-# macOS / Linux
-ifconfig | grep "inet "
+# Run the one-click capture script (Windows)
+.\tools\Start-EhgTokenCapture.ps1
 ```
 
-Start mitmproxy:
-
-```bash
-mitmdump --mode regular --listen-port 8080 --set flow_detail=3 -w hymer_trace.flow
-```
+The script will:
+- Display your PC's IP address and the proxy port
+- Start a minimal HTTPS proxy that watches for the token
+- Print step-by-step instructions
 
 #### 5. Configure your phone to use the proxy
 
-1. Go to **Settings > Wi-Fi** (or Connections > Wi-Fi)
-2. Long-press your home WiFi network > **Manage network settings**
-3. Set Proxy to **Manual**
-   - **Proxy hostname:** Your PC's IP address (e.g., `192.168.178.154`)
-   - **Proxy port:** `8080`
-4. Save
+1. Go to **Settings → Wi-Fi** → tap your network → **Proxy → Manual**
+2. Enter the **IP** and **port** shown by the capture script
+3. Save
 
-#### 6. Install the mitmproxy CA certificate
+#### 6. Install the mitmproxy CA certificate (first time only)
 
 1. Open Chrome on your phone and navigate to **http://mitm.it**
 2. Tap **Android** to download the certificate
-3. Open the downloaded file and install it (Settings > Security > Install certificates)
+3. Install it: **Settings → Security → Install certificates**
 4. Name it `mitmproxy`, select **VPN and apps**
 
 #### 7. Capture the token
 
-1. **Force-close** the HYMER Connect app (swipe away from recent apps)
+1. **Force-close** the patched HYMER Connect app (swipe away from recent apps)
 2. **Open** the patched HYMER Connect app
-3. Wait for it to load the vehicle dashboard with sensor data (~10 seconds)
-4. Close the app
+3. Wait ~10 seconds — the token will appear automatically in the terminal:
 
-#### 8. Extract the token
+```
+╔══════════════════════════════════════════════════════════════════╗
+║   ✅  EHG REFRESH TOKEN CAPTURED SUCCESSFULLY!                   ║
+║   The token has been saved to: captured_ehg_token.txt            ║
+╚══════════════════════════════════════════════════════════════════╝
 
-Stop mitmproxy (`Ctrl+C`). Then extract your refresh token:
+   Vehicle:   urn:ehg:vehicle:hy-XXXXXXXXXX
+   Client ID: xx:xx:xx:xx:xx:xx (phone BLE MAC)
+   Token length: 660 chars
 
-```bash
-python3 -c "
-from mitmproxy.io import FlowReader
-import json
-
-with open('hymer_trace.flow', 'rb') as f:
-    reader = FlowReader(f)
-    for flow in reader.stream():
-        if hasattr(flow, 'request') and 'remoteAccessToken' in flow.request.url:
-            body = json.loads(flow.request.content.decode('utf-8'))
-            print('=== YOUR EHG REFRESH TOKEN ===')
-            print(body['token'])
-            print()
-            print('Copy the token above and paste it into the')
-            print('HYMER Connect integration configuration in Home Assistant.')
-            break
-    else:
-        print('Token not found in trace. Make sure the app loaded sensor data.')
-"
+   TOKEN:
+   eyJraWQi...
 ```
 
-The output is a long JWT string starting with `eyJ...`. This is your **EHG Remote Access Refresh Token**.
+The token is also saved to `tools/captured_ehg_token.txt`.
 
-#### 9. Add the token to Home Assistant
+#### 8. Add the token to Home Assistant
 
-1. Go to **Settings > Devices & Services**
+1. Go to **Settings → Devices & Services**
 2. Find **HYMER Connect** and click **Configure** (or re-add the integration)
 3. Paste the token into the **EHG Remote Access Refresh Token** field
 4. Save — real-time sensor data will start flowing within seconds
 
-#### 10. Restore your phone
+#### 9. Clean up your phone
 
 1. Remove the WiFi proxy settings (set Proxy back to **None**)
 2. *(Optional)* Uninstall the patched APK and reinstall from the Play Store
