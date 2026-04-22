@@ -1,7 +1,7 @@
 # PIA Sensor Bus Map — Grand Canyon S 600 CrossOver
 
 > **Vehicle:** HYMER Grand Canyon S 600 CrossOver (2025)
-> **Base:** Mercedes Sprinter 316 CDI
+> **Base:** Mercedes Sprinter 419 CDI
 > **SCU Firmware:** 1.12.0.0
 > **Validated:** April 2026 via mitmproxy captures + live HA correlation
 > **Discovery scan:** 2026-04-22 — 129 sensors, 126 mapped, 3 unmapped (Bus 27 = LED bar candidate)
