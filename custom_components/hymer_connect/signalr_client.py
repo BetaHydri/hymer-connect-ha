@@ -615,12 +615,15 @@ class HymerSignalRClient:
                                     msg_count,
                                     exc_info=True,
                                 )
-                elif msg.type in (
-                    aiohttp.WSMsgType.CLOSED,
-                    aiohttp.WSMsgType.ERROR,
-                ):
+                elif msg.type == aiohttp.WSMsgType.CLOSED:
+                    _LOGGER.info(
+                        "SignalR WebSocket closed after %d messages",
+                        msg_count,
+                    )
+                    break
+                elif msg.type == aiohttp.WSMsgType.ERROR:
                     _LOGGER.warning(
-                        "SignalR WebSocket closed/error after %d messages",
+                        "SignalR WebSocket error after %d messages",
                         msg_count,
                     )
                     break
@@ -631,7 +634,7 @@ class HymerSignalRClient:
                 exc_info=True,
             )
         finally:
-            _LOGGER.warning(
+            _LOGGER.info(
                 "SignalR listen loop ended after %d messages — "
                 "requesting immediate reconnect",
                 msg_count,

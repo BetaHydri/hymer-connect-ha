@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.23.2] - 2026-04-22
+
+### Changed
+
+- **Reduce HA error log noise from expected SignalR reconnections** — Downgraded routine WebSocket close and listen-loop-ended messages from WARNING to INFO level. Only actual WebSocket errors remain at WARNING. Azure SignalR periodically closes connections (token expiry, server-side recycling); the client reconnects automatically and these events are not user-actionable.
+
 ## [2.23.1] - 2026-04-21
 
 ### Fixed

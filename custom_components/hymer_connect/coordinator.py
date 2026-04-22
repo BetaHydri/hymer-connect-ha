@@ -94,7 +94,7 @@ class HymerConnectCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         refresh so `_async_update_data` reconnects within seconds instead
         of waiting for the next poll interval + exponential backoff.
         """
-        _LOGGER.warning("SignalR connection lost — scheduling immediate reconnect")
+        _LOGGER.info("SignalR connection lost — scheduling immediate reconnect")
         self._reconnect_backoff = _INITIAL_BACKOFF
         self._last_reconnect_attempt = 0.0
         # Schedule an async coordinator refresh — listen loop runs on the
