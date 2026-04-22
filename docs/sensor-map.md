@@ -130,13 +130,15 @@ the raw slot (8, 7) directly.
 | (22, 1) | `fresh_water_sensor` | — | — | Raw sensor |
 | (22, 2) | `fresh_water_level` | % | invert100 | 100=empty, 0=full (inverted) |
 
-## Bus 24 — Outside light
+## Bus 24 — All Wohnen light group
+
+Sending (24,1)=true toggles all living area lights (ceiling, ambient, kitchen, seating). **NOT an individual outside light** — verified 2026-04-22: toggling activates all Wohnen lights.
 
 | Slot | Sensor Name | Unit | Notes |
 |------|------------|------|-------|
-| (24, 1) | `light_outside` | — | On/off |
-| (24, 2) | `light_outside_brightness` | % | Brightness (sentinel: 10000 when off) |
-| (24, 3) | `light_outside_color_temp` | — | Color temperature |
+| (24, 1) | `light_wohnen_group` | — | On/off. Toggles all Wohnen lights |
+| (24, 2) | `light_wohnen_group_brightness` | % | Group brightness (sentinel: 10000 when off) |
+| (24, 3) | `light_wohnen_group_color_temp` | — | Group color temperature context |
 
 ## Bus 25 — Grey water
 
