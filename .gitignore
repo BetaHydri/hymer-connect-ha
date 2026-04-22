@@ -35,4 +35,5 @@ Thumbs.db
 # Personal secrets (QR codes, tokens, private data)
 secrets/
 private_*
+captured_ehg_token.txt
 test_signalr.py
