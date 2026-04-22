@@ -145,15 +145,15 @@ the raw slot (8, 7) directly.
 | (25, 1) | `gray_water_sensor_ext` | — | — | Raw sensor |
 | (25, 2) | `gray_water_level` | % | invert100 | 100=empty, 0=full (inverted) |
 
-## Bus 27 — Outside LED bar (discovered 2026-04-22)
+## Bus 27 — All Privat light group (discovered 2026-04-22)
 
-Discovered by `tools/discover_sensors.py`. Same structure as bus 24 (on/off + brightness + color_temp). Likely the outside LED light bar (issue #46). **Pending vehicle verification** — needs physical toggle test to confirm.
+Discovered by `tools/discover_sensors.py`. Same structure as Bus 24 (All Wohnen group). Sending (27,1)=true toggles all bedroom/bath lights. **NOT the outside LED bar** — verified by user: toggling (27,1) activates all private area lights.
 
 | Slot | Sensor Name | Unit | Notes |
 |------|------------|------|-------|
-| (27, 1) | `light_led_bar` | — | On/off (bool). Discovered value: `False` |
-| (27, 2) | `light_led_bar_brightness` | % | Brightness (sentinel: 10000 when off) |
-| (27, 3) | `light_led_bar_color_temp` | — | Color temperature. Discovered value: `100` |
+| (27, 1) | `light_privat_group` | — | On/off (bool). Toggles all Privat lights |
+| (27, 2) | `light_privat_group_brightness` | % | Group brightness (sentinel: 10000 when off) |
+| (27, 3) | `light_privat_group_color_temp` | — | Group color temperature context |
 
 ## Bus 30 — ScuSignals (GPS + SCU telemetry)
 
