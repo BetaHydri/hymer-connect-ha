@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.24.0] - 2026-04-22
+
+### Fixed
+
+- **Duplicate WebSocket connections cause ghost connection state** — When Azure SignalR closes the connection (token expiry, server recycling), the connection-lost callback and the coordinator poll could race to reconnect simultaneously, creating two parallel WebSocket connections with double the traffic. Azure would then throttle or drop one, leaving a "ghost" connection that appears alive (pings succeed, data flows) but silently drops all commands. Added an `asyncio.Lock` to serialize reconnection attempts so only one connection is ever created.
+
 ## [2.23.2] - 2026-04-22
 
 ### Changed

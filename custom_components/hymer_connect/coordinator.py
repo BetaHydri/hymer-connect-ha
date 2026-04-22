@@ -6,6 +6,7 @@ The coordinator polls REST periodically and merges SignalR push data on arrival.
 
 from __future__ import annotations
 
+import asyncio
 from datetime import timedelta
 import logging
 import time
@@ -61,6 +62,7 @@ class HymerConnectCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self._last_rest_metadata_refresh: float = 0.0
         self._last_resubscribe: float = 0.0
         self._cached_rest_data: dict[str, Any] = {}
+        self._signalr_lock = asyncio.Lock()  # prevent concurrent reconnect attempts
         super().__init__(
             hass,
             _LOGGER,
@@ -102,65 +104,78 @@ class HymerConnectCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self.hass.async_create_task(self.async_request_refresh())
 
     async def start_signalr(self) -> None:
-        """Start the SignalR WebSocket connection."""
+        """Start the SignalR WebSocket connection.
+
+        Uses an asyncio.Lock to prevent the race condition where both
+        the connection-lost callback and the coordinator poll trigger
+        concurrent reconnects, creating duplicate WebSocket connections
+        with double the traffic (which Azure then throttles/drops).
+        """
         if not self._scu_urn:
             _LOGGER.warning("No SCU URN — skipping SignalR")
             return
 
-        if self._signalr and self._signalr.connected and not self._signalr.needs_reconnect:
-            _LOGGER.debug("SignalR already connected")
+        if self._signalr_lock.locked():
+            _LOGGER.debug("SignalR reconnect already in progress — skipping")
             return
 
-        # Stop any existing dead/stale connection first
-        if self._signalr:
-            _LOGGER.info("Stopping stale SignalR client before reconnect")
-            await self.stop_signalr()
+        async with self._signalr_lock:
+            # Re-check after acquiring the lock — another task may have
+            # reconnected while we were waiting.
+            if self._signalr and self._signalr.connected and not self._signalr.needs_reconnect:
+                _LOGGER.debug("SignalR already connected (checked under lock)")
+                return
 
-        self._signalr = HymerSignalRClient(
-            api=self.api,
-            session=self._session,
-            vehicle_urn=self._vehicle_urn,
-            scu_urn=self._scu_urn,
-            ehg_refresh_token=self._ehg_refresh_token,
-            on_sensor_update=self._on_signalr_update,
-            on_connection_lost=self._on_signalr_connection_lost,
-        )
+            # Stop any existing dead/stale connection first
+            if self._signalr:
+                _LOGGER.info("Stopping stale SignalR client before reconnect")
+                await self.stop_signalr()
 
-        try:
-            await self._signalr.start()
-            _LOGGER.info("SignalR connected for %s", self._vehicle_urn)
-            # Reset backoff and failure counter on successful connection
-            self._reconnect_backoff = _INITIAL_BACKOFF
-            self._consecutive_failures = 0
-        except HymerConnectApiError as err:
-            self._consecutive_failures += 1
-            _LOGGER.warning(
-                "SignalR connection failed (%d/%d): %s",
-                self._consecutive_failures, _MAX_CONSECUTIVE_FAILURES, err,
+            self._signalr = HymerSignalRClient(
+                api=self.api,
+                session=self._session,
+                vehicle_urn=self._vehicle_urn,
+                scu_urn=self._scu_urn,
+                ehg_refresh_token=self._ehg_refresh_token,
+                on_sensor_update=self._on_signalr_update,
+                on_connection_lost=self._on_signalr_connection_lost,
             )
-            self._signalr = None
 
-            # After too many consecutive failures, force OAuth2 token refresh
-            if self._consecutive_failures >= _MAX_CONSECUTIVE_FAILURES:
-                _LOGGER.warning(
-                    "SignalR failed %d times in a row — forcing OAuth2 token refresh",
-                    self._consecutive_failures,
-                )
-                try:
-                    await self.api._refresh_access_token()
-                    _LOGGER.info("OAuth2 token refreshed after consecutive failures")
-                except Exception:
-                    _LOGGER.error("OAuth2 token refresh failed", exc_info=True)
-                self._consecutive_failures = 0
+            try:
+                await self._signalr.start()
+                _LOGGER.info("SignalR connected for %s", self._vehicle_urn)
+                # Reset backoff and failure counter on successful connection
                 self._reconnect_backoff = _INITIAL_BACKOFF
-            else:
-                # Increase backoff (exponential, capped)
-                self._reconnect_backoff = min(
-                    self._reconnect_backoff * 2, _MAX_BACKOFF
+                self._consecutive_failures = 0
+            except HymerConnectApiError as err:
+                self._consecutive_failures += 1
+                _LOGGER.warning(
+                    "SignalR connection failed (%d/%d): %s",
+                    self._consecutive_failures, _MAX_CONSECUTIVE_FAILURES, err,
                 )
-            _LOGGER.info(
-                "Next SignalR reconnect attempt in %ds", self._reconnect_backoff
-            )
+                self._signalr = None
+
+                # After too many consecutive failures, force OAuth2 token refresh
+                if self._consecutive_failures >= _MAX_CONSECUTIVE_FAILURES:
+                    _LOGGER.warning(
+                        "SignalR failed %d times in a row — forcing OAuth2 token refresh",
+                        self._consecutive_failures,
+                    )
+                    try:
+                        await self.api._refresh_access_token()
+                        _LOGGER.info("OAuth2 token refreshed after consecutive failures")
+                    except Exception:
+                        _LOGGER.error("OAuth2 token refresh failed", exc_info=True)
+                    self._consecutive_failures = 0
+                    self._reconnect_backoff = _INITIAL_BACKOFF
+                else:
+                    # Increase backoff (exponential, capped)
+                    self._reconnect_backoff = min(
+                        self._reconnect_backoff * 2, _MAX_BACKOFF
+                    )
+                _LOGGER.info(
+                    "Next SignalR reconnect attempt in %ds", self._reconnect_backoff
+                )
 
     async def stop_signalr(self) -> None:
         """Stop the SignalR WebSocket connection."""
