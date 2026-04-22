@@ -5,6 +5,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.25.0] - 2026-04-22
+
+### Added
+
+- **Outside LED bar light entity** — Discovered Bus 27 as the outside LED bar via the new `discover_sensors.py` tool. Adds a controllable light entity with on/off and brightness (bus 27, sensor IDs 1-3). EHG app supports on/off + brightness for this light.
+- **Sensor discovery tool** (`tools/discover_sensors.py`) — Standalone script that connects to the SCU via the cloud, subscribes to all PIA data, and outputs a complete (bus_id, sensor_id) mapping table with mapped/unmapped status. Discovered 129 sensors, 126 mapped, 3 unmapped.
+- **EHG token capture scripts** (`tools/capture_ehg_token.py`, `tools/Start-EhgTokenCapture.ps1`) — Simplified one-click proxy for capturing the EHG refresh token. Windows launcher auto-installs prerequisites.
+
+### Documentation
+
+- Updated sensor map (`docs/sensor-map.md`) with Bus 27 LED bar mapping and full discovery scan results
+- Updated README with simplified token capture guide, cross-platform instructions, and prerequisites table
+
 ## [2.24.0] - 2026-04-22
 
 ### Fixed

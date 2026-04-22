@@ -157,6 +157,12 @@ SENSOR_MAP: dict[tuple[int, int], tuple[str, str | None, str | None]] = {
     # Grey water (25)
     (25, 1): ("gray_water_sensor_ext", None, None),
     (25, 2): ("gray_water_level", "%", "invert100"),
+    # Light: LED Bar / Outside LED bar (bus 27) — discovered 2026-04-22 via discover_sensors.py
+    # Same structure as outside light (bus 24): on/off + brightness
+    # EHG app shows on/off + brightness only (no color_temp control)
+    (27, 1): ("light_led_bar", None, None),
+    (27, 2): ("light_led_bar_brightness", "%", None),
+    (27, 3): ("light_led_bar_color_temp", None, None),
     # Fridge (37)
     (37, 1): ("fridge_mode", None, None),
     (37, 2): ("fridge_status", None, None),

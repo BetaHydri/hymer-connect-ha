@@ -106,11 +106,15 @@ LIGHT_DESCRIPTIONS: tuple[HymerLightEntityDescription, ...] = (
         brightness_path="signalr_sensors.light_bedroom_overhead_brightness",
         icon="mdi:ceiling-light",
     ),
-    # NOTE: Outside LED bar — bus ID unknown. Bus 24 is the DALI master
-    # brightness/color_temp channel (sent alongside every light toggle),
-    # NOT the outside light. Sending (24,1)=true activates "all Wohnen".
-    # Need a mitmproxy trace of the EHG app toggling the outside light
-    # specifically to discover its real bus ID.
+    HymerLightEntityDescription(
+        key="light_led_bar",
+        translation_key="light_led_bar",
+        bus_id=27,
+        on_off_path="signalr_sensors.light_led_bar",
+        brightness_path="signalr_sensors.light_led_bar_brightness",
+        color_temp_path="signalr_sensors.light_led_bar_color_temp",
+        icon="mdi:led-strip-variant",
+    ),
 )
 
 
