@@ -123,12 +123,14 @@ the raw slot (8, 7) directly.
 | (21, 2) | `light_kitchen_brightness` | % | Brightness |
 | (21, 3) | `light_kitchen_color_temp` | — | Color temperature |
 
-## Bus 22 — Fresh water
+## Bus 22 — Unknown (likely a light, not fresh water)
+
+Previously labelled as fresh water tank, but mitmproxy capture showed the EHG app sends on/off commands (sid=1, val=1/0) to bus 22 — same pattern as light controls. Fresh water is actually on bus 3 slot (3,8) via EBL402. Bus 22's true purpose needs physical verification (toggle from HA and observe what activates).
 
 | Slot | Sensor Name | Unit | Notes |
 |------|------------|------|-------|
-| (22, 1) | `fresh_water_sensor` | — | Raw sensor bool |
-| (22, 2) | `fresh_water_level` | % | Direct percentage (no invert). Discovery: `15` raw ≈ <10% in EHG app |
+| (22, 1) | `fresh_water_sensor` | — | ⚠️ Likely a light on/off, not water. Discovery: `False` (bool) |
+| (22, 2) | `fresh_water_level` | % | ⚠️ Likely brightness, not water level. Discovery: `15` (int) |
 
 ## Bus 24 — All Wohnen light group
 
