@@ -232,14 +232,20 @@ You can obtain the APK from your own phone using `adb shell pm path com.ehg.hyme
 git clone https://github.com/BetaHydri/hymer-connect-ha.git
 cd hymer-connect-ha
 
-# Run the one-click capture script (Windows)
+# Windows — run the launcher script:
 .\tools\Start-EhgTokenCapture.ps1
+
+# macOS / Linux — run mitmdump directly:
+mitmdump -s tools/capture_ehg_token.py --listen-port 8080 --quiet
 ```
 
 The script will:
-- Display your PC's IP address and the proxy port
-- Start a minimal HTTPS proxy that watches for the token
-- Print step-by-step instructions
+- Start a minimal HTTPS proxy on port 8080
+- Auto-capture the token when the app connects
+- Save it to `tools/captured_ehg_token.txt`
+
+On **Windows**, the launcher also displays your PC's IP address and step-by-step instructions.
+On **macOS/Linux**, find your IP with `ifconfig | grep "inet "` or `ip addr`.
 
 #### 5. Configure your phone to use the proxy
 
