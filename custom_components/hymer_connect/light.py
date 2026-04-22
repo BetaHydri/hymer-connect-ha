@@ -122,6 +122,14 @@ LIGHT_DESCRIPTIONS: tuple[HymerLightEntityDescription, ...] = (
         brightness_path="signalr_sensors.light_wohnen_group_brightness",
         icon="mdi:lightbulb-group-outline",
     ),
+    HymerLightEntityDescription(
+        key="light_led_bar",
+        translation_key="light_led_bar",
+        bus_id=25,
+        on_off_path="signalr_sensors.light_led_bar",
+        brightness_path="signalr_sensors.light_led_bar_brightness",
+        icon="mdi:led-strip-variant",
+    ),
 )
 
 

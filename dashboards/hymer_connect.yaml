@@ -701,6 +701,19 @@ views:
             icon: mdi:ceiling-light
             color: amber
 
+      # ── Outside ──
+      - type: markdown
+        content: "## 🏕️ Outside"
+      - type: grid
+        columns: 2
+        square: false
+        cards:
+          - type: tile
+            entity: light.hymer_led_bar
+            name: LED Bar
+            icon: mdi:led-strip-variant
+            color: amber
+
   # ══════════════════════════════════════════════════════════
   # GPS
   # ══════════════════════════════════════════════════════════

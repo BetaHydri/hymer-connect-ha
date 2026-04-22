@@ -125,10 +125,10 @@ the raw slot (8, 7) directly.
 
 ## Bus 22 — Fresh water
 
-| Slot | Sensor Name | Unit | Transform | Notes |
-|------|------------|------|-----------|-------|
-| (22, 1) | `fresh_water_sensor` | — | — | Raw sensor |
-| (22, 2) | `fresh_water_level` | % | invert100 | 100=empty, 0=full (inverted) |
+| Slot | Sensor Name | Unit | Notes |
+|------|------------|------|-------|
+| (22, 1) | `fresh_water_sensor` | — | Raw sensor bool |
+| (22, 2) | `fresh_water_level` | % | Direct percentage (no invert). Discovery: `15` raw ≈ <10% in EHG app |
 
 ## Bus 24 — All Wohnen light group
 
@@ -140,12 +140,14 @@ Sending (24,1)=true toggles all living area lights (ceiling, ambient, kitchen, s
 | (24, 2) | `light_wohnen_group_brightness` | % | Group brightness (sentinel: 10000 when off) |
 | (24, 3) | `light_wohnen_group_color_temp` | — | Group color temperature context |
 
-## Bus 25 — Grey water
+## Bus 25 — Outside LED bar (confirmed via mitmproxy 2026-04-22)
 
-| Slot | Sensor Name | Unit | Transform | Notes |
-|------|------------|------|-----------|-------|
-| (25, 1) | `gray_water_sensor_ext` | — | — | Raw sensor |
-| (25, 2) | `gray_water_level` | % | invert100 | 100=empty, 0=full (inverted) |
+Previously mislabelled as grey water. Mitmproxy capture confirmed the EHG app sends on/off + brightness commands to bus 25 when toggling the LED bar. Issue #46 resolved.
+
+| Slot | Sensor Name | Unit | Notes |
+|------|------------|------|-------|
+| (25, 1) | `light_led_bar` | — | On/off (bool) |
+| (25, 2) | `light_led_bar_brightness` | % | Brightness (0-100) |
 
 ## Bus 27 — All Privat light group (discovered 2026-04-22)
 

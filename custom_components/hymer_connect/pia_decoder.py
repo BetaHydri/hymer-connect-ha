@@ -148,17 +148,21 @@ SENSOR_MAP: dict[tuple[int, int], tuple[str, str | None, str | None]] = {
     # Water tanks — bus 22 = fresh water, bus 25 = grey water
     # Raw uint is inverted: 100 = empty (0%), 0 = full (100%)
     # Old releases showed both as 0-6% when empty — confirmed inverted scale
+    # Water tank — bus 22 = fresh water
+    # Raw uint value is direct percentage (confirmed: empty tanks show ~15% raw = <10% in EHG app)
     (22, 1): ("fresh_water_sensor", None, None),
-    (22, 2): ("fresh_water_level", "%", "invert100"),
+    (22, 2): ("fresh_water_level", "%", None),
     # Light group: All Wohnen / All living area lights (bus 24)
     # Sending (24,1)=true toggles all living area lights (ceiling, ambient, kitchen, seating).
     # NOT an individual outside light — verified 2026-04-22.
     (24, 1): ("light_wohnen_group", None, None),
     (24, 2): ("light_wohnen_group_brightness", "%", None),
     (24, 3): ("light_wohnen_group_color_temp", None, None),
-    # Grey water (25)
-    (25, 1): ("gray_water_sensor_ext", None, None),
-    (25, 2): ("gray_water_level", "%", "invert100"),
+    # Light: LED bar / Outside LED bar (bus 25) — confirmed via mitmproxy 2026-04-22
+    # EHG app sends on/off (25,1) + brightness (25,2) when toggling LED bar.
+    # Previously mislabelled as grey water. Issue #46 resolved.
+    (25, 1): ("light_led_bar", None, None),
+    (25, 2): ("light_led_bar_brightness", "%", None),
     # Light group: All Privat / All private lights (bus 27) — discovered 2026-04-22
     # Same structure as bus 24 (All Wohnen group). Sending (27,1)=true toggles
     # all bedroom/bath lights. NOT the outside LED bar.

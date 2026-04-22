@@ -5,6 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.27.0] - 2026-04-22
+
+### Added
+
+- **Outside LED bar light entity (Bus 25)** — Confirmed via mitmproxy capture: the EHG app sends on/off + brightness commands to bus 25 when toggling the LED bar. Issue #46 resolved!
+
+### Fixed
+
+- **Bus 25 was grey water, not LED bar** — Mitmproxy capture proved bus 25 is the outside LED bar. Grey water sensor removed from bus 25.
+- **Fresh water invert100 transform removed** — Bus 22 raw values are direct percentages (empty tanks show ~15 raw ≈ <10% in EHG app). The invert100 transform was producing incorrect 85% readings for empty tanks.
+
 ## [2.26.0] - 2026-04-22
 
 ### Changed
