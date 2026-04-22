@@ -266,6 +266,12 @@
       "light_bedroom_overhead_brightness": {
         "name": "Bedroom overhead brightness"
       },
+      "light_led_bar_brightness": {
+        "name": "LED bar brightness"
+      },
+      "light_led_bar_color_temp": {
+        "name": "LED bar color temp"
+      },
       "light_nightlight_brightness": {
         "name": "Night light brightness"
       },
@@ -390,6 +396,9 @@
       },
       "light_bedroom_overhead": {
         "name": "Bedroom overhead light"
+      },
+      "light_led_bar": {
+        "name": "LED bar"
       }
     },
     "light": {
@@ -416,6 +425,9 @@
       },
       "light_bedroom_overhead": {
         "name": "Bedroom overhead"
+      },
+      "light_led_bar": {
+        "name": "LED bar"
       },
       "light_outside": {
         "name": "Outside light"
