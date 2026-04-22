@@ -4,6 +4,7 @@
 > **Base:** Mercedes Sprinter 316 CDI
 > **SCU Firmware:** 1.12.0.0
 > **Validated:** April 2026 via mitmproxy captures + live HA correlation
+> **Discovery scan:** 2026-04-22 — 129 sensors, 126 mapped, 3 unmapped (Bus 27 = LED bar candidate)
 
 This document maps every known `(bus_id, sensor_id)` slot to its sensor name,
 unit, and value transform as observed on the S600. Other models (e.g. the S700)
@@ -129,18 +130,13 @@ the raw slot (8, 7) directly.
 | (22, 1) | `fresh_water_sensor` | — | — | Raw sensor |
 | (22, 2) | `fresh_water_level` | % | invert100 | 100=empty, 0=full (inverted) |
 
-## Bus 24 — DALI master (brightness/color_temp context)
-
-Bus 24 is **not** the outside LED bar. It is the DALI master channel that the
-EHG app sends alongside every individual light toggle as a global
-brightness/color_temp context. Sending commands to bus 24 has no effect
-on the outside light. The outside light bus ID is unknown.
+## Bus 24 — Outside light
 
 | Slot | Sensor Name | Unit | Notes |
 |------|------------|------|-------|
-| (24, 1) | `screen_1` | — | DALI group toggle (sending true activates "all Wohnen") |
-| (24, 2) | `screen_2` | % | Global brightness context (sentinel: 10000 when off) |
-| (24, 3) | `unknown_24_3` | — | Global color temperature context |
+| (24, 1) | `light_outside` | — | On/off |
+| (24, 2) | `light_outside_brightness` | % | Brightness (sentinel: 10000 when off) |
+| (24, 3) | `light_outside_color_temp` | — | Color temperature |
 
 ## Bus 25 — Grey water
 
@@ -148,6 +144,16 @@ on the outside light. The outside light bus ID is unknown.
 |------|------------|------|-----------|-------|
 | (25, 1) | `gray_water_sensor_ext` | — | — | Raw sensor |
 | (25, 2) | `gray_water_level` | % | invert100 | 100=empty, 0=full (inverted) |
+
+## Bus 27 — Outside LED bar (discovered 2026-04-22)
+
+Discovered by `tools/discover_sensors.py`. Same structure as bus 24 (on/off + brightness + color_temp). Likely the outside LED light bar (issue #46). **Pending vehicle verification** — needs physical toggle test to confirm.
+
+| Slot | Sensor Name | Unit | Notes |
+|------|------------|------|-------|
+| (27, 1) | `light_led_bar` | — | On/off (bool). Discovered value: `False` |
+| (27, 2) | `light_led_bar_brightness` | % | Brightness (sentinel: 10000 when off) |
+| (27, 3) | `light_led_bar_color_temp` | — | Color temperature. Discovered value: `100` |
 
 ## Bus 30 — ScuSignals (GPS + SCU telemetry)
 
@@ -163,7 +169,13 @@ Slots 1-2 are shared across S600/S700. Slots 3-7 carry GPS data on the S600
 | (30, 5) | `gps_altitude` | m | Confirmed 13.1m on S600. S700: `scu_voltage` (V) |
 | (30, 6) | `gps_satellites` | — | Confirmed 3 on S600. S700: `paired_bt_devices` |
 | (30, 7) | `gps_heading` | ° | Confirmed 0° on S600. S700: `connected_bt_devices` |
-| (30, 8-14) | `gps_sensor_8..14` | — | Unmapped SCU state flags |
+| (30, 8) | `scu_flag_1` | — | `False` — unknown flag |
+| (30, 9) | `lte_connected` | — | `True` — LTE connection state |
+| (30, 10) | `scu_flag_2` | — | `False` — unknown flag |
+| (30, 11) | `paired_bt_devices` | — | `3` — BT paired device count (confirmed) |
+| (30, 12) | `scu_flag_5` | — | `True` — unknown flag |
+| (30, 13) | `scu_flag_3` | — | `False` — unknown flag |
+| (30, 14) | `scu_flag_4` | — | `False` — unknown flag |
 
 ## Bus 34 — Thetford N4112A fridge (shared S600/S700)
 
