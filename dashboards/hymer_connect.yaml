@@ -709,7 +709,7 @@ views:
         square: false
         cards:
           - type: tile
-            entity: light.hymer
+            entity: light.hymer_2
             name: LED Bar
             icon: mdi:led-strip-variant
             color: amber
