@@ -150,19 +150,21 @@ SENSOR_MAP: dict[tuple[int, int], tuple[str, str | None, str | None]] = {
     # Old releases showed both as 0-6% when empty — confirmed inverted scale
     (22, 1): ("fresh_water_sensor", None, None),
     (22, 2): ("fresh_water_level", "%", "invert100"),
-    # Light: Außenbeleuchtung / Outside light (bus 24)
-    (24, 1): ("light_outside", None, None),
-    (24, 2): ("light_outside_brightness", "%", None),
-    (24, 3): ("light_outside_color_temp", None, None),
+    # Light group: All Wohnen / All living area lights (bus 24)
+    # Sending (24,1)=true toggles all living area lights (ceiling, ambient, kitchen, seating).
+    # NOT an individual outside light — verified 2026-04-22.
+    (24, 1): ("light_wohnen_group", None, None),
+    (24, 2): ("light_wohnen_group_brightness", "%", None),
+    (24, 3): ("light_wohnen_group_color_temp", None, None),
     # Grey water (25)
     (25, 1): ("gray_water_sensor_ext", None, None),
     (25, 2): ("gray_water_level", "%", "invert100"),
-    # Light: LED Bar / Outside LED bar (bus 27) — discovered 2026-04-22 via discover_sensors.py
-    # Same structure as outside light (bus 24): on/off + brightness
-    # EHG app shows on/off + brightness only (no color_temp control)
-    (27, 1): ("light_led_bar", None, None),
-    (27, 2): ("light_led_bar_brightness", "%", None),
-    (27, 3): ("light_led_bar_color_temp", None, None),
+    # Light group: All Privat / All private lights (bus 27) — discovered 2026-04-22
+    # Same structure as bus 24 (All Wohnen group). Sending (27,1)=true toggles
+    # all bedroom/bath lights. NOT the outside LED bar.
+    (27, 1): ("light_privat_group", None, None),
+    (27, 2): ("light_privat_group_brightness", "%", None),
+    (27, 3): ("light_privat_group_color_temp", None, None),
     # Fridge (37)
     (37, 1): ("fridge_mode", None, None),
     (37, 2): ("fridge_status", None, None),

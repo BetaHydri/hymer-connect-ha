@@ -5,6 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.26.0] - 2026-04-22
+
+### Changed
+
+- **Native SCU light groups replace HA groups** — Bus 24 (All Wohnen) and Bus 27 (All Privat) are hardware group controls built into the SCU. One command toggles all lights in each group at the hardware level — faster and more reliable than HA light groups.
+
+### Fixed
+
+- **Bus 24 was not an outside light** — Corrected from individual outside light to All Wohnen group control (verified: toggling activates all living area lights)
+- **Bus 27 was not the LED bar** — Corrected from LED bar to All Privat group control (verified: toggling activates all bedroom/bath lights)
+- **Outside LED bar bus ID still unknown** — Issue #46 remains open. The LED bar is not in the 129 discovered sensor buses.
+
 ## [2.25.0] - 2026-04-22
 
 ### Added

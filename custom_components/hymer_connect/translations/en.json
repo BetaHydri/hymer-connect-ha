@@ -267,10 +267,10 @@
         "name": "Bedroom overhead brightness"
       },
       "light_led_bar_brightness": {
-        "name": "LED bar brightness"
+        "name": "Privat group brightness"
       },
       "light_led_bar_color_temp": {
-        "name": "LED bar color temp"
+        "name": "Privat group color temp"
       },
       "light_nightlight_brightness": {
         "name": "Night light brightness"

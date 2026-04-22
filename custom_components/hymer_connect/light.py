@@ -107,13 +107,20 @@ LIGHT_DESCRIPTIONS: tuple[HymerLightEntityDescription, ...] = (
         icon="mdi:ceiling-light",
     ),
     HymerLightEntityDescription(
-        key="light_led_bar",
-        translation_key="light_led_bar",
+        key="light_privat_group",
+        translation_key="light_privat_group",
         bus_id=27,
-        on_off_path="signalr_sensors.light_led_bar",
-        brightness_path="signalr_sensors.light_led_bar_brightness",
-        color_temp_path="signalr_sensors.light_led_bar_color_temp",
-        icon="mdi:led-strip-variant",
+        on_off_path="signalr_sensors.light_privat_group",
+        brightness_path="signalr_sensors.light_privat_group_brightness",
+        icon="mdi:lightbulb-group",
+    ),
+    HymerLightEntityDescription(
+        key="light_wohnen_group",
+        translation_key="light_wohnen_group",
+        bus_id=24,
+        on_off_path="signalr_sensors.light_wohnen_group",
+        brightness_path="signalr_sensors.light_wohnen_group_brightness",
+        icon="mdi:lightbulb-group-outline",
     ),
 )
 

@@ -627,7 +627,7 @@ views:
     path: lights
     icon: mdi:lightbulb-group
     cards:
-      # ── Master Groups ──
+      # ── Master Groups (native SCU group controls) ──
       - type: markdown
         content: "## 💡 Master Groups"
       - type: grid
@@ -635,12 +635,12 @@ views:
         square: false
         cards:
           - type: tile
-            entity: light.all_wohnen
+            entity: light.hymer_wohnen_all_lights
             name: All Wohnen
             icon: mdi:lightbulb-group
             color: amber
           - type: tile
-            entity: light.all_privat
+            entity: light.hymer
             name: All Privat
             icon: mdi:lightbulb-group-outline
             color: amber
@@ -699,19 +699,6 @@ views:
             entity: light.hymer_bedroom_overhead
             name: Bed Overhead
             icon: mdi:ceiling-light
-            color: amber
-
-      # ── Outside ──
-      - type: markdown
-        content: "## 🏕️ Outside"
-      - type: grid
-        columns: 2
-        square: false
-        cards:
-          - type: tile
-            entity: light.hymer
-            name: LED Bar
-            icon: mdi:led-strip-variant
             color: amber
 
   # ══════════════════════════════════════════════════════════
