@@ -184,20 +184,32 @@ Since there is no public API to generate this token, you must capture it **once*
 
 ### Prerequisites
 
-- A **PC** (Windows, Mac, or Linux) on the same WiFi as your phone
+- A **PC** (Windows, macOS, or Linux) on the same WiFi network as your phone
 - An **Android phone** with the HYMER Connect app already paired with your vehicle
-- **Python 3.10+** with **mitmproxy** installed: `pip install mitmproxy`
-- **apk-mitm** to patch the app (one-time): `npm install -g apk-mitm`
 - ~10 minutes
+
+**Required software on your PC:**
+
+| Tool | Purpose | Install |
+|------|---------|---------|
+| **Python 3.10+** | Required by mitmproxy | [python.org](https://www.python.org/downloads/) or `winget install Python.Python.3` |
+| **mitmproxy** | HTTPS proxy to intercept the token | `pip install mitmproxy` |
+| **Node.js 16+** | Required by apk-mitm | [nodejs.org](https://nodejs.org/) or `winget install OpenJS.NodeJS` |
+| **apk-mitm** | Patches the APK to disable certificate pinning | `npm install -g apk-mitm` |
+| **Git** *(optional)* | Clone this repo for the capture script | [git-scm.com](https://git-scm.com/) or `winget install Git.Git` |
 
 > **iOS is not supported** for token capture. The HYMER Connect app uses certificate pinning, and iOS apps cannot be repackaged without a jailbreak. You need an Android device (even a borrowed one) for the one-time token capture. After that, the integration works independently of your phone.
 
 ### Step-by-step guide
 
-#### 1. Install mitmproxy on your PC
+#### 1. Install the required tools
 
 ```bash
+# Install mitmproxy (requires Python 3.10+)
 pip install mitmproxy
+
+# Install apk-mitm (requires Node.js 16+)
+npm install -g apk-mitm
 ```
 
 #### 2. Patch the HYMER Connect APK (one-time)
