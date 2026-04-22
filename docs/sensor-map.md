@@ -50,15 +50,15 @@ may have different slot assignments on buses 1, 3, 8, 30, and 99 — see the
 | (3, 5) | `battery_voltage` | V | — | Living battery voltage |
 | (3, 6) | `battery_current` | A | — | Living battery current (negative = discharging) |
 | (3, 7) | `chassis_battery_voltage` | V | — | Starter battery voltage |
-| (3, 8) | `light_1_level` | % | — | ⚠️ Label unverified on S600 — EBL402 has tank inputs, not "light levels". Likely water level (S700: fresh_water_level). S600 uses dedicated bus 22. |
-| (3, 9) | `light_2_level` | % | — | ⚠️ Label unverified on S600 — same as (3,8). Likely water level (S700: gray_water_level). S600 uses dedicated bus 25. |
-| (3, 10) | `battery_soc` | % | — | Battery state of charge — confirmed 77% on S600 (⚠️ S700: Ah capacity, not %) |
+| (3, 8) | `light_1_level` | % | — | Discovery: `0`. ⚠️ Label unverified — EBL402 has tank inputs on these pins. S600 uses dedicated bus 22/25 for water. May be unused on S600. |
+| (3, 9) | `light_2_level` | % | — | Discovery: `0`. ⚠️ Same as (3,8). May be unused on S600. |
+| (3, 10) | `battery_soc` | % | — | Battery state of charge. Discovery: 95%. (⚠️ S700: Ah capacity, not %) |
 | (3, 11) | `battery_type` | — | — | "AGM/Lithium" |
 | (3, 12–18) | `switch_12v_1..7` | — | — | 12V switch channels |
 | (3, 19) | `solar_voltage_sentinel` | V | — | Always 3276.8 (sentinel). Real solar on bus 8 |
-| (3, 20) | `solar_connected` | — | — | Solar panel connected flag |
-| (3, 21) | `solar_charger_status` | — | — | MPPT charger status |
-| (3, 22) | `shoreline_connected` | — | — | Shore power (Landstrom) connected. Binary: 1=connected, 0=disconnected |
+| (3, 20) | `solar_connected` | — | — | Solar panel connected. Discovery: `1` (int, not bool) |
+| (3, 21) | `solar_charger_status` | — | — | MPPT charger status. Discovery: `1` (int) |
+| (3, 22) | `shoreline_connected` | — | — | Shore power connected. Discovery: `False` (bool) |
 
 ## Bus 8 — Voltronic MPP260CI (MPPT solar charger)
 
