@@ -181,17 +181,20 @@ Slots 1-2 are shared across S600/S700. Slots 3-7 carry GPS data on the S600
 
 | Slot | Sensor Name | Notes |
 |------|------------|-------|
-| (34, 1) | `fridge_power` | Power on/off (bool write) |
-| (34, 2) | `fridge_eco` | ECO/quiet mode (bool write) |
-| (34, 3) | `fridge_cooling_step` | Cooling step 1–5 (uint write) |
-| (34, 4–7) | `heat_ctrl_4..7` | Heater control / fridge setpoint raw |
+| (34, 1) | `fridge_power` | Power on/off (bool write). Discovery: `False` |
+| (34, 2) | `fridge_eco` | ECO/quiet mode (bool write). Discovery: `False` |
+| (34, 3) | `fridge_cooling_step` | Cooling step 1–5 (uint write). Discovery: `2` |
+| (34, 4) | `heat_ctrl_4` | Heater control value. Discovery: `0` (int) |
+| (34, 5) | `heat_ctrl_5` | Heater control flag. Discovery: `False` (bool) |
+| (34, 6) | `heat_ctrl_6` | Heater control value. Discovery: `0` (int) |
+| (34, 7) | `heat_setpoint_raw` | Fridge setpoint raw (div1000). Discovery: `13.0` |
 
-## Bus 37 — Vehicle metadata
+## Bus 37 — Fridge status
 
 | Slot | Sensor Name | Notes |
 |------|------------|-------|
-| (37, 1) | `fridge_mode` | Static metadata (likely VehicleType). Legacy code label, not actually fridge-related |
-| (37, 2) | `fridge_status` | Static metadata (likely VehicleBrand). Legacy code label, not actually fridge-related |
+| (37, 1) | `fridge_mode` | Fridge operating mode. Discovery: `Off` (string) |
+| (37, 2) | `fridge_status` | Fridge door state. Discovery: `Closed` (string) |
 
 ## Bus 43 — Seating overhead light
 
@@ -211,10 +214,10 @@ Slots 1-2 are shared across S600/S700. Slots 3-7 carry GPS data on the S600
 
 | Slot | Sensor Name | Notes |
 |------|------------|-------|
-| (45, 8) | `scu_connected` | SCU connectivity flag |
-| (45, 9) | `scu_sensor_9` | Unknown |
-| (45, 10) | `scu_sensor_10` | Unknown |
-| (45, 11) | `scu_firmware` | SCU firmware version string |
+| (45, 8) | `scu_connected` | SCU connectivity flag. Discovery: `True` |
+| (45, 9) | `scu_sensor_9` | Discovery: `False` (bool) |
+| (45, 10) | `scu_sensor_10` | Discovery: `False` (bool) |
+| (45, 11) | `scu_firmware` | SCU firmware version string. Discovery: `1.12.0.0` |
 
 ## Bus 49 — Truma / LIM module
 
@@ -234,9 +237,11 @@ Slots 1-2 are shared across S600/S700. Slots 3-7 carry GPS data on the S600
 | (58, 7) | `heater_state` | — | Heater on/off state |
 | (58, 8) | `heater_setpoint` | °C | Target temperature (float write) |
 | (58, 9) | `heater_electric_power` | W | Electric power (0/900/1800) |
-| (58, 10) | `heater_sensor_10` | — | Unknown |
-| (58, 11) | `heater_operating_mode` | — | Operating mode string |
-| (58, 12–14) | `heater_sensor_12..14` | — | Unknown |
+| (58, 10) | `heater_sensor_10` | — | Discovery: `False` (bool) |
+| (58, 11) | `heater_operating_mode` | — | Operating mode string. Discovery: `Normal` |
+| (58, 12) | `heater_sensor_12` | — | Discovery: `False` (bool) |
+| (58, 13) | `heater_sensor_13` | — | Discovery: `False` (bool) |
+| (58, 14) | `heater_sensor_14` | — | Discovery: `False` (bool) |
 
 ## Bus 99 — BOS LUX LiFePO4 BMS (4×80Ah)
 
