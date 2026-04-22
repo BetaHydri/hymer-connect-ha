@@ -50,8 +50,8 @@ may have different slot assignments on buses 1, 3, 8, 30, and 99 — see the
 | (3, 5) | `battery_voltage` | V | — | Living battery voltage |
 | (3, 6) | `battery_current` | A | — | Living battery current (negative = discharging) |
 | (3, 7) | `chassis_battery_voltage` | V | — | Starter battery voltage |
-| (3, 8) | `light_1_level` | % | — | Discovery: `0`. Likely **fresh water level** (EBL402 tank input per S700 PR #44). Shows `0` with empty tank. |
-| (3, 9) | `light_2_level` | % | — | Discovery: `0`. Likely **grey water level** (EBL402 tank input per S700 PR #44). Shows `0` with empty tank. Bus 25 confirmed as LED bar, not grey water. |
+| (3, 8) | `fresh_water_level_ebl` | % | — | **Fresh water level** from EBL402 tank input (per S700 PR #44). Discovery: `0` with empty tank. |
+| (3, 9) | `grey_water_level_ebl` | % | — | **Grey water level** from EBL402 tank input (per S700 PR #44). Discovery: `0` with empty tank. |
 | (3, 10) | `battery_soc` | % | — | Battery state of charge. Discovery: 95%. (⚠️ S700: Ah capacity, not %) |
 | (3, 11) | `battery_type` | — | — | "AGM/Lithium" |
 | (3, 12–18) | `switch_12v_1..7` | — | — | 12V switch channels |

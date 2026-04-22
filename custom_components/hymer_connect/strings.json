@@ -100,7 +100,9 @@
       "heater_operating_mode": { "name": "Heater operating mode" },
       "fridge_mode": { "name": "Fridge mode" },
       "fridge_status": { "name": "Fridge status" },
-      "fresh_water_level": { "name": "Fresh water level" }
+      "fresh_water_level": { "name": "Fresh water level" },
+      "fresh_water_level_ebl": { "name": "Fresh water (EBL)" },
+      "grey_water_level_ebl": { "name": "Grey water (EBL)" }
     },
     "light": {
       "light_living_ceiling": { "name": "Living ceiling" },

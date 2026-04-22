@@ -5,6 +5,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.28.0] - 2026-04-22
+
+### Added
+
+- **EBL402 water tank sensors** — Bus 3 slots (3,8) and (3,9) renamed from `light_1_level`/`light_2_level` to `fresh_water_level_ebl`/`grey_water_level_ebl`. These are the EBL402's built-in tank level inputs (per Dan's S700 PR #44). Direct percentages, no invert.
+
+### Removed
+
+- **Grey water sensor from bus 25** — Bus 25 is the LED bar (confirmed v2.27.0), not grey water. Old `gray_water_level` sensor entity removed.
+
+### Changed
+
+- **Dashboard water gauges** — Updated to use new EBL402 water sensors instead of the old bus 22/25 mappings.
+
 ## [2.27.0] - 2026-04-22
 
 ### Added

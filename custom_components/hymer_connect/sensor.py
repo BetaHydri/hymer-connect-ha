@@ -169,15 +169,6 @@ SIGNALR_SENSORS: tuple[HymerSensorEntityDescription, ...] = (
         value_path="signalr_sensors.solar_voltage",
         icon="mdi:solar-power-variant",
     ),
-    # --- Gray water (bus 12) ---
-    HymerSensorEntityDescription(
-        key="gray_water_level",
-        translation_key="gray_water_level",
-        native_unit_of_measurement=PERCENTAGE,
-        state_class=SensorStateClass.MEASUREMENT,
-        value_path="signalr_sensors.gray_water_level",
-        icon="mdi:water-off",
-    ),
     # --- GPS (bus 30) ---
     HymerSensorEntityDescription(
         key="gps_coordinates",
@@ -429,23 +420,22 @@ SIGNALR_SENSORS: tuple[HymerSensorEntityDescription, ...] = (
         value_path="signalr_sensors.tire_pressure",
         icon="mdi:car-tire-alert",
     ),
-    # --- Diagnostic: EBL402 slots (3,8) and (3,9) ---
-    # Temporary sensors to verify if these are water levels (not light levels)
+    # --- Water levels from EBL402 (bus 3, slots 8/9) ---
     HymerSensorEntityDescription(
-        key="ebl_slot_8",
-        translation_key="ebl_slot_8",
+        key="fresh_water_level_ebl",
+        translation_key="fresh_water_level_ebl",
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
-        value_path="signalr_sensors.light_1_level",
-        icon="mdi:help-circle-outline",
+        value_path="signalr_sensors.fresh_water_level_ebl",
+        icon="mdi:water",
     ),
     HymerSensorEntityDescription(
-        key="ebl_slot_9",
-        translation_key="ebl_slot_9",
+        key="grey_water_level_ebl",
+        translation_key="grey_water_level_ebl",
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
-        value_path="signalr_sensors.light_2_level",
-        icon="mdi:help-circle-outline",
+        value_path="signalr_sensors.grey_water_level_ebl",
+        icon="mdi:water-opacity",
     ),
     # --- Living ceiling brightness (was alarm_battery) ---
     # Bus 11 sid 2 is living room ceiling brightness, not alarm battery

@@ -72,8 +72,8 @@ SENSOR_MAP: dict[tuple[int, int], tuple[str, str | None, str | None]] = {
     (3, 5): ("battery_voltage", "V", None),
     (3, 6): ("battery_current", "A", None),
     (3, 7): ("chassis_battery_voltage", "V", None),
-    (3, 8): ("light_1_level", "%", None),
-    (3, 9): ("light_2_level", "%", None),
+    (3, 8): ("fresh_water_level_ebl", "%", None),   # EBL402 tank input — fresh water (per S700 PR #44, confirmed: 0 with empty tank)
+    (3, 9): ("grey_water_level_ebl", "%", None),    # EBL402 tank input — grey water (per S700 PR #44, confirmed: 0 with empty tank)
     (3, 10): ("battery_soc", "%", None),
     (3, 11): ("battery_type", None, None),
     (3, 12): ("switch_12v_1", None, None),

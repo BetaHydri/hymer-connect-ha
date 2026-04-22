@@ -248,6 +248,12 @@
       "fresh_water_level": {
         "name": "Fresh water level"
       },
+      "fresh_water_level_ebl": {
+        "name": "Fresh water (EBL)"
+      },
+      "grey_water_level_ebl": {
+        "name": "Grey water (EBL)"
+      },
       "light_living_ceiling_brightness": {
         "name": "Living ceiling brightness"
       },

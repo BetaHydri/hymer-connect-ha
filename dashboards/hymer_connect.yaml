@@ -41,7 +41,7 @@ views:
               red: 10
             needle: true
           - type: gauge
-            entity: sensor.hymer_fresh_water_level
+            entity: sensor.hymer_fresh_water_ebl
             name: Fresh Water
             min: 0
             max: 100
@@ -453,8 +453,8 @@ views:
       - type: horizontal-stack
         cards:
           - type: gauge
-            entity: sensor.hymer_fresh_water_level
-            name: Fresh
+            entity: sensor.hymer_fresh_water_ebl
+            name: Fresh (EBL)
             min: 0
             max: 100
             severity:
@@ -463,8 +463,8 @@ views:
               red: 10
             needle: true
           - type: gauge
-            entity: sensor.hymer_grey_water_level
-            name: Grey
+            entity: sensor.hymer_grey_water_ebl
+            name: Grey (EBL)
             min: 0
             max: 100
             severity:
@@ -709,7 +709,7 @@ views:
         square: false
         cards:
           - type: tile
-            entity: light.hymer_led_bar
+            entity: light.hymer
             name: LED Bar
             icon: mdi:led-strip-variant
             color: amber
