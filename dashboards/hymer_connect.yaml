@@ -640,7 +640,7 @@ views:
             icon: mdi:lightbulb-group
             color: amber
           - type: tile
-            entity: light.hymer
+            entity: light.hymer_privat_all_lights
             name: All Privat
             icon: mdi:lightbulb-group-outline
             color: amber
