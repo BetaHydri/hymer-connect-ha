@@ -73,5 +73,9 @@ CONF_VEHICLE_ID = "vehicle_id"
 CONF_EHG_TOKEN = "ehg_access_token"
 CONF_EHG_REFRESH_TOKEN = "ehg_refresh_token"
 
+# Vehicle fuel tank capacity (litres)
+# Sprinter 419 CDI = 93 L diesel tank
+TANK_CAPACITY_LITERS = 93
+
 # Platforms
 PLATFORMS = ["sensor", "binary_sensor", "device_tracker", "light", "switch", "climate", "select"]

@@ -540,6 +540,43 @@ views:
             name: AdBlue Level
             icon: mdi:car-turbocharger
 
+      # ── Fuel (computed from 93 L tank) ──
+      - type: horizontal-stack
+        cards:
+          - type: gauge
+            entity: sensor.hymer_fuel_level
+            name: Diesel
+            min: 0
+            max: 100
+            severity:
+              green: 40
+              yellow: 20
+              red: 10
+            needle: true
+          - type: gauge
+            entity: sensor.hymer_fuel_level_liters
+            name: Liters
+            min: 0
+            max: 93
+            severity:
+              green: 37
+              yellow: 19
+              red: 9
+            needle: true
+      - type: entities
+        title: "⛽ Fuel (93 L Tank)"
+        show_header_toggle: false
+        entities:
+          - entity: sensor.hymer_fuel_level_liters
+            name: Tank Content
+            icon: mdi:fuel
+          - entity: sensor.hymer_fuel_consumption
+            name: Consumption
+            icon: mdi:gas-station-outline
+          - entity: sensor.hymer_estimated_range
+            name: Estimated Range
+            icon: mdi:map-marker-distance
+
       # ── Security ──
       - type: entities
         title: "🔒 Security"

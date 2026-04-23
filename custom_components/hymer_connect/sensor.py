@@ -81,6 +81,33 @@ SIGNALR_SENSORS: tuple[HymerSensorEntityDescription, ...] = (
         value_path="signalr_sensors.fuel_level",
         icon="mdi:fuel",
     ),
+    # --- Computed fuel metrics (93 L tank) ---
+    HymerSensorEntityDescription(
+        key="fuel_level_liters",
+        translation_key="fuel_level_liters",
+        native_unit_of_measurement=UnitOfVolume.LITERS,
+        device_class=SensorDeviceClass.VOLUME_STORAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_path="signalr_sensors.fuel_level_liters",
+        icon="mdi:fuel",
+    ),
+    HymerSensorEntityDescription(
+        key="fuel_consumption",
+        translation_key="fuel_consumption",
+        native_unit_of_measurement="L/100km",
+        state_class=SensorStateClass.MEASUREMENT,
+        value_path="signalr_sensors.fuel_consumption",
+        icon="mdi:gas-station-outline",
+    ),
+    HymerSensorEntityDescription(
+        key="fuel_range_estimated",
+        translation_key="fuel_range_estimated",
+        native_unit_of_measurement=UnitOfLength.KILOMETERS,
+        device_class=SensorDeviceClass.DISTANCE,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_path="signalr_sensors.fuel_range_estimated",
+        icon="mdi:map-marker-distance",
+    ),
     HymerSensorEntityDescription(
         key="adblue_level",
         translation_key="adblue_level",

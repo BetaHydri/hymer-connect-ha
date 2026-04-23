@@ -254,6 +254,15 @@
       "grey_water_level_ebl": {
         "name": "Grey water (EBL)"
       },
+      "fuel_level_liters": {
+        "name": "Fuel level (liters)"
+      },
+      "fuel_consumption": {
+        "name": "Fuel consumption"
+      },
+      "fuel_range_estimated": {
+        "name": "Estimated range"
+      },
       "light_living_ceiling_brightness": {
         "name": "Living ceiling brightness"
       },

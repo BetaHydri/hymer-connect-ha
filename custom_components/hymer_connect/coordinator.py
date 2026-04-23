@@ -20,7 +20,7 @@ from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .api import HymerConnectApi, HymerConnectApiError, HymerConnectAuthError
-from .const import DEFAULT_SCAN_INTERVAL, DOMAIN
+from .const import DEFAULT_SCAN_INTERVAL, DOMAIN, TANK_CAPACITY_LITERS
 from .signalr_client import HymerSignalRClient
 
 _LOGGER = logging.getLogger(__name__)
@@ -31,6 +31,10 @@ _MAX_BACKOFF = 900  # 15 minutes
 _MAX_CONSECUTIVE_FAILURES = 5  # force re-auth after this many failures
 _REST_METADATA_INTERVAL = 600  # 10 minutes between full REST metadata refreshes
 _RESUBSCRIBE_INTERVAL = 600  # 10 minutes — only resubscribe periodically, not every poll
+
+# Fuel consumption tracking
+_FUEL_REFUEL_THRESHOLD_PCT = 5  # fuel increase > 5% = refueling detected
+_FUEL_MIN_DISTANCE_KM = 5  # minimum distance before computing consumption
 
 
 class HymerConnectCoordinator(DataUpdateCoordinator[dict[str, Any]]):
@@ -63,6 +67,10 @@ class HymerConnectCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self._last_resubscribe: float = 0.0
         self._cached_rest_data: dict[str, Any] = {}
         self._signalr_lock = asyncio.Lock()  # prevent concurrent reconnect attempts
+        # Fuel consumption tracking — reference point for trip calculation
+        self._fuel_ref_odo: float | None = None  # odometer at trip start (km)
+        self._fuel_ref_level: float | None = None  # fuel level at trip start (%)
+        self._fuel_consumption_l100: float | None = None  # current L/100km
         super().__init__(
             hass,
             _LOGGER,
@@ -79,6 +87,7 @@ class HymerConnectCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     def _on_signalr_update(self, sensor_data: dict[str, Any]) -> None:
         """Handle incoming SignalR sensor data."""
         self._signalr_data.update(sensor_data)
+        self._compute_fuel_metrics()
         _LOGGER.debug(
             "SignalR push: %d total sensors", len(self._signalr_data)
         )
@@ -87,6 +96,64 @@ class HymerConnectCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             **(self.data or {}),
             "signalr_sensors": self._signalr_data,
         })
+
+    def _compute_fuel_metrics(self) -> None:
+        """Compute fuel consumption (L/100km) and range from odometer + fuel level.
+
+        Uses a trip reference point (odo + fuel level at start).  When the fuel
+        level increases by more than the refuel threshold, the reference resets
+        (tank was filled up).  Consumption is only computed after at least
+        _FUEL_MIN_DISTANCE_KM have been driven to avoid noisy readings.
+        """
+        odo = self._signalr_data.get("odometer")
+        fuel_pct = self._signalr_data.get("fuel_level")
+
+        if not isinstance(odo, (int, float)) or not isinstance(fuel_pct, (int, float)):
+            return
+        if odo <= 0 or fuel_pct < 0 or fuel_pct > 100:
+            return
+
+        fuel_liters = fuel_pct / 100.0 * TANK_CAPACITY_LITERS
+        self._signalr_data["fuel_level_liters"] = round(fuel_liters, 1)
+
+        # Initialize reference point on first valid reading
+        if self._fuel_ref_odo is None or self._fuel_ref_level is None:
+            self._fuel_ref_odo = odo
+            self._fuel_ref_level = fuel_pct
+            _LOGGER.debug("Fuel tracking initialized: odo=%.1f km, level=%.1f%%", odo, fuel_pct)
+            return
+
+        # Detect refueling: fuel level jumped up significantly
+        if fuel_pct > self._fuel_ref_level + _FUEL_REFUEL_THRESHOLD_PCT:
+            _LOGGER.info(
+                "Refueling detected: %.1f%% → %.1f%% — resetting trip reference",
+                self._fuel_ref_level, fuel_pct,
+            )
+            self._fuel_ref_odo = odo
+            self._fuel_ref_level = fuel_pct
+            return
+
+        # Compute consumption when enough distance has been driven
+        delta_km = odo - self._fuel_ref_odo
+        delta_fuel_pct = self._fuel_ref_level - fuel_pct  # positive = fuel used
+
+        if delta_km >= _FUEL_MIN_DISTANCE_KM and delta_fuel_pct > 0:
+            fuel_used_liters = delta_fuel_pct / 100.0 * TANK_CAPACITY_LITERS
+            consumption = fuel_used_liters / delta_km * 100.0
+            # Sanity check: realistic diesel consumption is 5–40 L/100km for a Sprinter
+            if 2.0 <= consumption <= 60.0:
+                self._fuel_consumption_l100 = round(consumption, 1)
+                self._signalr_data["fuel_consumption"] = self._fuel_consumption_l100
+                _LOGGER.debug(
+                    "Fuel consumption: %.1f L/100km (%.1f L over %.1f km)",
+                    consumption, fuel_used_liters, delta_km,
+                )
+
+        # Compute estimated range
+        if self._fuel_consumption_l100 and self._fuel_consumption_l100 > 0:
+            est_range = fuel_liters / self._fuel_consumption_l100 * 100.0
+            self._signalr_data["fuel_range_estimated"] = round(est_range, 0)
+
 
     def _on_signalr_connection_lost(self) -> None:
         """Handle SignalR connection loss — schedule immediate reconnect.

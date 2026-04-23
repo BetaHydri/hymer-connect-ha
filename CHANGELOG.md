@@ -5,6 +5,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.29.0] - 2026-04-23
+
+### Added
+
+- **Fuel level in liters** — Computed sensor `fuel_level_liters` converts fuel level percentage to absolute liters using the 93 L tank capacity (Sprinter 419 CDI).
+- **Fuel consumption (L/100km)** — Computed sensor `fuel_consumption` tracks diesel usage from odometer + fuel level deltas. Resets on refueling (>5% fuel increase). Requires minimum 5 km driven.
+- **Estimated range** — Computed sensor `fuel_range_estimated` calculates remaining driving range in km from current fuel and consumption rate.
+- **Dashboard fuel section** — Diesel gauges and fuel entities card added to the Vehicle tab.
+
 ## [2.28.0] - 2026-04-22
 
 ### Added
