@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.31.0] - 2026-04-23
+
+### Fixed
+
+- **Dashboard engine entity** — Corrected entity ID from `binary_sensor.hymer_engine_running` to `binary_sensor.hymer_engine` (HA-generated ID). Dashboard and template helper now work correctly.
+- **Fridge door sensor** — Confirmed (37,2) IS a door sensor (EHG app shows open/closed). HA entity doesn’t update — suspected decoder depth filter issue, needs mitmproxy capture.
+- **Documentation** — Updated README (LED bar, native groups, ~130 entities, door sensors corrected), sensor-map (bus 22 = LED bar, bus 121 Victron, door verification notes).
+
 ## [2.30.2] - 2026-04-23
 
 ### Fixed
