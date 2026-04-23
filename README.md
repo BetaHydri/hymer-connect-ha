@@ -124,18 +124,21 @@ Three computed sensors derived from the CAN bus odometer and fuel level:
 
 | Category | Sensors |
 |----------|---------|
-| **Vehicle** | Odometer, fuel level, AdBlue level, engine hours, distance to service, outside temperature, ignition state |
-| **Battery** | Voltage, current, SOC (%), chassis battery, charge phase, charger status, battery type, power source |
+| **Vehicle** | Odometer, fuel level, AdBlue level, engine hours, distance to service, outside temperature, ignition state, VIN, language, seatbelt warning |
+| **Battery** | Voltage, current, SOC (%), chassis battery, charge phase, charger status, battery type, power source, shoreline connected |
+| **BMS** | Pack voltage, current, temperature, SOC, SoH, capacity remaining, time remaining, charge detected, device failure |
 | **Solar** | Voltage, current, power (W), panel connected, charger active |
-| **Water** | Fresh water level (%), grey water level (%), water pump status |
-| **Temperature** | Ambient, AdBlue |
-| **GPS** | Coordinates, altitude, heading, satellites, signal quality, fix status |
-| **Doors** | Driver, passenger (open/closed). Sliding door and rear doors are CAN-bus only — use Mercedes ME (mbapi2020) integration |
-| **Security** | Lock status, ignition, handbrake, engine running, cruise control |
-| **Lights** | Parking brake, aux heater available/state, cruise control, downhill assist |
+| **Water** | Fresh water (EBL), grey water (EBL), water pump |
+| **GPS** | Coordinates, altitude, heading, satellites, signal quality, fix status, UTC time |
+| **Doors** | Driver, passenger (open/closed). Sliding/rear doors: CAN-bus only (Mercedes ME / mbapi2020) |
+| **Security** | Lock status, ignition, handbrake, engine running, seatbelt warning |
+| **Chassis** | Parking brake, aux heater available/state, cruise control, downhill assist, coolant warning, motor oil warning, wiping water empty |
 | **Heating** | Truma connected/status/firmware, fan speed, fuel type, electric power (0/900/1800W), setpoint, operating mode |
-| **Fridge** | Mode (cooling step), door status (Open/Closed), ECO/Quiet mode |
-| **System** | SCU connected/firmware, Truma firmware, tyre pressure, alarm status/battery |
+| **Fridge** | Mode (cooling step), door status, ECO/Quiet mode, power on/off |
+| **Lights** | 8 interior lights (on/off, brightness, color temp), LED bar (on/off, brightness), Wohnen group, Privat group |
+| **Fuel** | Level (%), liters, consumption (L/100km), estimated range (computed) |
+| **System** | SCU connected/firmware, Truma firmware, LTE connected, paired BT devices |
+| **Victron** | Inverter on/off, charger on/off, voltages, currents, frequencies, device failure, firmware (bus 121 — disabled by default) |
 | **Total** | **~130 entities** (sensors, binary sensors, lights, switches, climate, selects) from CAN bus, LIN bus, GPS, and connected components |
 
 ### 🗺️ Device Tracker
