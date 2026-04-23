@@ -123,9 +123,9 @@ the raw slot (8, 7) directly.
 | (21, 2) | `light_kitchen_brightness` | % | Brightness |
 | (21, 3) | `light_kitchen_color_temp` | — | Color temperature |
 
-## Bus 22 — LED bar duplicate (confirmed 2026-04-23)
+## Bus 22 — Outside LED bar (confirmed at vehicle 2026-04-23)
 
-Previously labelled as fresh water tank. Confirmed at vehicle 2026-04-23: both water tanks were empty but bus 22 showed 88%, matching LED bar brightness on bus 25. Bus 22 is a duplicate SCU component for the same physical LED bar. Disabled by default.
+Previously labelled as fresh water tank. Confirmed at vehicle 2026-04-23: both water tanks were empty but bus 22 showed 88%, matching LED bar brightness on bus 25. Bus 22 is the outside LED bar — same physical light as bus 25 (separate SCU component registration). Sensor entities disabled by default (bus 25 is the primary control channel).
 
 | Slot | Sensor Name | Unit | Notes |
 |------|------------|------|-------|
