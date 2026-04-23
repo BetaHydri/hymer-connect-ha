@@ -200,7 +200,7 @@ Slots 1-2 are shared across S600/S700. Slots 3-7 carry GPS data on the S600
 | Slot | Sensor Name | Notes |
 |------|------------|-------|
 | (37, 1) | `fridge_mode` | Fridge operating mode. Discovery: `Off` (string) |
-| (37, 2) | `fridge_status` | Fridge operating state (NOT door sensor — Thetford N4112A has no door switch). Always shows "Closed" regardless of door position. Confirmed 2026-04-23. |
+| (37, 2) | `fridge_status` | Fridge door state. EHG app correctly shows open/closed but HA entity stays "Closed". Suspected decoder issue — update may arrive via different protobuf path or depth. Needs mitmproxy capture. |
 
 ## Bus 43 — Seating overhead light
 
