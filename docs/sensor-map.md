@@ -288,22 +288,22 @@ Solar Panel (19V)
       │
       ▼
 ┌─────────────┐
-│  Voltronic   │  solar_current (bus 8)  → raw panel output
-│  MPPT 260CI  │  e.g. 2.1 A @ 19.4V = 40.7W
+│  Voltronic  │  solar_current (bus 8)  → raw panel output
+│  MPPT 260CI │  e.g. 2.1 A @ 19.4V = 40.7W
 └──────┬──────┘
        │  MPPT converts to battery voltage
        ▼
 ┌─────────────┐
-│  BOS LUX     │  bms_current (bus 99)   → net flow at battery
-│  LiFePO4 BMS │  positive = charging, negative = discharging
-│  4×80Ah      │  e.g. +1.54 A (net charge into cells)
+│  BOS LUX    │  bms_current (bus 99)   → net flow at battery
+│  LiFePO4 BMS│  positive = charging, negative = discharging
+│  4×80Ah     │  e.g. +1.54 A (net charge into cells)
 └──────┬──────┘
        │
        ▼
 ┌─────────────┐
-│  CBE EBL402  │  battery_current (bus 3) → habitation load draw
-│  Habitation  │  negative = consuming power
-│  Controller  │  e.g. -0.37 A (SCU, fridge ECU, standby loads)
+│  CBE EBL402 │  battery_current (bus 3) → habitation load draw
+│  Habitation │  negative = consuming power
+│  Controller │  e.g. -0.37 A (SCU, fridge ECU, standby loads)
 └─────────────┘
 ```
 
