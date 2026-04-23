@@ -9,9 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- **Fuel level in liters** — Computed sensor `fuel_level_liters` converts fuel level percentage to absolute liters using the 93 L tank capacity (Sprinter 419 CDI).
+- **Fuel level in liters** — Computed sensor `fuel_level_liters` converts fuel level percentage to absolute liters using the configured tank capacity.
 - **Fuel consumption (L/100km)** — Computed sensor `fuel_consumption` tracks diesel usage from odometer + fuel level deltas. Resets on refueling (>5% fuel increase). Requires minimum 5 km driven.
 - **Estimated range** — Computed sensor `fuel_range_estimated` calculates remaining driving range in km from current fuel and consumption rate.
+- **Configurable diesel tank capacity** — Options flow allows users to set their diesel tank size (30–200 L, default 93 L for Sprinter 419/519 CDI). Go to Settings > Integrations > HYMER Connect > Configure.
 - **Dashboard fuel section** — Diesel gauges and fuel entities card added to the Vehicle tab.
 
 ## [2.28.0] - 2026-04-22

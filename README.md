@@ -101,6 +101,23 @@ Control 8 interior lights with on/off, brightness, and color temperature:
 
 *Electric mode requires shore power (Landstrom). Without it, only Diesel and Both are available.
 
+### ⛽ Fuel Consumption & Range (computed)
+
+Three computed sensors derived from the CAN bus odometer and fuel level:
+
+| Sensor | Entity ID | Description |
+|--------|-----------|-------------|
+| **Tank content** | `sensor.hymer_fuel_level_liters` | Fuel level in absolute liters |
+| **Consumption** | `sensor.hymer_fuel_consumption` | Trip consumption in L/100km |
+| **Estimated range** | `sensor.hymer_estimated_range` | Remaining range in km |
+
+**How it works:**
+- A trip reference point (odometer + fuel %) is stored on first reading
+- Consumption is computed once ≥ 5 km have been driven
+- Refueling is auto-detected when fuel level increases by > 5% — trip resets
+- Tank capacity is configurable: **Settings > Integrations > HYMER Connect > Configure** (default: 93 L)
+- Common Sprinter tanks: 71 L (standard), 93 L (419/519 CDI optional)
+
 ### 📊 Real-Time Sensors (via SignalR, requires EHG Refresh Token)
 
 | Category | Sensors |

@@ -78,8 +78,18 @@ async def async_setup_entry(
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
 
+    # Reload integration when options change (e.g. tank capacity)
+    entry.async_on_unload(entry.add_update_listener(_async_options_updated))
+
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORM_LIST)
     return True
+
+
+async def _async_options_updated(
+    hass: HomeAssistant, entry: HymerConnectConfigEntry
+) -> None:
+    """Handle options update — reload integration to apply new settings."""
+    await hass.config_entries.async_reload(entry.entry_id)
 
 
 async def async_unload_entry(

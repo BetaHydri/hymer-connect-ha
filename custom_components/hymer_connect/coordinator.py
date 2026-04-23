@@ -20,7 +20,7 @@ from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .api import HymerConnectApi, HymerConnectApiError, HymerConnectAuthError
-from .const import DEFAULT_SCAN_INTERVAL, DOMAIN, TANK_CAPACITY_LITERS
+from .const import CONF_TANK_CAPACITY, DEFAULT_SCAN_INTERVAL, DEFAULT_TANK_CAPACITY_LITERS, DOMAIN
 from .signalr_client import HymerSignalRClient
 
 _LOGGER = logging.getLogger(__name__)
@@ -84,6 +84,13 @@ class HymerConnectCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         """Return the active SignalR client for sending commands."""
         return self._signalr
 
+    @property
+    def tank_capacity(self) -> int:
+        """Return the configured diesel tank capacity in liters."""
+        return self.config_entry.options.get(
+            CONF_TANK_CAPACITY, DEFAULT_TANK_CAPACITY_LITERS
+        )
+
     def _on_signalr_update(self, sensor_data: dict[str, Any]) -> None:
         """Handle incoming SignalR sensor data."""
         self._signalr_data.update(sensor_data)
@@ -113,7 +120,8 @@ class HymerConnectCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         if odo <= 0 or fuel_pct < 0 or fuel_pct > 100:
             return
 
-        fuel_liters = fuel_pct / 100.0 * TANK_CAPACITY_LITERS
+        tank_cap = self.tank_capacity
+        fuel_liters = fuel_pct / 100.0 * tank_cap
         self._signalr_data["fuel_level_liters"] = round(fuel_liters, 1)
 
         # Initialize reference point on first valid reading
@@ -138,7 +146,7 @@ class HymerConnectCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         delta_fuel_pct = self._fuel_ref_level - fuel_pct  # positive = fuel used
 
         if delta_km >= _FUEL_MIN_DISTANCE_KM and delta_fuel_pct > 0:
-            fuel_used_liters = delta_fuel_pct / 100.0 * TANK_CAPACITY_LITERS
+            fuel_used_liters = delta_fuel_pct / 100.0 * tank_cap
             consumption = fuel_used_liters / delta_km * 100.0
             # Sanity check: realistic diesel consumption is 5–40 L/100km for a Sprinter
             if 2.0 <= consumption <= 60.0:

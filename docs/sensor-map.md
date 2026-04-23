@@ -321,6 +321,28 @@ Solar Panel (19V)
 A negative habitation current while BMS current is positive is normal —
 the solar more than compensates for the load.
 
+## Computed Fuel Sensors (v2.29.0)
+
+These sensors are **not** read from a CAN bus slot. They are computed by the
+coordinator from `(1,1) odometer` and `(1,2) fuel_level` plus the configured
+diesel tank capacity (default: 93 L for Sprinter 419/519 CDI).
+
+| Sensor | Unit | Description |
+|--------|------|-------------|
+| `fuel_level_liters` | L | `fuel_level_% × tank_capacity / 100` |
+| `fuel_consumption` | L/100km | Trip-based: `(fuel_used_L / distance_km) × 100` |
+| `fuel_range_estimated` | km | `fuel_liters / consumption_L100 × 100` |
+
+**Trip tracking logic:**
+- A reference point (odometer + fuel %) is stored on first reading
+- Consumption is only computed after ≥ 5 km driven (noise filter)
+- Refueling auto-detected when fuel level increases > 5% → trip resets
+- Sanity bounds: only values between 2–60 L/100km are accepted
+
+**Tank capacity configuration:**
+Settings → Integrations → HYMER Connect → Configure → "Diesel tank capacity"
+Range: 30–200 L. Common Sprinter values: 71 L (standard), 93 L (419/519 CDI optional).
+
 ## S700 Conflicts Legend
 
 Slots marked with ⚠️ have **different meanings on the Grand Canyon S700**.

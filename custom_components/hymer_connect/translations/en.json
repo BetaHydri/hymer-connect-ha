@@ -478,5 +478,18 @@
         "name": "Boiler mode"
       }
     }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "HYMER Connect Options",
+        "data": {
+          "tank_capacity_liters": "Diesel tank capacity (liters)"
+        },
+        "data_description": {
+          "tank_capacity_liters": "Size of the diesel tank in liters. Common values: 71 L (Sprinter standard), 93 L (Sprinter 419/519 CDI optional). Used to compute fuel level in liters, consumption (L/100km), and estimated range."
+        }
+      }
+    }
   }
 }

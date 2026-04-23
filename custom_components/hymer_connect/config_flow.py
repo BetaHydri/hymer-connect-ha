@@ -11,6 +11,7 @@ from homeassistant.config_entries import (
     ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
+    OptionsFlow,
 )
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
@@ -22,6 +23,8 @@ from .const import (
     CONF_BRAND,
     CONF_EHG_REFRESH_TOKEN,
     CONF_REFRESH_TOKEN,
+    CONF_TANK_CAPACITY,
+    DEFAULT_TANK_CAPACITY_LITERS,
     DOMAIN,
 )
 
@@ -41,6 +44,13 @@ class HymerConnectConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for HYMER Connect."""
 
     VERSION = 1
+
+    @staticmethod
+    def async_get_options_flow(
+        config_entry: ConfigEntry,
+    ) -> HymerConnectOptionsFlow:
+        """Get the options flow for this handler."""
+        return HymerConnectOptionsFlow(config_entry)
 
     async def _async_try_authenticate(
         self, brand: str, username: str, password: str
@@ -149,4 +159,35 @@ class HymerConnectConfigFlow(ConfigFlow, domain=DOMAIN):
                 }
             ),
             errors=errors,
+        )
+
+
+class HymerConnectOptionsFlow(OptionsFlow):
+    """Handle options for HYMER Connect."""
+
+    def __init__(self, config_entry: ConfigEntry) -> None:
+        """Initialize options flow."""
+        self._config_entry = config_entry
+
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Manage the options."""
+        if user_input is not None:
+            return self.async_create_entry(title="", data=user_input)
+
+        current_capacity = self._config_entry.options.get(
+            CONF_TANK_CAPACITY, DEFAULT_TANK_CAPACITY_LITERS
+        )
+
+        return self.async_show_form(
+            step_id="init",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(
+                        CONF_TANK_CAPACITY,
+                        default=current_capacity,
+                    ): vol.All(vol.Coerce(int), vol.Range(min=30, max=200)),
+                }
+            ),
         )
