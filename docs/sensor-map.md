@@ -4,7 +4,7 @@
 > **Base:** Mercedes Sprinter 419 CDI
 > **SCU Firmware:** 1.12.0.0
 > **Validated:** April 2026 via mitmproxy captures + live HA correlation
-> **Discovery scan:** 2026-04-22 — 129 sensors, 126 mapped, 3 unmapped (Bus 25 = LED bar candidate)
+> **Discovery scan:** 2026-04-23 — 129 sensors, 129 mapped, 0 unmapped. Vehicle-verified at Unterföhring.
 
 This document maps every known `(bus_id, sensor_id)` slot to its sensor name,
 unit, and value transform as observed on the S600. Other models (e.g. the S700)
@@ -26,9 +26,9 @@ may have different slot assignments on buses 1, 3, 8, 30, and 99 — see the
 | (1, 9) | `outside_temperature` | °C | — | Mercedes outside temperature sensor (bumper-mounted). Confirmed 2026-04-20: read 13°C → 16°C tracking real ambient weather in Unterföhring. Same value as Mercedes cockpit "Außentemperatur" display. |
 | (1, 10) | `engine_running` | — | — | Engine on/off |
 | (1, 11) | `wiping_water_empty` | — | — | Washer fluid low warning (per S700 PR #44; was door_sliding — never updated on S600) |
-| (1, 12) | `door_driver` | — | — | Driver door (confirmed at vehicle 2026-04-20) |
-| (1, 13) | `door_passenger` | — | — | Passenger door (confirmed at vehicle 2026-04-20) |
-| (1, 14) | `motor_oil_warning` | — | — | Engine oil warning (per S700 PR #44; was door_rear — never updated on S600) |
+| (1, 12) | `door_driver` | — | — | Driver door (confirmed at vehicle 2026-04-20, re-confirmed 2026-04-23). MB API: `doorstatusfrontleft` |
+| (1, 13) | `door_passenger` | — | — | Passenger door (confirmed at vehicle 2026-04-20, re-confirmed 2026-04-23). MB API: `doorstatusfrontright` |
+| (1, 14) | `motor_oil_warning` | — | — | Shows "SNA" (Sensor Not Available) on S600. Per S700 PR #44: engine oil warning. Not a door — confirmed 2026-04-23. Sliding/rear doors only via MB API (`doorstatusrearright`, `decklidstatus`). |
 | (1, 15) | `ignition_state` | — | — | IGN_LOCK/OFF/ACC/ON/START |
 | (1, 16) | `seatbelt_warning` | — | — | Seatbelt warning |
 | (1, 17) | `coolant_warning` | — | — | Coolant low warning (was: turn_signal) |
@@ -123,14 +123,14 @@ the raw slot (8, 7) directly.
 | (21, 2) | `light_kitchen_brightness` | % | Brightness |
 | (21, 3) | `light_kitchen_color_temp` | — | Color temperature |
 
-## Bus 22 — Unknown (likely a light, not fresh water)
+## Bus 22 — LED bar duplicate (confirmed 2026-04-23)
 
-Previously labelled as fresh water tank, but mitmproxy capture showed the EHG app sends on/off commands (sid=1, val=1/0) to bus 22 — same pattern as light controls. Fresh water is actually on bus 3 slot (3,8) via EBL402. Bus 22's true purpose needs physical verification (toggle from HA and observe what activates).
+Previously labelled as fresh water tank. Confirmed at vehicle 2026-04-23: both water tanks were empty but bus 22 showed 88%, matching LED bar brightness on bus 25. Bus 22 is a duplicate SCU component for the same physical LED bar. Disabled by default.
 
 | Slot | Sensor Name | Unit | Notes |
 |------|------------|------|-------|
-| (22, 1) | `fresh_water_sensor` | — | ⚠️ Likely a light on/off, not water. Discovery: `False` (bool) |
-| (22, 2) | `fresh_water_level` | % | ⚠️ Likely brightness, not water level. Discovery: `15` (int) |
+| (22, 1) | `light_led_bar_2` | — | On/off (duplicate of bus 25) |
+| (22, 2) | `light_led_bar_2_brightness` | % | Brightness (tracks bus 25 LED bar) |
 
 ## Bus 24 — All Wohnen light group
 
@@ -349,3 +349,31 @@ Slots marked with ⚠️ have **different meanings on the Grand Canyon S700**.
 See [PR #44](https://github.com/BetaHydri/hymer-connect-ha/pull/44) for the
 S700 observations. A model-aware sensor map is planned to support both models
 without conflicts.
+
+## Bus 121 — Victron MultiPlus 12/1600/70 (inverter/charger) — NOT YET CONFIRMED
+
+From EHG app metadata extraction (Dan, April 2026). SCU component 121 = VictronMultiplus.
+**Not detected** on S600 discovery scan 2026-04-23 (Victron physical switch may have been OFF).
+All entities disabled by default.
+
+| Slot | Sensor Name | R/W | Type | Notes |
+|------|------------|-----|------|-------|
+| (121, 1) | `victron_inverter_on` | rw | bool | Inverter power on/off |
+| (121, 2) | `victron_inverter_state` | r | int | Inverter state code |
+| (121, 3) | `victron_inverter_l1_voltage` | r | V | Inverter L1 output voltage |
+| (121, 4) | `victron_inverter_l1_current` | r | A | Inverter L1 output current |
+| (121, 5) | `victron_inverter_l1_frequency` | r | Hz | Inverter L1 output frequency |
+| (121, 6) | `victron_inverter_l2_voltage` | r | V | Inverter L2 output voltage |
+| (121, 7) | `victron_inverter_l2_current` | r | A | Inverter L2 output current |
+| (121, 8) | `victron_inverter_l2_frequency` | r | Hz | Inverter L2 output frequency |
+| (121, 9) | `victron_charger_on` | rw | bool | Charger power on/off |
+| (121, 10) | `victron_charger_state` | r | — | Charger state |
+| (121, 11) | `victron_charge_voltage` | r | V | Charge output voltage |
+| (121, 12) | `victron_charge_current` | r | A | Charge output current |
+| (121, 13) | `victron_max_charge_current` | rw | A | Maximum charge current limit |
+| (121, 14) | `victron_input_current_limit` | rw | A | Shore power input current limit |
+| (121, 15) | `victron_input_voltage` | r | V | Shore power input voltage |
+| (121, 16) | `victron_input_current` | r | A | Shore power input current |
+| (121, 17) | `victron_input_frequency` | r | Hz | Shore power input frequency |
+| (121, 18) | `victron_device_failure` | r | — | Device failure status |
+| (121, 19) | `victron_firmware` | r | — | Firmware version string |

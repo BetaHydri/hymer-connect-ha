@@ -29,7 +29,7 @@ Unlike the official EHG app, this integration gives you **full Home Assistant po
 
 > **⚠️ Important:** Real-time sensor data (70+ entities: GPS, battery, doors, heater, fridge, etc.) requires an **EHG Remote Access Refresh Token**. This token must be captured **once** from your phone using mitmproxy during the initial setup. Without it, only basic vehicle metadata (model, VIN, year) is available. See [Obtaining the EHG Refresh Token](#obtaining-the-ehg-refresh-token) for the step-by-step guide.
 
-> **v2.23.1** — **Stable connection & Energy dashboard!** Optimized SignalR traffic to prevent server-side disconnects. Two-tier polling: lightweight refresh every 60s + full resubscribe every 10 min. Auto-recovery after 5 consecutive failures with OAuth2 token refresh. ~100 entities with persistent command control for lights, heater, fridge, 12V switch, and more. See [SignalR connection architecture](docs/signalr-connection.md) for details.
+> **v2.30.2** — **Vehicle-verified sensor mappings!** Doors confirmed (driver + passenger on PIA, sliding/rear via Mercedes ME only). Bus 22 corrected from fresh water to LED bar duplicate. Victron MultiPlus bus 121 pre-mapped (disabled by default). Fuel consumption sensors + configurable tank capacity. Stable SignalR with asyncio.Lock. See [CHANGELOG](CHANGELOG.md) for full history.
 
 ### Energy Dashboard
 
@@ -88,7 +88,9 @@ Control 8 interior lights with on/off, brightness, and color temperature:
 
 *Color temperature supported on Ambient and Kitchen lights.
 
-> **Note:** The outside LED bar is not yet supported — its bus ID is unknown. Bus 24 turned out to be the DALI master channel, not the outside light. A mitmproxy trace is needed to discover the correct bus ID.
+The outside **LED bar** is controllable via `light.hymer` (bus 25) with on/off and brightness.
+
+> **Native SCU light groups:** The integration also provides `light.hymer_wohnen_all_lights` (bus 24) and `light.hymer_privat_all_lights` (bus 27) — hardware group toggles that switch all Wohnen or Privat lights at once.
 
 ### 🌡️ Climate Controls
 
@@ -122,19 +124,19 @@ Three computed sensors derived from the CAN bus odometer and fuel level:
 
 | Category | Sensors |
 |----------|---------|
-| **Vehicle** | Odometer, speed, RPM, AdBlue level/temp, fuel range, engine hours, coolant temp, gear, engine torque, DPF status |
+| **Vehicle** | Odometer, fuel level, AdBlue level, engine hours, distance to service, outside temperature, ignition state |
 | **Battery** | Voltage, current, SOC (%), chassis battery, charge phase, charger status, battery type, power source |
 | **Solar** | Voltage, current, power (W), panel connected, charger active |
 | **Water** | Fresh water level (%), grey water level (%), water pump status |
 | **Temperature** | Ambient, AdBlue |
 | **GPS** | Coordinates, altitude, heading, satellites, signal quality, fix status |
-| **Doors** | Driver, passenger, sliding, rear (open/closed) |
+| **Doors** | Driver, passenger (open/closed). Sliding door and rear doors are CAN-bus only — use Mercedes ME (mbapi2020) integration |
 | **Security** | Lock status, ignition, handbrake, engine running, cruise control |
-| **Lights** | Headlamp, high beam, parking, fog front/rear, turn signal |
+| **Lights** | Parking brake, aux heater available/state, cruise control, downhill assist |
 | **Heating** | Truma connected/status/firmware, fan speed, fuel type, electric power (0/900/1800W), setpoint, operating mode |
 | **Fridge** | Mode (cooling step), door status (Open/Closed), ECO/Quiet mode |
 | **System** | SCU connected/firmware, Truma firmware, tyre pressure, alarm status/battery |
-| **Total** | **~100 entities** (sensors, binary sensors, lights, switches, climate, selects) from CAN bus, LIN bus, GPS, and connected components |
+| **Total** | **~130 entities** (sensors, binary sensors, lights, switches, climate, selects) from CAN bus, LIN bus, GPS, and connected components |
 
 ### 🗺️ Device Tracker
 
