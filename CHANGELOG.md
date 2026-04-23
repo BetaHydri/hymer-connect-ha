@@ -5,6 +5,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.30.1] - 2026-04-23
+
+### Fixed
+
+- **Bus 22 is LED bar, not fresh water** — Confirmed at vehicle: both water tanks were empty but bus 22 showed 88%, matching LED bar brightness on bus 25. Bus 22 is a duplicate LED bar SCU component. Sensor renamed and disabled by default. Dashboard water sensors remain on EBL (bus 3).
+
+### Confirmed at vehicle (2026-04-23)
+
+- **Door sensors**: Only driver (1,12) and passenger (1,13) doors have PIA sensors. Sliding side door and rear barn doors are CAN-bus only (Mercedes ME API).
+- **Motor oil warning (1,14)**: Shows "SNA" (Sensor Not Available) — not connected on S600.
+- **No Victron bus 121**: Not detected with current Victron switch state. Entities remain disabled.
+- **No Truma ventilation**: EHG app only supports heating mode, not fan-only ventilation (issue #38 — won’t fix).
+
 ## [2.30.0] - 2026-04-23
 
 ### Added

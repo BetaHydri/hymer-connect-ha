@@ -150,8 +150,8 @@ SENSOR_MAP: dict[tuple[int, int], tuple[str, str | None, str | None]] = {
     # Old releases showed both as 0-6% when empty — confirmed inverted scale
     # Water tank — bus 22 = fresh water
     # Raw uint value is direct percentage (confirmed: empty tanks show ~15% raw = <10% in EHG app)
-    (22, 1): ("fresh_water_sensor", None, None),
-    (22, 2): ("fresh_water_level", "%", None),
+    (22, 1): ("light_led_bar_2", None, None),        # Confirmed at vehicle 2026-04-23: NOT fresh water (tanks empty, value=88%). Same LED bar as bus 25.
+    (22, 2): ("light_led_bar_2_brightness", "%", None),
     # Light group: All Wohnen / All living area lights (bus 24)
     # Sending (24,1)=true toggles all living area lights (ceiling, ambient, kitchen, seating).
     # NOT an individual outside light — verified 2026-04-22.

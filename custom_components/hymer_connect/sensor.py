@@ -380,14 +380,17 @@ SIGNALR_SENSORS: tuple[HymerSensorEntityDescription, ...] = (
         value_path="computed.solar_power",
         icon="mdi:solar-power",
     ),
-    # --- Fresh water (bus 22) ---
+    # --- LED bar 2 brightness (bus 22) ---
+    # Confirmed at vehicle 2026-04-23: NOT fresh water (tanks empty, shows 88%).
+    # Same LED bar as bus 25 — secondary SCU component ID.
     HymerSensorEntityDescription(
-        key="fresh_water_level",
-        translation_key="fresh_water_level",
+        key="light_led_bar_2_brightness",
+        translation_key="light_led_bar_2_brightness",
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
-        value_path="signalr_sensors.fresh_water_level",
-        icon="mdi:water",
+        value_path="signalr_sensors.light_led_bar_2_brightness",
+        entity_registry_enabled_default=False,
+        icon="mdi:led-strip",
     ),
     # --- Interior light brightness levels ---
     HymerSensorEntityDescription(

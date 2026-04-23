@@ -101,6 +101,7 @@
       "fridge_mode": { "name": "Fridge mode" },
       "fridge_status": { "name": "Fridge status" },
       "fresh_water_level": { "name": "Fresh water level" },
+      "light_led_bar_2_brightness": { "name": "LED bar 2 brightness" },
       "fresh_water_level_ebl": { "name": "Fresh water (EBL)" },
       "grey_water_level_ebl": { "name": "Grey water (EBL)" },
       "fuel_level_liters": { "name": "Fuel level (liters)" },
