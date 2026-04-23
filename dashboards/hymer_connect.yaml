@@ -588,7 +588,7 @@ views:
           - entity: sensor.hymer_ignition
             name: Ignition
             icon: mdi:key
-          - entity: binary_sensor.hymer_engine_running_corrected
+          - entity: binary_sensor.hymer_engine_running
             name: Engine Running
             icon: mdi:engine
 
