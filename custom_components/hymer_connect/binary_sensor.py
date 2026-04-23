@@ -141,15 +141,6 @@ BINARY_SENSOR_DESCRIPTIONS: tuple[HymerBinarySensorEntityDescription, ...] = (
         on_value="On",
         icon="mdi:power",
     ),
-    # --- Rear door ---
-    HymerBinarySensorEntityDescription(
-        key="door_rear",
-        translation_key="door_rear",
-        device_class=BinarySensorDeviceClass.DOOR,
-        value_path="signalr_sensors.door_rear",
-        on_value="Open",
-        icon="mdi:car-door",
-    ),
     # --- Chassis state flags (bus 1, slots 17-22) ---
     # Previously mislabelled as vehicle lights. Confirmed via PR #44 S700
     # observations + S600 live data: (1,18) read "ON" while parked = parking
