@@ -810,6 +810,5 @@ views:
           - entity: update.hymer_connect_update
             name: Integration Update
             icon: mdi:update
-
       # ── Diagnostic: EBL402 slots (3,8) and (3,9) ──
 
