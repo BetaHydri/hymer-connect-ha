@@ -105,7 +105,19 @@
       "grey_water_level_ebl": { "name": "Grey water (EBL)" },
       "fuel_level_liters": { "name": "Fuel level (liters)" },
       "fuel_consumption": { "name": "Fuel consumption" },
-      "fuel_range_estimated": { "name": "Estimated range" }
+      "fuel_range_estimated": { "name": "Estimated range" },
+      "victron_inverter_state": { "name": "Victron inverter state" },
+      "victron_inverter_l1_voltage": { "name": "Victron inverter L1 voltage" },
+      "victron_inverter_l1_current": { "name": "Victron inverter L1 current" },
+      "victron_inverter_l1_frequency": { "name": "Victron inverter L1 frequency" },
+      "victron_charger_state": { "name": "Victron charger state" },
+      "victron_charge_voltage": { "name": "Victron charge voltage" },
+      "victron_charge_current": { "name": "Victron charge current" },
+      "victron_input_voltage": { "name": "Victron input voltage" },
+      "victron_input_current": { "name": "Victron input current" },
+      "victron_input_frequency": { "name": "Victron input frequency" },
+      "victron_device_failure": { "name": "Victron device failure" },
+      "victron_firmware": { "name": "Victron firmware" }
     },
     "light": {
       "light_living_ceiling": { "name": "Living ceiling" },
@@ -154,7 +166,9 @@
       "turn_signal": { "name": "Turn signal" },
       "truma_connected": { "name": "Truma connected" },
       "step_retracted": { "name": "Entry step" },
-      "water_pump": { "name": "Water pump" }
+      "water_pump": { "name": "Water pump" },
+      "victron_inverter_on": { "name": "Victron inverter" },
+      "victron_charger_on": { "name": "Victron charger" }
     },
     "switch": {
       "main_switch_ctrl": { "name": "12V Main switch" },

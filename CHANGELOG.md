@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.30.0] - 2026-04-23
+
+### Added
+
+- **Victron MultiPlus 12/1600/70 support** — Bus 121 sensor mapping (19 slots) from EHG app metadata extraction. Includes inverter state/voltage/current/frequency, charger state/voltage/current, shore power input, device failure status, and firmware version. All entities disabled by default — enable in Settings > Entities when Victron physical switch is ON.
+- **Victron binary sensors** — `victron_inverter_on` and `victron_charger_on` for inverter/charger power state monitoring.
+
 ## [2.29.0] - 2026-04-23
 
 ### Added

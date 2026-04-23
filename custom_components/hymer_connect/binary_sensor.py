@@ -281,6 +281,24 @@ BINARY_SENSOR_DESCRIPTIONS: tuple[HymerBinarySensorEntityDescription, ...] = (
         value_path="signalr_sensors.light_nightlight",
         icon="mdi:water-pump",
     ),
+    # --- Victron MultiPlus (bus 121) ---
+    # Disabled by default — bus 121 not yet confirmed on S600.
+    HymerBinarySensorEntityDescription(
+        key="victron_inverter_on",
+        translation_key="victron_inverter_on",
+        device_class=BinarySensorDeviceClass.POWER,
+        value_path="signalr_sensors.victron_inverter_on",
+        entity_registry_enabled_default=False,
+        icon="mdi:power-plug",
+    ),
+    HymerBinarySensorEntityDescription(
+        key="victron_charger_on",
+        translation_key="victron_charger_on",
+        device_class=BinarySensorDeviceClass.BATTERY_CHARGING,
+        value_path="signalr_sensors.victron_charger_on",
+        entity_registry_enabled_default=False,
+        icon="mdi:battery-charging",
+    ),
 )
 
 

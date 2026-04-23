@@ -35,451 +35,151 @@
   },
   "entity": {
     "sensor": {
-      "vehicle_model": {
-        "name": "Model"
-      },
-      "vehicle_model_year": {
-        "name": "Model year"
-      },
-      "vehicle_vin": {
-        "name": "VIN"
-      },
-      "odometer": {
-        "name": "Odometer"
-      },
-      "fuel_level": {
-        "name": "Fuel level"
-      },
-      "adblue_level": {
-        "name": "AdBlue level"
-      },
-      "outside_temperature": {
-        "name": "Outside temperature"
-      },
-      "lock_status": {
-        "name": "Lock status"
-      },
-      "ignition_state": {
-        "name": "Ignition"
-      },
-      "door_driver": {
-        "name": "Driver door"
-      },
-      "door_passenger": {
-        "name": "Passenger door"
-      },
-      "door_sliding": {
-        "name": "Sliding door"
-      },
-      "battery_voltage": {
-        "name": "Battery voltage"
-      },
-      "battery_current": {
-        "name": "Battery current"
-      },
-      "chassis_battery_voltage": {
-        "name": "Chassis battery voltage"
-      },
-      "battery_soc": {
-        "name": "Battery level"
-      },
-      "battery_type": {
-        "name": "Battery type"
-      },
-      "charge_phase": {
-        "name": "Charge phase"
-      },
-      "power_source": {
-        "name": "Power source"
-      },
-      "main_switch": {
-        "name": "Main switch"
-      },
-      "solar_voltage": {
-        "name": "Solar voltage"
-      },
-      "solar_power": {
-        "name": "Solar power"
-      },
-      "gray_water_level": {
-        "name": "Grey water level"
-      },
-      "gps_coordinates": {
-        "name": "GPS coordinates"
-      },
-      "gps_signal_quality": {
-        "name": "GPS signal"
-      },
-      "gps_altitude": {
-        "name": "Altitude"
-      },
-      "heater_fan_speed": {
-        "name": "Heater fan speed"
-      },
-      "heater_setpoint": {
-        "name": "Heater setpoint"
-      },
-      "heater_fuel_type": {
-        "name": "Heater fuel type"
-      },
-      "ambient_temp": {
-        "name": "Ambient temperature"
-      },
-      "current_gear": {
-        "name": "Current gear"
-      },
-      "distance_to_service": {
-        "name": "Distance to next service"
-      },
-      "engine_hours": {
-        "name": "Engine hours"
-      },
-      "fuel_range": {
-        "name": "Fuel range"
-      },
-      "total_fuel_used": {
-        "name": "Total fuel used"
-      },
-      "engine_torque": {
-        "name": "Engine torque"
-      },
-      "adblue_temp": {
-        "name": "AdBlue temperature"
-      },
-      "dpf_status": {
-        "name": "DPF status"
-      },
-      "bms_voltage": {
-        "name": "BMS voltage"
-      },
-      "bms_current": {
-        "name": "BMS current"
-      },
-      "bms_temperature": {
-        "name": "BMS temperature"
-      },
-      "bms_time_remaining": {
-        "name": "BMS time remaining"
-      },
-      "bms_state_of_health": {
-        "name": "BMS state of health"
-      },
-      "bms_capacity_remaining": {
-        "name": "BMS capacity remaining"
-      },
-      "solar_charger_status": {
-        "name": "Solar charger status"
-      },
-      "solar_current": {
-        "name": "Solar current"
-      },
-      "light_1_level": {
-        "name": "Light group 1"
-      },
-      "light_2_level": {
-        "name": "Light group 2"
-      },
-      "tire_pressure": {
-        "name": "Tyre pressure"
-      },
-      "ebl_slot_8": {
-        "name": "EBL Slot 3,8 (diag)"
-      },
-      "ebl_slot_9": {
-        "name": "EBL Slot 3,9 (diag)"
-      },
-      "alarm_battery": {
-        "name": "Alarm battery"
-      },
-      "scu_firmware": {
-        "name": "SCU firmware"
-      },
-      "truma_firmware": {
-        "name": "Truma firmware"
-      },
-      "truma_status": {
-        "name": "Truma status"
-      },
-      "gps_satellites": {
-        "name": "GPS satellites"
-      },
-      "gps_utc_time": {
-        "name": "GPS UTC time"
-      },
-      "gps_heading": {
-        "name": "GPS heading"
-      },
-      "scu_flag_1": {
-        "name": "SCU flag 1 (30/8)"
-      },
-      "lte_connected": {
-        "name": "LTE connected"
-      },
-      "scu_flag_2": {
-        "name": "SCU flag 2 (30/10)"
-      },
-      "paired_bt_devices": {
-        "name": "Paired BT devices"
-      },
-      "scu_flag_5": {
-        "name": "SCU flag 5 (30/12)"
-      },
-      "scu_flag_3": {
-        "name": "SCU flag 3 (30/13)"
-      },
-      "scu_flag_4": {
-        "name": "SCU flag 4 (30/14)"
-      },
-      "heater_state": {
-        "name": "Heater state"
-      },
-      "heater_electric_power": {
-        "name": "Heater electric power"
-      },
-      "heater_operating_mode": {
-        "name": "Heater operating mode"
-      },
-      "fridge_mode": {
-        "name": "Fridge mode"
-      },
-      "fridge_status": {
-        "name": "Fridge status"
-      },
-      "fresh_water_level": {
-        "name": "Fresh water level"
-      },
-      "fresh_water_level_ebl": {
-        "name": "Fresh water (EBL)"
-      },
-      "grey_water_level_ebl": {
-        "name": "Grey water (EBL)"
-      },
-      "fuel_level_liters": {
-        "name": "Fuel level (liters)"
-      },
-      "fuel_consumption": {
-        "name": "Fuel consumption"
-      },
-      "fuel_range_estimated": {
-        "name": "Estimated range"
-      },
-      "light_living_ceiling_brightness": {
-        "name": "Living ceiling brightness"
-      },
-      "light_living_ambient_brightness": {
-        "name": "Living ambient brightness"
-      },
-      "light_kitchen_brightness": {
-        "name": "Kitchen brightness"
-      },
-      "light_seating_overhead_brightness": {
-        "name": "Seating overhead brightness"
-      },
-      "light_bathroom_ceiling_brightness": {
-        "name": "Bathroom ceiling brightness"
-      },
-      "light_bedroom_overhead_brightness": {
-        "name": "Bedroom overhead brightness"
-      },
-      "light_led_bar_brightness": {
-        "name": "Privat group brightness"
-      },
-      "light_led_bar_color_temp": {
-        "name": "Privat group color temp"
-      },
-      "light_nightlight_brightness": {
-        "name": "Night light brightness"
-      },
-      "light_bedroom_ambient_brightness": {
-        "name": "Bedroom ambient brightness"
-      },
-      "light_bedroom_ambient_color_temp": {
-        "name": "Bedroom ambient color temp"
-      }
-    },
-    "binary_sensor": {
-      "engine_running": {
-        "name": "Engine"
-      },
-      "handbrake": {
-        "name": "Handbrake"
-      },
-      "charger_active": {
-        "name": "Charger"
-      },
-      "solar_connected": {
-        "name": "Solar panel"
-      },
-      "solar_active": {
-        "name": "Solar active"
-      },
-      "gps_fix": {
-        "name": "GPS fix"
-      },
-      "scu_connected": {
-        "name": "SCU connected"
-      },
-      "cruise_control": {
-        "name": "Cruise control"
-      },
-      "alarm_armed": {
-        "name": "Alarm"
-      },
-      "door_driver": {
-        "name": "Driver door"
-      },
-      "door_passenger": {
-        "name": "Passenger door"
-      },
-      "wiping_water_empty": {
-        "name": "Washer fluid low"
-      },
-      "motor_oil_warning": {
-        "name": "Motor oil warning"
-      },
-      "lock_status": {
-        "name": "Lock"
-      },
-      "main_switch": {
-        "name": "Main switch"
-      },
-      "headlamp": {
-        "name": "Headlamp"
-      },
-      "high_beam": {
-        "name": "High beam"
-      },
-      "parking_light": {
-        "name": "Parking light"
-      },
-      "fog_front": {
-        "name": "Front fog light"
-      },
-      "fog_rear": {
-        "name": "Rear fog light"
-      },
-      "turn_signal": {
-        "name": "Turn signal"
-      },
-      "parking_brake": {
-        "name": "Parking brake"
-      },
-      "standheizung_available": {
-        "name": "Auxiliary heater available"
-      },
-      "standheizung_state": {
-        "name": "Auxiliary heater"
-      },
-      "cruise_control_can": {
-        "name": "Cruise control (CAN)"
-      },
-      "downhill_assist": {
-        "name": "Downhill assist"
-      },
-      "coolant_warning": {
-        "name": "Coolant warning"
-      },
-      "truma_connected": {
-        "name": "Truma connected"
-      },
-      "step_retracted": {
-        "name": "Entry step"
-      },
-      "water_pump": {
-        "name": "Water pump"
-      },
-      "light_living_ceiling": {
-        "name": "Living ceiling light"
-      },
-      "light_living_ambient": {
-        "name": "Living ambient light"
-      },
-      "light_kitchen": {
-        "name": "Kitchen light"
-      },
-      "light_seating_overhead": {
-        "name": "Seating overhead light"
-      },
-      "light_bedroom_ambient": {
-        "name": "Bedroom ambient light"
-      },
-      "light_nightlight": {
-        "name": "Night light"
-      },
-      "light_bathroom_ceiling": {
-        "name": "Bathroom ceiling light"
-      },
-      "light_bedroom_overhead": {
-        "name": "Bedroom overhead light"
-      },
-      "light_led_bar": {
-        "name": "LED bar"
-      }
+      "vehicle_model": { "name": "Model" },
+      "vehicle_model_year": { "name": "Model year" },
+      "vehicle_vin": { "name": "VIN" },
+      "odometer": { "name": "Odometer" },
+      "speed": { "name": "Speed" },
+      "adblue_level": { "name": "AdBlue level" },
+      "coolant_temp": { "name": "Coolant temperature" },
+      "lock_status": { "name": "Lock status" },
+      "ignition_state": { "name": "Ignition" },
+      "door_driver": { "name": "Driver door" },
+      "door_passenger": { "name": "Passenger door" },
+      "door_sliding": { "name": "Sliding door" },
+      "battery_voltage": { "name": "Battery voltage" },
+      "battery_current": { "name": "Battery current" },
+      "chassis_battery_voltage": { "name": "Chassis battery voltage" },
+      "battery_soc": { "name": "Battery level" },
+      "battery_type": { "name": "Battery type" },
+      "charge_phase": { "name": "Charge phase" },
+      "power_source": { "name": "Power source" },
+      "main_switch": { "name": "Main switch" },
+      "solar_voltage": { "name": "Solar voltage" },
+      "solar_power": { "name": "Solar power" },
+      "gray_water_level": { "name": "Grey water level" },
+      "gps_coordinates": { "name": "GPS coordinates" },
+      "gps_signal_quality": { "name": "GPS signal" },
+      "gps_altitude": { "name": "Altitude" },
+      "heater_fan_speed": { "name": "Heater fan speed" },
+      "heater_setpoint": { "name": "Heater setpoint" },
+      "heater_fuel_type": { "name": "Heater fuel type" },
+      "ambient_temp": { "name": "Ambient temperature" },
+      "current_gear": { "name": "Current gear" },
+      "rpm": { "name": "Engine RPM" },
+      "engine_hours": { "name": "Engine hours" },
+      "fuel_range": { "name": "Fuel range" },
+      "total_fuel_used": { "name": "Total fuel used" },
+      "engine_torque": { "name": "Engine torque" },
+      "adblue_temp": { "name": "AdBlue temperature" },
+      "dpf_status": { "name": "DPF status" },
+      "solar_charger_status": { "name": "Solar charger status" },
+      "solar_current": { "name": "Solar current" },
+      "light_1_level": { "name": "Light group 1" },
+      "light_2_level": { "name": "Light group 2" },
+      "light_living_ceiling_brightness": { "name": "Living ceiling brightness" },
+      "light_living_ambient_brightness": { "name": "Living ambient brightness" },
+      "light_kitchen_brightness": { "name": "Kitchen brightness" },
+      "light_seating_overhead_brightness": { "name": "Seating overhead brightness" },
+      "light_bathroom_ceiling_brightness": { "name": "Bathroom ceiling brightness" },
+      "light_bedroom_overhead_brightness": { "name": "Bedroom overhead brightness" },
+      "light_led_bar_brightness": { "name": "Privat group brightness" },
+      "light_led_bar_color_temp": { "name": "Privat group color temp" },
+      "light_nightlight_brightness": { "name": "Night light brightness" },
+      "light_bedroom_ambient_brightness": { "name": "Bedroom ambient brightness" },
+      "light_bedroom_ambient_color_temp": { "name": "Bedroom ambient color temp" },
+      "tire_pressure": { "name": "Tyre pressure" },
+      "alarm_battery": { "name": "Alarm battery" },
+      "scu_firmware": { "name": "SCU firmware" },
+      "truma_firmware": { "name": "Truma firmware" },
+      "truma_status": { "name": "Truma status" },
+      "gps_satellites": { "name": "GPS satellites" },
+      "gps_heading": { "name": "GPS heading" },
+      "heater_state": { "name": "Heater state" },
+      "heater_electric_power": { "name": "Heater electric power" },
+      "heater_operating_mode": { "name": "Heater operating mode" },
+      "fridge_mode": { "name": "Fridge mode" },
+      "fridge_status": { "name": "Fridge status" },
+      "fresh_water_level": { "name": "Fresh water level" },
+      "fresh_water_level_ebl": { "name": "Fresh water (EBL)" },
+      "grey_water_level_ebl": { "name": "Grey water (EBL)" },
+      "fuel_level_liters": { "name": "Fuel level (liters)" },
+      "fuel_consumption": { "name": "Fuel consumption" },
+      "fuel_range_estimated": { "name": "Estimated range" },
+      "victron_inverter_state": { "name": "Victron inverter state" },
+      "victron_inverter_l1_voltage": { "name": "Victron inverter L1 voltage" },
+      "victron_inverter_l1_current": { "name": "Victron inverter L1 current" },
+      "victron_inverter_l1_frequency": { "name": "Victron inverter L1 frequency" },
+      "victron_charger_state": { "name": "Victron charger state" },
+      "victron_charge_voltage": { "name": "Victron charge voltage" },
+      "victron_charge_current": { "name": "Victron charge current" },
+      "victron_input_voltage": { "name": "Victron input voltage" },
+      "victron_input_current": { "name": "Victron input current" },
+      "victron_input_frequency": { "name": "Victron input frequency" },
+      "victron_device_failure": { "name": "Victron device failure" },
+      "victron_firmware": { "name": "Victron firmware" }
     },
     "light": {
-      "light_living_ceiling": {
-        "name": "Living ceiling"
-      },
-      "light_living_ambient": {
-        "name": "Living ambient"
-      },
-      "light_kitchen": {
-        "name": "Kitchen"
-      },
-      "light_seating_overhead": {
-        "name": "Seating overhead"
-      },
-      "light_bedroom_ambient": {
-        "name": "Bedroom ambient"
-      },
-      "light_nightlight": {
-        "name": "Night light"
-      },
-      "light_bathroom_ceiling": {
-        "name": "Bathroom ceiling"
-      },
-      "light_bedroom_overhead": {
-        "name": "Bedroom overhead"
-      },
-      "light_led_bar": {
-        "name": "LED bar"
-      },
-      "light_outside": {
-        "name": "Outside light"
-      },
-      "light_wohnen_group": {
-        "name": "Wohnen all lights"
-      },
-      "light_privat_group": {
-        "name": "Privat all lights"
-      },
-      "light_bus22_unknown": {
-        "name": "Bus 22 (unknown)"
-      }
+      "light_living_ceiling": { "name": "Living ceiling" },
+      "light_living_ambient": { "name": "Living ambient" },
+      "light_kitchen": { "name": "Kitchen" },
+      "light_seating_overhead": { "name": "Seating overhead" },
+      "light_bedroom_ambient": { "name": "Bedroom ambient" },
+      "light_nightlight": { "name": "Night light" },
+      "light_bathroom_ceiling": { "name": "Bathroom ceiling" },
+      "light_bedroom_overhead": { "name": "Bedroom overhead" },
+      "light_led_bar": { "name": "LED bar" },
+      "light_wohnen_group": { "name": "Wohnen all lights" },
+      "light_privat_group": { "name": "Privat all lights" },
+      "light_bus22_unknown": { "name": "Bus 22 (unknown)" }
+    },
+    "binary_sensor": {
+      "engine_running": { "name": "Engine" },
+      "handbrake": { "name": "Handbrake" },
+      "charger_active": { "name": "Charger" },
+      "solar_connected": { "name": "Solar panel" },
+      "solar_active": { "name": "Solar active" },
+      "gps_fix": { "name": "GPS fix" },
+      "scu_connected": { "name": "SCU connected" },
+      "cruise_control": { "name": "Cruise control" },
+      "alarm_armed": { "name": "Alarm" },
+      "light_living_ceiling": { "name": "Living ceiling light" },
+      "light_living_ambient": { "name": "Living ambient light" },
+      "light_kitchen": { "name": "Kitchen light" },
+      "light_seating_overhead": { "name": "Seating overhead light" },
+      "light_bedroom_ambient": { "name": "Bedroom ambient light" },
+      "light_nightlight": { "name": "Night light" },
+      "light_bathroom_ceiling": { "name": "Bathroom ceiling light" },
+      "light_bedroom_overhead": { "name": "Bedroom overhead light" },
+      "light_led_bar": { "name": "LED bar" },
+      "door_driver": { "name": "Driver door" },
+      "door_passenger": { "name": "Passenger door" },
+      "door_sliding": { "name": "Sliding door" },
+      "lock_status": { "name": "Lock" },
+      "main_switch": { "name": "Main switch" },
+      "door_rear": { "name": "Rear door" },
+      "headlamp": { "name": "Headlamp" },
+      "high_beam": { "name": "High beam" },
+      "parking_light": { "name": "Parking light" },
+      "fog_front": { "name": "Front fog light" },
+      "fog_rear": { "name": "Rear fog light" },
+      "turn_signal": { "name": "Turn signal" },
+      "truma_connected": { "name": "Truma connected" },
+      "step_retracted": { "name": "Entry step" },
+      "water_pump": { "name": "Water pump" },
+      "victron_inverter_on": { "name": "Victron inverter" },
+      "victron_charger_on": { "name": "Victron charger" }
     },
     "switch": {
-      "main_switch_ctrl": {
-        "name": "12V Main switch"
-      },
-      "water_pump_ctrl": {
-        "name": "Water pump"
-      },
-      "fridge_eco_ctrl": {
-        "name": "Fridge ECO (Leise)"
-      }
+      "main_switch_ctrl": { "name": "12V Main switch" },
+      "water_pump_ctrl": { "name": "Water pump" }
     },
     "climate": {
-      "truma_heater": {
-        "name": "Truma heater"
-      }
+      "truma_heater": { "name": "Truma heater" }
     },
     "select": {
-      "fridge_mode_ctrl": {
-        "name": "Fridge mode"
-      },
-      "boiler_mode_ctrl": {
-        "name": "Boiler mode"
-      }
+      "fridge_mode_ctrl": { "name": "Fridge mode" },
+      "boiler_mode_ctrl": { "name": "Boiler mode" }
     }
   },
   "options": {

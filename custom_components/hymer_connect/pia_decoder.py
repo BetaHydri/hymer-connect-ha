@@ -214,6 +214,30 @@ SENSOR_MAP: dict[tuple[int, int], tuple[str, str | None, str | None]] = {
     (99, 8): ("lithium_soc_2", "%", None),
     (99, 9): ("bms_charge_detected", None, None),
     (99, 10): ("bms_device_failure", None, None),
+
+    # Bus 121: Victron MultiPlus 12/1600/70 (inverter/charger)
+    # Extracted from EHG app metadata by Dan (SCU component 121 = VictronMultiplus).
+    # Not yet confirmed on S600 — Victron physical switch was OFF during all scans.
+    # (121,1) and (121,9) are writable booleans (inverter_on, charger_on).
+    (121, 1): ("victron_inverter_on", None, None),        # rw bool
+    (121, 2): ("victron_inverter_state", None, None),      # r int
+    (121, 3): ("victron_inverter_l1_voltage", "V", None),
+    (121, 4): ("victron_inverter_l1_current", "A", None),
+    (121, 5): ("victron_inverter_l1_frequency", "Hz", None),
+    (121, 6): ("victron_inverter_l2_voltage", "V", None),
+    (121, 7): ("victron_inverter_l2_current", "A", None),
+    (121, 8): ("victron_inverter_l2_frequency", "Hz", None),
+    (121, 9): ("victron_charger_on", None, None),          # rw bool
+    (121, 10): ("victron_charger_state", None, None),
+    (121, 11): ("victron_charge_voltage", "V", None),
+    (121, 12): ("victron_charge_current", "A", None),
+    (121, 13): ("victron_max_charge_current", "A", None),  # rw
+    (121, 14): ("victron_input_current_limit", "A", None), # rw
+    (121, 15): ("victron_input_voltage", "V", None),
+    (121, 16): ("victron_input_current", "A", None),
+    (121, 17): ("victron_input_frequency", "Hz", None),
+    (121, 18): ("victron_device_failure", None, None),
+    (121, 19): ("victron_firmware", None, None),
 }
 
 # Human-readable mappings for raw SCU string values
