@@ -341,7 +341,7 @@ diesel tank capacity (default: 93 L for Sprinter 419/519 CDI).
 
 **Tank capacity configuration:**
 Settings → Integrations → HYMER Connect → Configure → "Diesel tank capacity"
-Range: 30–200 L. Common Sprinter values: 71 L (standard), 93 L (419/519 CDI optional).
+Range: 30–200 L. Common Sprinter values: 71 L (314/316 CDI), 93 L (419/519 CDI standard).
 
 ## S700 Conflicts Legend
 

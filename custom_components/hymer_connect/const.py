@@ -75,7 +75,7 @@ CONF_EHG_REFRESH_TOKEN = "ehg_refresh_token"
 CONF_TANK_CAPACITY = "tank_capacity_liters"
 
 # Default diesel tank capacity (litres) — user can override in Options
-# Common Sprinter tanks: 71 L (standard), 93 L (optional, 419/519 CDI)
+# Common Sprinter tanks: 71 L (314/316 CDI), 93 L (419/519 CDI standard)
 DEFAULT_TANK_CAPACITY_LITERS = 93
 
 # Platforms

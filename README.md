@@ -116,7 +116,7 @@ Three computed sensors derived from the CAN bus odometer and fuel level:
 - Consumption is computed once ≥ 5 km have been driven
 - Refueling is auto-detected when fuel level increases by > 5% — trip resets
 - Tank capacity is configurable: **Settings > Integrations > HYMER Connect > Configure** (default: 93 L)
-- Common Sprinter tanks: 71 L (standard), 93 L (419/519 CDI optional)
+- Common Sprinter tanks: 71 L (314/316 CDI), 93 L (419/519 CDI standard)
 
 ### 📊 Real-Time Sensors (via SignalR, requires EHG Refresh Token)
 
