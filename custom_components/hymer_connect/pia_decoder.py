@@ -171,7 +171,7 @@ SENSOR_MAP: dict[tuple[int, int], tuple[str, str | None, str | None]] = {
     (27, 3): ("light_privat_group_color_temp", None, None),
     # Fridge (37)
     (37, 1): ("fridge_mode", None, None),
-    (37, 2): ("fridge_status", None, None),
+    (37, 2): ("fridge_status", None, None),  # Operating state, NOT door sensor (Thetford N4112A has no door switch — confirmed 2026-04-23)
     # Light: Sitzgruppe Dachschrank / Seating area overhead (bus 43)
     (43, 1): ("light_seating_overhead", None, None),
     (43, 2): ("light_seating_overhead_brightness", "%", None),
@@ -279,7 +279,7 @@ _VALUE_LABELS: dict[str, dict[str, str]] = {
 _INT_LABELS: dict[str, dict[int, str]] = {
     "dpf_status": {0: "Normal", 1: "Regeneration"},
     "fridge_mode": {0: "On", 1: "Eco", 2: "Boost", 8: "Off"},
-    "fridge_status": {0: "Open", 1: "Closed"},
+    "fridge_status": {0: "Open", 1: "Closed"},  # Operating state labels from SCU, not physical door
 }
 
 # Sentinel float values that indicate "sensor unavailable / not connected".
