@@ -130,6 +130,17 @@ LIGHT_DESCRIPTIONS: tuple[HymerLightEntityDescription, ...] = (
         brightness_path="signalr_sensors.light_led_bar_brightness",
         icon="mdi:led-strip-variant",
     ),
+    # Bus 22 — Unknown device (likely a light, needs physical verification)
+    # Default-disabled so it only shows in entity registry, not in dashboard
+    HymerLightEntityDescription(
+        key="light_bus22_unknown",
+        translation_key="light_bus22_unknown",
+        bus_id=22,
+        on_off_path="signalr_sensors.fresh_water_sensor",
+        brightness_path="signalr_sensors.fresh_water_level",
+        entity_registry_enabled_default=False,
+        icon="mdi:help-circle-outline",
+    ),
 )
 
 
