@@ -810,16 +810,19 @@ views:
           - entity: update.hymer_connect_update
             name: Integration Update
             icon: mdi:update
-          - entity: button.hymer_restart_scu
-            name: Restart SCU
-            icon: mdi:restart-alert
-            tap_action:
-              action: call-service
-              service: button.press
-              target:
-                entity_id: button.hymer_restart_scu
-              confirmation:
-                text: "Are you sure you want to restart the SCU? The vehicle control unit will
-                  reboot and reconnect (~30-60s)."
+
+      # ── SCU Restart (with confirmation dialog) ──
+      - type: tile
+        entity: button.hymer_restart_scu
+        name: Restart SCU
+        icon: mdi:restart-alert
+        color: red
+        tap_action:
+          action: perform-action
+          perform_action: button.press
+          target:
+            entity_id: button.hymer_restart_scu
+          confirmation:
+            text: "Are you sure you want to restart the SCU? The vehicle control unit will reboot and reconnect (~30-60s)."
       # ── Diagnostic: EBL402 slots (3,8) and (3,9) ──
 
