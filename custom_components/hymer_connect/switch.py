@@ -165,7 +165,7 @@ class HymerConnectSwitch(
                 _LOGGER.info("Marked SignalR as disconnected — will reconnect on next poll")
 
     # Switches that require 12V main power to operate
-    _REQUIRES_12V = {\"water_pump_ctrl\", \"fridge_eco_ctrl\"}", "oldString": "    _REQUIRES_12V = {\"water_pump_ctrl\"}"
+    _REQUIRES_12V = {"water_pump_ctrl"}
 
     @property
     def available(self) -> bool:
