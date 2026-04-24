@@ -228,11 +228,17 @@ SIGNALR_SENSORS: tuple[HymerSensorEntityDescription, ...] = (
         icon="mdi:altimeter",
     ),
     # --- Truma heater (bus 58) ---
+    # NOTE: `heater_fan_speed` is a legacy misnomer — it reads slot 58:5
+    # which is `water_heater_mode` (the boiler), already exposed (and
+    # writable) via `select.hymer_boiler_mode_ctrl`. The entity is kept
+    # for backwards-compat with existing dashboards/history but is
+    # disabled by default so new installs don't see a confusing duplicate.
     HymerSensorEntityDescription(
         key="heater_fan_speed",
         translation_key="heater_fan_speed",
         value_path="signalr_sensors.heater_fan_speed",
         icon="mdi:fan",
+        entity_registry_enabled_default=False,
     ),
     HymerSensorEntityDescription(
         key="heater_setpoint",

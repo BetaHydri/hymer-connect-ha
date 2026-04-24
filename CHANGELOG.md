@@ -5,6 +5,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.36.5] - 2026-04-25
+
+### Changed
+
+- **Truma Combi diagnostics now enabled by default** — The three bus-58 diagnostic binary sensors added in v2.35.0 (`binary_sensor.hymer_heater_combi_error`, `binary_sensor.hymer_heater_response_error`, `binary_sensor.hymer_heater_shoreline_connected`) are now enabled by default instead of disabled. Field use confirmed they catch genuine transient SCU/Truma faults (e.g. a 21-second `Combi Error` window observed on 2026-04-24 23:24:42 → 23:26:21) that would otherwise be invisible without per-entity opt-in. The window safety contact (`binary_sensor.hymer_heater_window_contact`) was already enabled by default. Existing installations that explicitly disabled these entities keep their preference; only fresh installs and never-seen entities are affected.
+- **Heater Status dashboard card extended** — The default Truma dashboard now surfaces `Combi Error`, `Response Error`, and `Shoreline (230 V)` rows alongside the existing window-contact row, giving a complete at-a-glance Truma health view.
+- **Bus 58 documentation rewritten** — `docs/sensor-map.md` now lists every bus-58 slot with both its local sensor key and the EHG canonical name in parentheses. Slots 10/12/13/14 (renamed in v2.35.0) are no longer shown under the obsolete `heater_sensor_*` placeholders. Slot 58:5 is explicitly flagged as a legacy misnomer (the local key `heater_fan_speed` actually reads `water_heater_mode`, the boiler — kept for backwards compat with existing dashboards/history).
+- **`sensor.hymer_heater_fan_speed` disabled by default** — This legacy sensor reads slot 58:5 (`water_heater_mode`), which is the boiler mode and is already exposed (and writable) via `select.hymer_boiler_mode_ctrl`. The duplicate sensor is now disabled by default for new installs to avoid confusion. Existing installs keep their current state (enable/disable) — manually disable it in the entity registry if you want it gone.
+
 ## [2.36.4] - 2026-04-24
 
 ### Fixed

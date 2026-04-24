@@ -228,7 +228,6 @@ BINARY_SENSOR_DESCRIPTIONS: tuple[HymerBinarySensorEntityDescription, ...] = (
         device_class=BinarySensorDeviceClass.PROBLEM,
         value_path="signalr_sensors.heater_combi_error",
         icon="mdi:alert-circle",
-        entity_registry_enabled_default=False,
     ),
     HymerBinarySensorEntityDescription(
         key="heater_response_error",
@@ -236,7 +235,6 @@ BINARY_SENSOR_DESCRIPTIONS: tuple[HymerBinarySensorEntityDescription, ...] = (
         device_class=BinarySensorDeviceClass.PROBLEM,
         value_path="signalr_sensors.heater_response_error",
         icon="mdi:alert",
-        entity_registry_enabled_default=False,
     ),
     HymerBinarySensorEntityDescription(
         key="heater_shoreline_connected",
@@ -244,7 +242,6 @@ BINARY_SENSOR_DESCRIPTIONS: tuple[HymerBinarySensorEntityDescription, ...] = (
         device_class=BinarySensorDeviceClass.PLUG,
         value_path="signalr_sensors.heater_shoreline_connected",
         icon="mdi:power-plug",
-        entity_registry_enabled_default=False,
     ),
     # --- Interior lights ---
     HymerBinarySensorEntityDescription(

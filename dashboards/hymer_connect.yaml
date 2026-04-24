@@ -439,6 +439,17 @@ views:
           - entity: sensor.hymer_heater_operating_mode
             name: Operating Mode
             icon: mdi:cog
+          - entity: binary_sensor.hymer_heater_combi_error
+            name: Combi Error
+            icon: mdi:alert-circle
+            secondary_info: last-changed
+          - entity: binary_sensor.hymer_heater_response_error
+            name: Response Error
+            icon: mdi:alert-octagon
+            secondary_info: last-changed
+          - entity: binary_sensor.hymer_heater_shoreline_connected
+            name: Shoreline (230 V)
+            icon: mdi:power-plug
           - entity: binary_sensor.hymer_heater_window_contact
             name: Dinette Window (Diesel Safety)
             icon: mdi:window-open-variant
