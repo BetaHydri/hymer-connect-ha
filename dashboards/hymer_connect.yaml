@@ -431,9 +431,10 @@ views:
         title: "🔥 Heater Status"
         show_header_toggle: false
         entities:
-          - entity: sensor.hymer_heater_fan_speed
-            name: Fan Speed
-            icon: mdi:fan
+          # NOTE: sensor.hymer_heater_fan_speed is misnamed — it actually reads
+          # slot 58:5 which is water_heater_mode (the boiler). Hidden here to
+          # avoid duplicating the Boiler Mode tile. The Truma fan power
+          # (Eco/High) is panel-only and not exposed on the SCU bus.
           - entity: sensor.hymer_heater_fuel_type
             name: Fuel Type
             icon: mdi:gas-station

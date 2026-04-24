@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.36.2] - 2026-04-24
+
+### Fixed
+
+- **Dashboard "Fan Speed" mirrored Boiler Mode** — The Heater Status card showed a `Fan Speed` row backed by `sensor.hymer_heater_fan_speed`, but that sensor reads slot 58:5 which is `water_heater_mode` (the boiler). So toggling the boiler to ECO made the row read `Eco`, looking like the heater fan was responding when it wasn't. Removed the misleading row from the dashboard. The underlying sensor entity is left in place for backwards compatibility but is no longer surfaced on the default dashboard. The real Truma fan power (Eco/High) is not exposed on the SCU bus and remains panel-only.
+
 ## [2.36.1] - 2026-04-24
 
 ### Fixed
