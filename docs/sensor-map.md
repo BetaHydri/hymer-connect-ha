@@ -235,19 +235,22 @@ Slots 1-2 are shared across S600/S700. Slots 3-7 carry GPS data on the S600
 
 ## Bus 58 — Truma Combi D6E heater (shared S600/S700)
 
+EHG canonical name in parentheses where the local sensor key is a legacy
+misnomer kept for backwards-compatibility with existing dashboards/history.
+
 | Slot | Sensor Name | Unit | Notes |
 |------|------------|------|-------|
-| (58, 4) | `heater_fuel_type` | — | Fuel type string (Diesel/Electric/Both) |
-| (58, 5) | `heater_fan_speed` | — | Fan speed (Off/ECO/High) |
-| (58, 6) | `heater_fuel_type_2` | — | Energy source selector write target |
-| (58, 7) | `heater_state` | — | Heater on/off state |
-| (58, 8) | `heater_setpoint` | °C | Target temperature (float write) |
-| (58, 9) | `heater_electric_power` | W | Electric power (0/900/1800) |
-| (58, 10) | `heater_sensor_10` | — | Discovery: `False` (bool) |
-| (58, 11) | `heater_operating_mode` | — | Operating mode string. Discovery: `Normal` |
-| (58, 12) | `heater_sensor_12` | — | Discovery: `False` (bool) |
-| (58, 13) | `heater_sensor_13` | — | Discovery: `False` (bool) |
-| (58, 14) | `heater_sensor_14` | — | Discovery: `False` (bool) |
+| (58, 4) | `heater_fuel_type` (EHG: `heater_air_energy_source`) | — | Heater air energy source string (Gas/Electric/Mix). `rw` |
+| (58, 5) | `heater_fan_speed` (EHG: `water_heater_mode`) | — | **Boiler** mode (Off/ECO/HOT). The legacy `heater_fan_speed` name is misleading — this is the water-heater (boiler) mode, not the heater fan. The Truma fan power (Eco/High) is **not** exposed on the SCU bus and remains panel-only. `rw` |
+| (58, 6) | `heater_fuel_type_2` (EHG: `heater_water_energy_source`) | — | Water heater energy source. `rw` |
+| (58, 7) | `heater_state` (EHG: `panel_busy`) | — | Panel-busy flag (bool). `r` |
+| (58, 8) | `heater_setpoint` (EHG: `target_air_temperature`) | °C | Target air temperature, float write, range -273…30. `rw` |
+| (58, 9) | `heater_electric_power` (EHG: `power_limit`) | W | Electric heating element power (0/900/1800). `rw` |
+| (58, 10) | `heater_combi_error` (EHG: `combi_error`) | — | Combi error flag (bool). `r` |
+| (58, 11) | `heater_operating_mode` (EHG: `heater_air_mode`) | — | Heater air mode string (`OFF` / `Normal` / `Automatic`). Read-only in practice — SCU silently rolls back writes. `rw` per metadata |
+| (58, 12) | `heater_response_error` (EHG: `response_error`) | — | Response error flag (bool). `r` |
+| (58, 13) | `heater_shoreline_connected` (EHG: `shoreline_connected`) | — | Shoreline connected flag (bool). `r` |
+| (58, 14) | `heater_window_switch_closed` (EHG: `window_switch_closed`) | — | Window contact closed (diesel safety interlock, bool). `r` |
 
 ## Bus 99 — BOS LUX LiFePO4 BMS (4×80Ah)
 
