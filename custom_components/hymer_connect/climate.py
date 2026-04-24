@@ -210,10 +210,12 @@ class HymerHeaterClimate(
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set fan mode.
 
-        Sends bus=58, sid=5 with 'ECO', 'High', or 'VENT' string value.
-        Confirmed modes from Truma Combi panel: OFF, 1-10, VENT.
+        Sends bus=58, sid=5. EHG metadata for slot 58:5 only accepts
+        the strings 'OFF', 'ECO', 'HOT' (not 'High'/'Hot'/etc.). The
+        physical Truma panel can also show VENT and numeric steps 1-10
+        but those are panel-only and not writable from the SCU bus.
         """
-        mode_map = {"Eco": "ECO", "High": "High", "Vent": "VENT"}
+        mode_map = {"Eco": "ECO", "High": "HOT"}
         mode_str = mode_map.get(fan_mode)
         if mode_str is None:
             _LOGGER.warning("Unknown fan mode: %s", fan_mode)
