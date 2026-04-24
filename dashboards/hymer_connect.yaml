@@ -839,6 +839,7 @@ views:
           target:
             entity_id: button.hymer_restart_scu
           confirmation:
-            text: "Are you sure you want to restart the SCU? The vehicle control unit will reboot and reconnect (~30-60s)."
+            text: "Are you sure you want to restart the SCU? The vehicle control unit will
+              reboot and reconnect (~30-60s)."
       # ── Diagnostic: EBL402 slots (3,8) and (3,9) ──
 
