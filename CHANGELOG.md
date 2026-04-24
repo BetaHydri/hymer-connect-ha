@@ -5,6 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.35.0] - 2026-04-24
+
+### Added
+
+- **Truma Combi window safety contact** — New `binary_sensor.hymer_heater_window_contact` exposes the window switch on the dinette window where the Truma diesel exhaust is routed. When the window is open the SCU automatically blocks the diesel heater (safety interlock); the entity uses HA's `WINDOW` device class so dashboards/automations can react instantly. Source: bus 58 sid 14 (`window_switch_closed`) per EHG app metadata.
+- **Truma Combi diagnostics** — Three additional diagnostic binary sensors (disabled by default): `heater_combi_error`, `heater_response_error`, `heater_shoreline_connected`. Sources: bus 58 sids 10/12/13 per EHG app metadata.
+- **Bus 58 slot annotations** — All 11 mapped slots on bus 58 now carry inline comments naming their canonical EHG meaning (`TrumaCombi_DE` component) so future contributors do not have to re-derive them.
+
+### Changed
+
+- **Renamed 4 placeholder slots on bus 58** (no entity bindings, safe rename): `heater_sensor_10` -> `heater_combi_error`, `heater_sensor_12` -> `heater_response_error`, `heater_sensor_13` -> `heater_shoreline_connected`, `heater_sensor_14` -> `heater_window_switch_closed`. The previously confusing `heater_sensor_14` users may have seen via v2.34.0 dynamic discovery is now a properly named binary sensor. Existing entities (`heater_setpoint`, `heater_state`, `heater_fuel_type`, `heater_fan_speed`, `heater_electric_power`, `heater_operating_mode`) are unchanged to preserve dashboards and history, but their canonical EHG names are documented in code comments for clarity.
+
 ## [2.34.0] - 2026-04-24
 
 ### Added

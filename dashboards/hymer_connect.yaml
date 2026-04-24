@@ -438,6 +438,10 @@ views:
           - entity: sensor.hymer_heater_operating_mode
             name: Operating Mode
             icon: mdi:cog
+          - entity: binary_sensor.hymer_heater_window_contact
+            name: Dinette Window (Diesel Safety)
+            icon: mdi:window-open-variant
+            secondary_info: last-changed
           - entity: binary_sensor.hymer_truma_connected
             name: Truma Connected
             icon: mdi:connection

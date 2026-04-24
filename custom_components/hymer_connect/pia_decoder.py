@@ -187,18 +187,24 @@ SENSOR_MAP: dict[tuple[int, int], tuple[str, str | None, str | None]] = {
     (49, 8): ("truma_connected", None, None),
     (49, 10): ("truma_status", None, None),
     (49, 11): ("truma_firmware", None, None),
-    # Truma heater (58)
-    (58, 4): ("heater_fuel_type", None, None),
-    (58, 5): ("heater_fan_speed", None, None),
-    (58, 6): ("heater_fuel_type_2", None, None),
-    (58, 7): ("heater_state", None, None),
-    (58, 8): ("heater_setpoint", "\u00b0C", None),
-    (58, 9): ("heater_electric_power", "W", None),
-    (58, 10): ("heater_sensor_10", None, None),
-    (58, 11): ("heater_operating_mode", None, None),
-    (58, 12): ("heater_sensor_12", None, None),
-    (58, 13): ("heater_sensor_13", None, None),
-    (58, 14): ("heater_sensor_14", None, None),
+    # Truma heater (58) — TrumaCombi_DE (diesel + electric variant)
+    # Verified against EHG app metadata (component_kinds.json: "TrumaCombi_DE").
+    # Comments on the right are the canonical EHG slot names; we keep our
+    # historical key names where entities/translations are already bound to
+    # them, to avoid breaking user dashboards & history. Slots (58,10/12/13/14)
+    # were generic placeholders with no entity bindings, so they get the
+    # canonical names directly.
+    (58, 4): ("heater_fuel_type", None, None),          # EHG: heater_air_energy_source ('Diesel'|'Electricity'|'Both')
+    (58, 5): ("heater_fan_speed", None, None),          # EHG: water_heater_mode ('OFF'|'ECO'|'HOT')
+    (58, 6): ("heater_fuel_type_2", None, None),        # EHG: heater_water_energy_source ('Diesel'|'Electricity'|'Both')
+    (58, 7): ("heater_state", None, None),              # EHG: panel_busy (bool)
+    (58, 8): ("heater_setpoint", "\u00b0C", None),      # EHG: target_air_temperature (rw, -273..30 °C)
+    (58, 9): ("heater_electric_power", "W", None),      # EHG: power_limit (rw, W) — electric element setpoint
+    (58, 10): ("heater_combi_error", None, None),       # EHG: combi_error (bool)
+    (58, 11): ("heater_operating_mode", None, None),    # EHG: heater_air_mode ('OFF'|'Normal'|'Automatic')
+    (58, 12): ("heater_response_error", None, None),    # EHG: response_error (bool)
+    (58, 13): ("heater_shoreline_connected", None, None),  # EHG: shoreline_connected (bool, Truma-side)
+    (58, 14): ("heater_window_switch_closed", None, None), # EHG: window_switch_closed (bool) — diesel safety interlock
     # can2 — BOS LUX LiFePO4 Battery Management System (4×80Ah)
     # Confirmed: S600 CrossOver has BOS 2.0 lithium battery, not AGM.
     # Bus 99 is the BMS, not extended chassis CAN. Matches S700 (PR #44).

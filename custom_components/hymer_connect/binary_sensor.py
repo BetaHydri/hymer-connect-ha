@@ -205,6 +205,45 @@ BINARY_SENSOR_DESCRIPTIONS: tuple[HymerBinarySensorEntityDescription, ...] = (
         value_path="signalr_sensors.truma_connected",
         icon="mdi:radiator",
     ),
+    # --- Truma Combi (bus 58) — slot meanings from EHG app metadata ---
+    # Window safety interlock: when the dinette window is open the SCU
+    # cuts the diesel heater (the diesel exhaust outlet is on that side).
+    # Exposing this as a binary_sensor lets users automate notifications.
+    HymerBinarySensorEntityDescription(
+        key="heater_window_switch_closed",
+        translation_key="heater_window_switch_closed",
+        device_class=BinarySensorDeviceClass.WINDOW,
+        value_path="signalr_sensors.heater_window_switch_closed",
+        # window_switch_closed=True means the safety contact is closed
+        # (= window CLOSED = heater allowed to run). For HA's WINDOW device
+        # class we want True = window OPEN, so invert via on_value=False.
+        on_value=False,
+        icon="mdi:window-closed-variant",
+    ),
+    HymerBinarySensorEntityDescription(
+        key="heater_combi_error",
+        translation_key="heater_combi_error",
+        device_class=BinarySensorDeviceClass.PROBLEM,
+        value_path="signalr_sensors.heater_combi_error",
+        icon="mdi:alert-circle",
+        entity_registry_enabled_default=False,
+    ),
+    HymerBinarySensorEntityDescription(
+        key="heater_response_error",
+        translation_key="heater_response_error",
+        device_class=BinarySensorDeviceClass.PROBLEM,
+        value_path="signalr_sensors.heater_response_error",
+        icon="mdi:alert",
+        entity_registry_enabled_default=False,
+    ),
+    HymerBinarySensorEntityDescription(
+        key="heater_shoreline_connected",
+        translation_key="heater_shoreline_connected",
+        device_class=BinarySensorDeviceClass.PLUG,
+        value_path="signalr_sensors.heater_shoreline_connected",
+        icon="mdi:power-plug",
+        entity_registry_enabled_default=False,
+    ),
     # --- Interior lights ---
     HymerBinarySensorEntityDescription(
         key="light_living_ambient",
