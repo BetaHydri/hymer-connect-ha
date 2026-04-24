@@ -1,6 +1,6 @@
 # SignalR Connection Architecture
 
-> **Last updated:** 2026-04-21 (v2.23.1)
+> **Last updated:** 2026-04-24 (v2.33.0)
 
 This document explains how the HYMER Connect integration maintains its real-time
 connection to the vehicle SCU (Smart Connectivity Unit) through Azure SignalR Service.
@@ -269,6 +269,20 @@ Check HA logs for:
 2. **EHG servers down** — Check if the EHG app itself works
 3. **Network issue** — Check HA''s internet connectivity
 
+### Symptom: "Session is closed" warnings on HA restart
+
+**Fixed in v2.33.0.** The coordinator now sets `_shutting_down = True` before
+tearing down SignalR during config entry unload or HA stop. The connection-lost
+callback checks this flag and suppresses reconnect attempts. If you still see
+this on older versions, upgrade to v2.33.0+.
+
+### Symptom: SCU is stuck and not responding to commands
+
+Use the **Restart SCU** button (v2.33.0+) in the dashboard System tab or via
+`button.hymer_restart_scu`. This sends a PIA `Request.command.restart` (cold reboot)
+to the SCU. The SCU will disconnect, reboot, and reconnect within ~30–60 seconds.
+The integration auto-reconnects after the reboot.
+
 ### Symptom: Commands sent from HA but nothing happens on vehicle
 
 1. Check if SignalR is connected: look for recent "SignalR connected" in logs
@@ -337,4 +351,5 @@ switch/light/device commands.
 | `signalr_client.py` | WebSocket management, PIA protocol, keepalive, listen loop |
 | `api.py` | OAuth2 auth, token refresh, SignalR negotiate, REST API |
 | `pia_decoder.py` | Protobuf encode/decode for PIA sensor data and commands |
+| `button.py` | SCU restart button entity (Request.command.restart) |
 | `const.py` | Timing constants, API URLs, header names |
