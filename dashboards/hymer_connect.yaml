@@ -372,28 +372,28 @@ views:
             icon: mdi:thermometer
 
       # ── Heater Control ──
-      - type: thermostat
-        entity: climate.hymer_truma_heater
-        name: Truma Heater
-        features:
-          - type: climate-hvac-modes
-            hvac_modes:
-              - heat
-              - "off"
-
-      # ── Controls ──
-      - type: markdown
-        content: "## ⚡ Controls"
-      - type: tile
-        entity: select.hymer
-        name: Energy Source
-        icon: mdi:gas-station
-        color: orange
-      - type: tile
-        entity: select.hymer_boiler_mode
-        name: Boiler Mode
-        icon: mdi:water-boiler
-        color: red
+      - type: horizontal-stack
+        cards:
+          - type: thermostat
+            entity: climate.hymer_truma_heater
+            name: Truma Heater
+            features:
+              - type: climate-hvac-modes
+                hvac_modes:
+                  - heat
+                  - "off"
+          - type: vertical-stack
+            cards:
+              - type: tile
+                entity: select.hymer
+                name: Energy Source
+                icon: mdi:gas-station
+                color: orange
+              - type: tile
+                entity: select.hymer_boiler_mode
+                name: Boiler Mode
+                icon: mdi:water-boiler
+                color: red
       - type: grid
         columns: 2
         square: false
