@@ -602,6 +602,88 @@ On the Grand Canyon S600, the CAN bus slots that carry speed, RPM, and engine to
 | **DataHub** | SignalR hub for real-time cloud communication |
 | **Connected Component** | Any device on the vehicle bus (heaters, fridges, sensors, etc.) |
 
+## Vehicle Bus Architecture
+
+The SCU (Smart Control Unit) is the central gateway in the vehicle. It bridges multiple physical buses — **CAN** and **LIN** — and exposes all connected devices to the EHG cloud via the PIA protobuf protocol over a SignalR WebSocket. This is the bus topology as observed on the Grand Canyon S 600 CrossOver.
+
+```mermaid
+graph TB
+    subgraph "EHG Cloud"
+        CLOUD["Azure SignalR Hub<br/>(PIA protocol over WebSocket)"]
+    end
+
+    subgraph "SCU — Smart Control Unit"
+        SCU["SCU / SIU<br/>Bus 45 · FW 1.12.0.0<br/>LTE modem + BLE + GPS"]
+    end
+
+    subgraph "CAN Bus"
+        CAN0["Bus 1 — can0<br/>Mercedes Sprinter Chassis CAN<br/>Odometer · Fuel · Doors · Ignition<br/>Engine · AdBlue · VIN"]
+        CAN2["Bus 99 — can2<br/>BOS LUX LiFePO4 BMS<br/>Pack V/A/°C · SOC · SoH<br/>Capacity · Charge detect"]
+    end
+
+    subgraph "LIN Bus"
+        LIN1["Bus 3 — lin1<br/>CBE EBL402 Habitation Electrics<br/>12V main · Battery V/A/SOC<br/>Water tanks · Solar · Shore power"]
+        LIN2["Bus 8 — lin2<br/>Voltronic MPP260CI MPPT<br/>Solar V/A/W · Charger status<br/>Error · AES · Reduced power"]
+    end
+
+    subgraph "PIA-addressed Devices"
+        LIGHTS["Lights (8 interior + LED bar)<br/>Bus 11 · 12 · 15 · 16 · 19 · 21 · 43 · 44<br/>On/Off · Brightness · Color temp"]
+        GROUPS["Light Groups<br/>Bus 24 — Wohnen (all living)<br/>Bus 27 — Privat (all bedroom/bath)"]
+        LEDBAR["LED Bar (outside)<br/>Bus 25 (primary) · Bus 22 (duplicate)"]
+        FRIDGE["Thetford N4112A Fridge<br/>Bus 34 — Control (power · ECO · step)<br/>Bus 37 — Status (mode · door)"]
+        TRUMA["Truma Combi D6E Heater<br/>Bus 49 — LIM module (FW · status)<br/>Bus 58 — Heater (setpoint · fan · fuel)"]
+        VICTRON["Victron MultiPlus 12/1600/70<br/>Bus 121 — Inverter · Charger<br/>(disabled by default)"]
+        GPS["SCU Telemetry<br/>Bus 30 — GPS · LTE · BT devices"]
+    end
+
+    CLOUD <-->|"cellular"| SCU
+    SCU <--> CAN0
+    SCU <--> CAN2
+    SCU <--> LIN1
+    SCU <--> LIN2
+    SCU <--> LIGHTS
+    SCU <--> GROUPS
+    SCU <--> LEDBAR
+    SCU <--> FRIDGE
+    SCU <--> TRUMA
+    SCU <--> VICTRON
+    SCU --- GPS
+```
+
+### Bus Summary
+
+| Bus ID | Internal Name | Physical Bus | Device | Key Sensors |
+|--------|--------------|-------------|--------|-------------|
+| 1 | `can0` | **CAN** | Mercedes Sprinter chassis | Odometer, fuel, doors, ignition, engine, AdBlue, VIN, temperature |
+| 3 | `lin1` | **LIN** | CBE EBL402 | 12V main switch, battery V/A/SOC, water tanks, charge phase, shore power |
+| 8 | `lin2` | **LIN** | Voltronic MPP260CI | Solar voltage, current, power, charger status, error flags |
+| 11–21 | — | PIA | Interior lights | Ceiling, ambient, kitchen, bathroom, nightlight (on/off, brightness, color temp) |
+| 22 | — | PIA | LED bar (duplicate) | Mirrors bus 25 — disabled by default |
+| 24 | — | PIA | Wohnen light group | Hardware group toggle for all living area lights |
+| 25 | — | PIA | Outside LED bar | On/off, brightness |
+| 27 | — | PIA | Privat light group | Hardware group toggle for all private area lights |
+| 30 | — | PIA | SCU telemetry | GPS coordinates, altitude, heading, satellites, LTE, Bluetooth |
+| 34 | `heat_ctrl` | PIA | Thetford fridge (control) | Power, ECO, cooling step, setpoint |
+| 37 | `fridge` | PIA | Thetford fridge (status) | Operating mode, door state |
+| 43–44 | — | PIA | Overhead lights | Seating overhead, bedroom overhead |
+| 45 | `scu` | PIA | SCU module | Connected flag, firmware version |
+| 49 | `truma` | PIA | Truma LIM module | Connected flag, status, firmware |
+| 58 | `heater` | PIA | Truma Combi D6E | Setpoint, fan speed, fuel type, electric power, operating mode |
+| 99 | `can2` | **CAN** | BOS LUX LiFePO4 BMS | Pack V/A/°C, SOC, SoH, capacity, charge detect, device failure |
+| 121 | — | PIA | Victron MultiPlus | Inverter/charger state, V/A/Hz, shore input (disabled by default) |
+
+### How Data Flows
+
+1. **Physical devices** (heater, fridge, lights, BMS, solar charger) communicate with the SCU over **CAN** or **LIN** buses, or are addressed directly via the SCU's internal **PIA bus**
+2. The **SCU** aggregates all bus data into **PIA protobuf messages** — each sensor is identified by a `(bus_id, sensor_id)` tuple
+3. The SCU transmits these messages to the **EHG cloud** via its built-in **LTE cellular modem**
+4. The cloud relays the data over **Azure SignalR** (WebSocket) to this Home Assistant integration
+5. The integration **decodes the protobuf** and maps each `(bus_id, sensor_id)` to a named HA entity
+
+> **Note:** The "PIA-addressed devices" in the diagram are not necessarily on a separate physical bus. The PIA protocol is a logical addressing layer — the SCU may internally route these over LIN, SPI, or proprietary wiring depending on the device. What matters for the integration is the `(bus_id, sensor_id)` addressing, not the physical wire.
+
+> **Full slot-by-slot reference:** See [`docs/sensor-map.md`](docs/sensor-map.md) for every known sensor mapping with units, transforms, and model-specific differences.
+
 ## Reverse Engineering
 
 This integration was reverse-engineered from the **HYMER Connect** Android app v2.10.14 using:
