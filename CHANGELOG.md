@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.33.1] - 2026-04-24
+
+### Fixed
+
+- **12V main switch ON flicker** — The verify timer now waits 30s (was 15s) for the main switch, matching the existing OFF holdoff. The SCU reboots on any 12V state change and pushes a stale "Off" readback during reconnect. The old 15s verify fired too early, falsely declared the SignalR send channel dead, forced a reconnect, and left the dashboard stuck on "Aus" even though the vehicle's 12V was actually ON. The fix suppresses this flicker by holding the optimistic state through the SCU reboot window.
+- **Case-insensitive readback comparison** — The switch verify check now uses case-insensitive string matching, consistent with the binary sensor fix in v2.32.0.
+
 ## [2.33.0] - 2026-04-24
 
 ### Added
