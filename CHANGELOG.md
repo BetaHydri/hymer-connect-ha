@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.34.0] - 2026-04-24
+
+### Added
+
+- **Dynamic slot discovery** — Any PIA `(bus_id, sensor_id)` pair reported by the SCU that is not present in `SENSOR_MAP` now automatically appears as a generic diagnostic sensor named `Discovered bus N slot M` (entity id `sensor.hymer_discovered_bus{N}_slot_{M}`). Entities are **disabled by default** so they do not pollute the UI — enable them via the entity registry to inspect the raw value reported by an unknown slot. This brings the discovery capability of `tools/discover_sensors.py` directly into Home Assistant, making it easier to identify what unmapped slots actually report when you trigger physical actions on the vehicle. Existing 129 named entities are unaffected (the decoder only emits fallback `bus{N}_s{M}` keys for slots NOT in `SENSOR_MAP`).
+
 ## [2.33.1] - 2026-04-24
 
 ### Fixed

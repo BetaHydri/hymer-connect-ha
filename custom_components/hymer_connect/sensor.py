@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import logging
+import re
 from dataclasses import dataclass
 from typing import Any
 
@@ -14,6 +16,7 @@ from homeassistant.components.sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     PERCENTAGE,
+    EntityCategory,
     UnitOfElectricCurrent,
     UnitOfElectricPotential,
     UnitOfFrequency,
@@ -25,12 +28,18 @@ from homeassistant.const import (
     UnitOfTime,
     UnitOfVolume,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN, MANUFACTURER
 from .coordinator import HymerConnectCoordinator
+
+_LOGGER = logging.getLogger(__name__)
+
+# Pattern matching unmapped slot fallback keys produced by pia_decoder when a
+# (bus_id, sensor_id) pair is NOT present in SENSOR_MAP, e.g. "bus47_s3".
+_DISCOVERED_KEY_RE = re.compile(r"^bus(\d+)_s(\d+)$")
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -704,6 +713,44 @@ async def async_setup_entry(
         for desc in ALL_SENSOR_DESCRIPTIONS
     )
 
+    # --- Dynamic slot discovery ---
+    # The PIA decoder stores any (bus_id, sensor_id) pair NOT in SENSOR_MAP
+    # under a fallback key "bus{B}_s{S}".  Watch the coordinator for new such
+    # keys and create a generic, disabled-by-default diagnostic sensor for
+    # each one so users can opt-in to inspect raw values from the SCU.
+    discovered: set[str] = set()
+
+    @callback
+    def _async_discover_slots() -> None:
+        if not coordinator.data:
+            return
+        sensors = coordinator.data.get("signalr_sensors")
+        if not isinstance(sensors, dict):
+            return
+        new_entities: list[HymerDiscoveredSensor] = []
+        for key in sensors:
+            if key in discovered:
+                continue
+            match = _DISCOVERED_KEY_RE.match(key)
+            if not match:
+                continue
+            discovered.add(key)
+            bus_id = int(match.group(1))
+            sensor_id = int(match.group(2))
+            new_entities.append(
+                HymerDiscoveredSensor(coordinator, entry, bus_id, sensor_id)
+            )
+            _LOGGER.info(
+                "Discovered unmapped slot (%d,%d) — creating diagnostic entity %s",
+                bus_id, sensor_id, key,
+            )
+        if new_entities:
+            async_add_entities(new_entities)
+
+    # Run once for any data already present, then on every coordinator update.
+    _async_discover_slots()
+    entry.async_on_unload(coordinator.async_add_listener(_async_discover_slots))
+
 
 class HymerConnectSensor(
     CoordinatorEntity[HymerConnectCoordinator], SensorEntity
@@ -771,4 +818,61 @@ class HymerConnectSensor(
             # 3276.8 = 32768/10 = CAN "no data" sentinel (solar voltage etc.)
             if value in (3276.8, 32768.0, 65535.0, 6553.5):
                 return None
+        return value
+
+
+class HymerDiscoveredSensor(
+    CoordinatorEntity[HymerConnectCoordinator], SensorEntity
+):
+    """Generic diagnostic sensor for an unmapped PIA (bus, slot) pair.
+
+    Created dynamically when the SCU reports a sensor whose (bus_id,
+    sensor_id) is not present in :data:`pia_decoder.SENSOR_MAP`.  These
+    entities are disabled by default so they never appear in the UI unless
+    the user explicitly enables them via the entity registry.
+
+    Their primary purpose is to make discovery (previously only available
+    via ``tools/discover_sensors.py``) accessible from inside Home
+    Assistant — users can enable a slot, observe how its value reacts to
+    physical actions, and propose a mapping for ``SENSOR_MAP``.
+    """
+
+    _attr_has_entity_name = True
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+    _attr_entity_registry_enabled_default = False
+    _attr_icon = "mdi:help-circle-outline"
+
+    def __init__(
+        self,
+        coordinator: HymerConnectCoordinator,
+        entry: ConfigEntry,
+        bus_id: int,
+        sensor_id: int,
+    ) -> None:
+        """Initialize a discovered slot sensor."""
+        super().__init__(coordinator)
+        self._bus_id = bus_id
+        self._sensor_id = sensor_id
+        self._key = f"bus{bus_id}_s{sensor_id}"
+        self._attr_unique_id = f"{entry.entry_id}_discovered_{self._key}"
+        self._attr_name = f"Discovered bus {bus_id} slot {sensor_id}"
+        self._attr_device_info = {
+            "identifiers": {(DOMAIN, entry.entry_id)},
+            "name": "HYMER",
+            "manufacturer": MANUFACTURER,
+            "model": "Smart Interface Unit",
+        }
+
+    @property
+    def native_value(self) -> Any | None:
+        """Return the raw value reported by the SCU for this slot."""
+        if self.coordinator.data is None:
+            return None
+        sensors = self.coordinator.data.get("signalr_sensors")
+        if not isinstance(sensors, dict):
+            return None
+        value = sensors.get(self._key)
+        # Coerce non-primitive types so HA's state machine can store them.
+        if isinstance(value, (bytes, bytearray)):
+            return value.hex()
         return value
