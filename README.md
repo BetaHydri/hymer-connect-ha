@@ -142,7 +142,31 @@ Three computed sensors derived from the CAN bus odometer and fuel level:
 | **Victron** | Inverter on/off, charger on/off, voltages, currents, frequencies, device failure, firmware (bus 121 — disabled by default) |
 | **Total** | **~130 entities** (sensors, binary sensors, lights, switches, climate, selects) from CAN bus, LIN bus, GPS, and connected components |
 
-### 🗺️ Device Tracker
+### � Dynamic Slot Discovery (v2.34.0+)
+
+The integration's named sensor map (`SENSOR_MAP`) was reverse-engineered on a HYMER Grand Canyon S 600 CrossOver. **All other EHG brands (Eriba, Bürstner, Dethleffs, LMC, Niesmann+Bischoff, Sunlight, Carado, Laika, FreeOnTour) share the same SCU hardware and PIA protobuf protocol**, but the slot layout can differ — different floor plans, different appliance models, different option packages can place sensors on bus/slot pairs that are not yet in the map.
+
+To make every reported value visible regardless of brand or model, the integration now **automatically creates a generic diagnostic sensor for any `(bus_id, sensor_id)` pair the SCU reports that is not present in `SENSOR_MAP`**:
+
+- **Entity name**: `Discovered bus N slot M`
+- **Entity ID**: `sensor.hymer_discovered_bus{N}_slot_{M}`
+- **Category**: Diagnostic
+- **Disabled by default** — they will not appear in your dashboard unless you explicitly enable them in the entity registry
+
+**To inspect unmapped slots on your vehicle:**
+
+1. Go to **Settings → Devices & Services → HYMER Connect** → click the device
+2. Scroll to **"+N entities not shown"** to see all disabled discovered entities
+3. Click any entry → ⚙️ → enable it
+4. Watch its raw value in **Developer Tools → States** while you trigger physical actions on the vehicle (toggle a light, open a door, switch on the heater) to identify what the slot reports
+
+**Contributing your findings:**
+
+If you identify what an unmapped slot does on your brand/model, please open an issue or PR adding the mapping to `custom_components/hymer_connect/pia_decoder.py` (`SENSOR_MAP`). Once added, the next release will replace the generic discovered entity with a properly named one with appropriate units and device class.
+
+> **Existing entities are unaffected.** Discovered entities only ever cover slots that are *not* in `SENSOR_MAP` — there is no collision possible with the named sensors.
+
+### �🗺️ Device Tracker
 
 GPS-based device tracker for vehicle location on the HA map.
 
