@@ -801,9 +801,6 @@ views:
           - entity: sensor.hymer_scu_firmware
             name: SCU Firmware
             icon: mdi:chip
-          - entity: binary_sensor.hymer_truma_connected
-            name: Truma Connected
-            icon: mdi:connection
           - entity: sensor.hymer_truma_firmware
             name: Truma Firmware
             icon: mdi:chip
