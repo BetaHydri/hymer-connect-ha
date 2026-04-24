@@ -698,8 +698,13 @@ class HymerSignalRClient:
             bus_id, sensor_id,
             bool_value=bool_value, uint_value=uint_value, str_value=str_value,
         )
+        # Note: despite the function name, this is a generic single-slot
+        # set_value writer used by lights, switches, the fridge controller
+        # (bus 34), the main switch, water pump, etc. The vehicle simply
+        # receives a PiaRequest.set_value targeting (bus_id, sensor_id) —
+        # the SCU routes it to the correct module based on bus_id.
         _LOGGER.info(
-            "Sending light command: bus=%d sid=%d bool=%s uint=%s str=%s",
+            "Sending set_value command: bus=%d sid=%d bool=%s uint=%s str=%s",
             bus_id, sensor_id, bool_value, uint_value, str_value,
         )
         return await self.send_pia_request(payload)
