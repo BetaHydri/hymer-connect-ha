@@ -348,6 +348,35 @@ def build_refresh_command() -> str:
     return base64.b64encode(payload).decode("ascii")
 
 
+def build_restart_system_request(*, cold: bool = True) -> str:
+    """Build a Request.command.restart PIA request to reboot the SCU.
+
+    Mirrors the EHG app's request.command.restart path:
+    - Request.command → field 9
+    - CommandRequestTopic.restart → field 2
+    - RestartCommand.cold → field 1 (1 = cold reboot)
+
+    Credit: Dan Simms (dan-simms1/hymer-connect-ha) decoded this protocol path.
+    """
+    import random
+    msg_id = random.randint(1, 10_000_000)
+    ts = int(time.time())
+
+    # RestartCommand: field 1 = cold (bool as varint)
+    restart_cmd = _encode_varint_field(1, 1 if cold else 0)
+    # CommandRequestTopic: field 2 = restart
+    command_topic = _encode_bytes_field(2, restart_cmd)
+
+    # Request envelope
+    wrapper = _encode_varint_field(1, msg_id)
+    wrapper += _encode_bytes_field(2, b"v0.32.0")
+    wrapper += _encode_varint_field(3, ts)
+    wrapper += _encode_bytes_field(9, command_topic)  # field 9 = command
+
+    payload = _encode_bytes_field(2, wrapper)
+    return base64.b64encode(payload).decode("ascii")
+
+
 def _encode_varint(value: int) -> bytes:
     """Encode an integer as a protobuf varint."""
     result = bytearray()

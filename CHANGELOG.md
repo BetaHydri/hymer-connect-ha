@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.33.0] - 2026-04-24
+
+### Added
+
+- **SCU Restart button** — New `button.hymer_restart_scu` entity sends a cold reboot command to the Smart Control Unit. Useful when the SCU is stuck or not responding to commands. Located in the System tab with a confirmation prompt ("Are you sure?"). The integration auto-reconnects after reboot (~30-60s). Credit: Dan Simms decoded the `Request.command.restart` PIA protocol path.
+
+### Fixed
+
+- **Shutdown-safe SignalR** — The coordinator now marks itself as shutting down before tearing down the SignalR connection. Reconnect attempts during HA shutdown/unload are suppressed, eliminating the `Session is closed` log noise that appeared on every HA restart.
+
 ## [2.32.0] - 2026-04-24
 
 ### Added

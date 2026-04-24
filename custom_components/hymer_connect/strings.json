@@ -182,6 +182,9 @@
     "select": {
       "fridge_mode_ctrl": { "name": "Fridge mode" },
       "boiler_mode_ctrl": { "name": "Boiler mode" }
+    },
+    "button": {
+      "restart_system": { "name": "Restart SCU" }
     }
   },
   "options": {

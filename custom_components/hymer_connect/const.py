@@ -79,4 +79,4 @@ CONF_TANK_CAPACITY = "tank_capacity_liters"
 DEFAULT_TANK_CAPACITY_LITERS = 93
 
 # Platforms
-PLATFORMS = ["sensor", "binary_sensor", "device_tracker", "light", "switch", "climate", "select"]
+PLATFORMS = ["sensor", "binary_sensor", "device_tracker", "light", "switch", "climate", "select", "button"]

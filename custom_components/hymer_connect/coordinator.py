@@ -67,6 +67,7 @@ class HymerConnectCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self._last_resubscribe: float = 0.0
         self._cached_rest_data: dict[str, Any] = {}
         self._signalr_lock = asyncio.Lock()  # prevent concurrent reconnect attempts
+        self._shutting_down = False  # suppress reconnects during HA shutdown/unload
         # Fuel consumption tracking — reference point for trip calculation
         self._fuel_ref_odo: float | None = None  # odometer at trip start (km)
         self._fuel_ref_level: float | None = None  # fuel level at trip start (%)
@@ -171,6 +172,9 @@ class HymerConnectCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         refresh so `_async_update_data` reconnects within seconds instead
         of waiting for the next poll interval + exponential backoff.
         """
+        if self._shutting_down:
+            _LOGGER.debug("SignalR connection lost during shutdown — suppressing reconnect")
+            return
         _LOGGER.info("SignalR connection lost — scheduling immediate reconnect")
         self._reconnect_backoff = _INITIAL_BACKOFF
         self._last_reconnect_attempt = 0.0
@@ -254,6 +258,7 @@ class HymerConnectCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
     async def stop_signalr(self) -> None:
         """Stop the SignalR WebSocket connection."""
+        self._shutting_down = True
         if self._signalr:
             await self._signalr.stop()
             self._signalr = None
@@ -329,6 +334,13 @@ class HymerConnectCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     ) -> None:
         """Send a raw PIA request with reconnect + retry."""
         await self._send_with_retry("send_pia_request", payload)
+
+    async def async_send_restart_system_command(self) -> None:
+        """Send an SCU restart command via PIA."""
+        from .pia_decoder import build_restart_system_request
+        payload = build_restart_system_request(cold=True)
+        await self.async_send_pia_request(payload)
+        _LOGGER.warning("SCU restart command sent — the SCU will reboot")
 
     async def _async_update_data(self) -> dict[str, Any]:
         """Fetch data from the REST API and merge with SignalR data."""
