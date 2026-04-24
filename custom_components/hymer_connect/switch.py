@@ -129,11 +129,17 @@ class HymerConnectSwitch(
     async def _verify_send(self, expected_on: bool) -> None:
         """Verify the SCU acknowledged the command after a delay.
 
-        If the readback doesn't match the expected state after 15 seconds,
+        If the readback doesn't match the expected state after the delay,
         the SignalR connection is likely stale. Force a reconnect by marking
         the client as disconnected so the coordinator reconnects on next poll.
+
+        The 12V main switch gets a longer delay (30s) because the SCU reboots
+        on any 12V state change and pushes stale cached values during reconnect.
         """
-        await asyncio.sleep(15)
+        # Main switch needs longer holdoff — SCU reboots on 12V changes
+        is_main_switch = self.entity_description.key == "main_switch_ctrl"
+        delay = 30 if is_main_switch else 15
+        await asyncio.sleep(delay)
         # Read the actual SCU readback (not optimistic)
         if self.coordinator.data is None:
             return
@@ -142,12 +148,16 @@ class HymerConnectSwitch(
         )
         if value is None:
             return
-        actual_on = value == self.entity_description.on_value
+        # Case-insensitive string comparison for readback check
+        if isinstance(value, str) and isinstance(self.entity_description.on_value, str):
+            actual_on = value.upper() == self.entity_description.on_value.upper()
+        else:
+            actual_on = value == self.entity_description.on_value
         if actual_on != expected_on:
             _LOGGER.warning(
                 "Switch %s: SCU readback (%s) doesn't match commanded (%s) "
-                "after 15s — SignalR send channel likely dead, forcing reconnect",
-                self.entity_description.key, value, expected_on,
+                "after %ds — SignalR send channel likely dead, forcing reconnect",
+                self.entity_description.key, value, expected_on, delay,
             )
             client = self.coordinator.signalr_client
             if client:
