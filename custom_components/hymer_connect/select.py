@@ -379,6 +379,16 @@ class HymerHeaterAirModeSelect(
         }
         self._optimistic: str | None = None
 
+    def _get_fuel_type(self) -> str:
+        """Get current fuel type from coordinator data."""
+        if self.coordinator.data:
+            val = _resolve_path(
+                self.coordinator.data, "signalr_sensors.heater_fuel_type"
+            )
+            if val and isinstance(val, str) and val not in ("unknown", "unavailable"):
+                return val
+        return "Diesel"
+
     @property
     def current_option(self) -> str | None:
         """Return the current heater air mode."""
@@ -402,16 +412,25 @@ class HymerHeaterAirModeSelect(
         return None
 
     async def async_select_option(self, option: str) -> None:
-        """Set the heater air mode."""
+        """Set the heater air mode.
+
+        Sent as a multi-sensor command paired with the fuel slot, matching
+        the pattern used by every other writable 58:* slot (setpoint, boiler
+        mode, energy source). Captured EHG traffic always pairs slot writes
+        on bus 58 this way; a standalone set_value on 58:11 was observed to
+        be silently reverted by the SCU back to Normal.
+        """
         mode_map = {"Off": "OFF", "Normal": "Normal", "Automatic": "Automatic"}
         mode_str = mode_map.get(option)
         if mode_str is None:
             _LOGGER.warning("Unknown heater air mode option: %s", option)
             return
 
-        await self.coordinator.async_send_light_command(
-            58, 11, str_value=mode_str
-        )
+        fuel = self._get_fuel_type()
+        await self.coordinator.async_send_multi_sensor_command([
+            {"bus_id": 58, "sensor_id": 11, "str_value": mode_str},
+            {"bus_id": 58, "sensor_id": 4, "str_value": fuel},
+        ])
         self._optimistic = option
         self.async_write_ha_state()
 

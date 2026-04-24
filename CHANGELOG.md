@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.36.1] - 2026-04-24
+
+### Fixed
+
+- **Heater mode reverted to `Normal` after selecting `Automatic`** — Standalone `set_value` writes to slot 58:11 were silently rolled back by the SCU. Switched the Heater Mode select to a multi-sensor command paired with the fuel slot (58:4), matching the pattern every other writable 58:* slot uses (setpoint, boiler mode, energy source). Captured EHG traffic always pairs writes on bus 58 this way.
+
 ## [2.36.0] - 2026-04-24
 
 ### Fixed
