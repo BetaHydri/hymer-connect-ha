@@ -393,11 +393,6 @@ views:
                 icon: mdi:gas-station
                 color: orange
               - type: tile
-                entity: select.hymer_heater_mode
-                name: Heater Mode
-                icon: mdi:radiator
-                color: orange
-              - type: tile
                 entity: select.hymer_boiler_mode
                 name: Boiler Mode
                 icon: mdi:water-boiler

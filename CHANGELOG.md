@@ -5,6 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.36.3] - 2026-04-24
+
+### Removed
+
+- **`select.hymer_heater_mode`** — The Heater Mode select (Off/Normal/Automatic) backed by slot 58:11 (`heater_air_mode`) was removed. Investigation against captured SignalR traffic (six `ws_capture_*.jsonl` sessions across three days) and the decoded mitm `.flow` files showed:
+  1. The official EHG app exposes **no** heater-mode control on the Klima tab — only heating on/off + setpoint, electric aux wattage, energy source, boiler on/off, and Turbo mode.
+  2. Slot 58:11 was **never** written to by the EHG app in any captured trace — the only bus-58 writes observed were 58:5 (`water_heater_mode`) paired with 58:4 (`heater_fuel_type`).
+  3. Slot 58:11 was always read as `"Normal"` in every capture; v2.36.1's pairing-with-fuel-slot fix did not change SCU behavior.
+  This matches the situation already documented for the heater fan slot in v2.36.0: the EHG metadata `rw` flag is a per-firmware capability hint, not a guarantee, and the Truma firmware silently reverts unsupported writes. The reading is still available via `sensor.hymer_heater_operating_mode`.
+- Heater Mode tile removed from the dashboard.
+- Translation entries for `heater_air_mode_ctrl` removed.
+
 ## [2.36.2] - 2026-04-24
 
 ### Fixed

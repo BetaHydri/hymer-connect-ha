@@ -186,8 +186,7 @@
     "select": {
       "fridge_mode_ctrl": { "name": "Fridge mode" },
       "boiler_mode_ctrl": { "name": "Boiler mode" },
-      "heater_energy_ctrl": { "name": "Heater energy source" },
-      "heater_air_mode_ctrl": { "name": "Heater mode" }
+      "heater_energy_ctrl": { "name": "Heater energy source" }
     },
     "button": {
       "restart_system": { "name": "Restart SCU" }
