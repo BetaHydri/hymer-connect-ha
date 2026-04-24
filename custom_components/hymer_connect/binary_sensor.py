@@ -214,10 +214,12 @@ BINARY_SENSOR_DESCRIPTIONS: tuple[HymerBinarySensorEntityDescription, ...] = (
         translation_key="heater_window_switch_closed",
         device_class=BinarySensorDeviceClass.WINDOW,
         value_path="signalr_sensors.heater_window_switch_closed",
-        # window_switch_closed=True means the safety contact is closed
-        # (= window CLOSED = heater allowed to run). For HA's WINDOW device
-        # class we want True = window OPEN, so invert via on_value=False.
-        on_value=False,
+        # Despite the EHG metadata name `window_switch_closed`, captured
+        # traces (custom_components/logs/ws_capture_*.jsonl) show the slot
+        # is actually a window-OPEN flag: resting state is `false` while
+        # the window is closed, and it flips to `true` when the dinette
+        # window is opened. So the raw value already matches HA's WINDOW
+        # device class semantics (True = open) — no inversion needed.
         icon="mdi:window-closed-variant",
     ),
     HymerBinarySensorEntityDescription(

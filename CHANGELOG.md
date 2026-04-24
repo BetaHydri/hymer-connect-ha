@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.36.4] - 2026-04-24
+
+### Fixed
+
+- **`binary_sensor.hymer_dinette_window_diesel_safety` showed `Geöffnet` while the window was actually closed** — Slot 58:14 was added in v2.35.0 with `on_value=False` based on the misleading EHG metadata name `window_switch_closed`. Captured traces (six `ws_capture_*.jsonl` files) prove the opposite: the slot's resting state is `false` while the window is closed, and it flips to `true` when the dinette window is opened (one capture at 2026-04-19 15:23:58 shows the live `false → true → false` transition). So the raw value already matches HA's WINDOW device-class semantics (`True = open`). Removed the `on_value=False` inversion.
+
 ## [2.36.3] - 2026-04-24
 
 ### Removed
