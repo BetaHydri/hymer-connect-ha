@@ -372,16 +372,19 @@ views:
             icon: mdi:thermometer
 
       # ── Heater Control ──
+      - type: markdown
+        content: "## ⚡ Controls"
       - type: horizontal-stack
         cards:
           - type: thermostat
             entity: climate.hymer_truma_heater
-            name: Truma Heater
             features:
               - type: climate-hvac-modes
                 hvac_modes:
                   - heat
                   - "off"
+            show_current_as_primary: false
+            name: Truma Heater
           - type: vertical-stack
             cards:
               - type: tile
@@ -409,6 +412,15 @@ views:
             icon: mdi:volume-off
             color: teal
 
+      # ── Fridge Status ──
+      - type: entities
+        title: "❄️ Fridge Status"
+        show_header_toggle: false
+        entities:
+          - entity: binary_sensor.hymer_fridge_door
+            name: Door
+            icon: mdi:fridge-alert
+
       # ── Heater Status ──
       - type: entities
         title: "🔥 Heater Status"
@@ -432,15 +444,6 @@ views:
           - entity: sensor.hymer_truma_status
             name: Truma Status
             icon: mdi:information
-
-      # ── Fridge Status ──
-      - type: entities
-        title: "❄️ Fridge Status"
-        show_header_toggle: false
-        entities:
-          - entity: binary_sensor.hymer_fridge_door
-            name: Door
-            icon: mdi:fridge-alert
 
   # ══════════════════════════════════════════════════════════
   # Water
