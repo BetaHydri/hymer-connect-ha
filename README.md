@@ -26,10 +26,11 @@ Unlike the official EHG app, this integration gives you **full Home Assistant po
 | **Template sensors** (corrected engine status, computed solar power) | ❌ | ✅ |
 | **Always-on monitoring** (24/7, not just while app is open) | ❌ | ✅ |
 | **~100 entities** (vs ~20 in the EHG app) | ❌ | ✅ |
+| **SCU restart** (reboot the control unit remotely) | ❌ | ✅ |
 
 > **⚠️ Important:** Real-time sensor data (70+ entities: GPS, battery, doors, heater, fridge, etc.) requires an **EHG Remote Access Refresh Token**. This token must be captured **once** from your phone using mitmproxy during the initial setup. Without it, only basic vehicle metadata (model, VIN, year) is available. See [Obtaining the EHG Refresh Token](#obtaining-the-ehg-refresh-token) for the step-by-step guide.
 
-> **v2.30.2** — **Vehicle-verified sensor mappings!** Doors confirmed (driver + passenger on PIA, sliding/rear via Mercedes ME only). Bus 22 corrected from fresh water to LED bar duplicate. Victron MultiPlus bus 121 pre-mapped (disabled by default). Fuel consumption sensors + configurable tank capacity. Stable SignalR with asyncio.Lock. See [CHANGELOG](CHANGELOG.md) for full history.
+> **v2.33.0** — **SCU Restart button + fridge door fix!** New `button.hymer_restart_scu` with confirmation prompt. Fridge door binary sensor (`binary_sensor.hymer_fridge_door`). Case-insensitive string matching for all binary sensors. Shutdown-safe SignalR (no more `Session is closed` log noise). See [CHANGELOG](CHANGELOG.md) for full history.
 
 ### Energy Dashboard
 
@@ -134,10 +135,10 @@ Three computed sensors derived from the CAN bus odometer and fuel level:
 | **Security** | Lock status, ignition, handbrake, engine running, seatbelt warning |
 | **Chassis** | Parking brake, aux heater available/state, cruise control, downhill assist, coolant warning, motor oil warning, wiping water empty |
 | **Heating** | Truma connected/status/firmware, fan speed, fuel type, electric power (0/900/1800W), setpoint, operating mode |
-| **Fridge** | Mode (cooling step), door status, ECO/Quiet mode, power on/off |
+| **Fridge** | Mode (cooling step), door status (binary sensor), ECO/Quiet mode, power on/off |
 | **Lights** | 8 interior lights (on/off, brightness, color temp), LED bar (on/off, brightness), Wohnen group, Privat group |
 | **Fuel** | Level (%), liters, consumption (L/100km), estimated range (computed) |
-| **System** | SCU connected/firmware, Truma firmware, LTE connected, paired BT devices |
+| **System** | SCU connected/firmware, Truma firmware, LTE connected, paired BT devices, SCU restart button |
 | **Victron** | Inverter on/off, charger on/off, voltages, currents, frequencies, device failure, firmware (bus 121 — disabled by default) |
 | **Total** | **~130 entities** (sensors, binary sensors, lights, switches, climate, selects) from CAN bus, LIN bus, GPS, and connected components |
 
@@ -159,7 +160,7 @@ A ready-to-use tile-based Lovelace dashboard optimized for mobile and desktop:
 | **Doors** | Door status, chassis state (parking brake, aux heater, cruise control) |
 | **Lights** | Interior light controls with master groups |
 | **GPS** | Full map, coordinates, satellites, signal |
-| **System** | SCU/Truma firmware, tyre pressure |
+| **System** | SCU/Truma firmware, SCU restart button, tyre pressure |
 
 **Prerequisites:** Home Assistant 2022.11+ (tile cards). No HACS frontend cards required — 100% stock HA.
 
@@ -365,7 +366,7 @@ sequenceDiagram
     HA->>Cloud: SignalR connect + UpdateTokens
     Cloud->>SCU: Forward via cellular
     SCU->>Cloud: PiaResponse (sensor data)
-    Cloud->>HA: Real-time sensor data (~100 entities)
+    Cloud->>HA: Real-time sensor data (~130 entities)
 ```
 
 ### Architecture

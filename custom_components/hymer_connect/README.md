@@ -12,9 +12,9 @@ Custom integration to connect your HYMER / Erwin Hymer Group motorhome or carava
 
 > **⚠️ Important:** Real-time sensor data (70+ entities: GPS, battery, doors, heater, fridge, etc.) requires an **EHG Remote Access Refresh Token**. This token must be captured **once** from your phone using mitmproxy during the initial setup. Without it, only basic vehicle metadata (model, VIN, year) is available. See [Obtaining the EHG Refresh Token](#obtaining-the-ehg-refresh-token) for the step-by-step guide.
 
-> **v2.19.5** — **Persistent command control!** Remote-access commands (lights, heater, fridge) no longer stop working after ~30 minutes. Periodic token refresh, SCU reconnect detection, and OAuth2 token fix. ~100 entities.
+> **v2.33.0** — **SCU Restart button + fridge door fix!** New `button.hymer_restart_scu` with confirmation prompt. Fridge door binary sensor. Case-insensitive binary sensor matching. Shutdown-safe SignalR. ~130 entities.
 
-> **v2.19.0** — **SignalR keepalive, command retry, and reconnect improvements.** Dead connections detected within 90s. All commands retry once on failure.
+> **v2.30.2** — **Vehicle-verified sensor mappings!** Doors confirmed (driver + passenger on PIA). Fuel consumption sensors + configurable tank capacity.
 
 <details>
 <summary><strong>Integration Screenshots</strong> (click to expand)</summary>
@@ -109,7 +109,7 @@ Real-time data from the **Voltronic MPP260CI** MPPT solar charger:
 | **Security** | Lock status, ignition, handbrake, engine running, seatbelt warning |
 | **Chassis** | Parking brake, aux heater available/state, cruise control, downhill assist, coolant warning, motor oil warning, wiping water empty |
 | **Heating** | Truma connected/status/firmware, fan speed, fuel type, electric power (0/900/1800W), setpoint, operating mode |
-| **Fridge** | Mode (cooling step), door status, ECO/Quiet mode, power on/off |
+| **Fridge** | Mode (cooling step), door status (binary sensor), ECO/Quiet mode, power on/off |
 | **Lights** | 8 interior lights (on/off, brightness, color temp), LED bar (on/off, brightness), Wohnen group, Privat group |
 | **Fuel** | Level (%), liters, consumption (L/100km), estimated range (computed) |
 | **System** | SCU connected/firmware, Truma firmware, LTE connected, paired BT devices |
@@ -322,7 +322,7 @@ sequenceDiagram
     HA->>Cloud: SignalR connect + UpdateTokens
     Cloud->>SCU: Forward via cellular
     SCU->>Cloud: PiaResponse (sensor data)
-    Cloud->>HA: Real-time sensor data (~100 entities)
+    Cloud->>HA: Real-time sensor data (~130 entities)
 ```
 
 ### Architecture
