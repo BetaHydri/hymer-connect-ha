@@ -7,7 +7,8 @@ A ready-to-use, mobile-friendly Lovelace dashboard is shipped with this integrat
 1. Copy or link [`hymer_connect.yaml`](./hymer_connect.yaml) into your Home Assistant config
 2. **Settings → Dashboards → + Add dashboard → From YAML file**, point it at the file
    *or* paste the contents into a new dashboard via **Edit dashboard → Raw configuration editor**
-3. Open the dashboard — all entities resolve automatically because the integration uses stable, predictable entity IDs (`sensor.hymer_*`, `light.hymer_*`, etc.)
+3. **Create the [`Engine Running (Corrected)` template sensor](#-required-engine-running-corrected-template-sensor)** — the dashboard references it on the Vehicle/Doors tabs and those tiles will show *Unavailable* until the helper exists
+4. Open the dashboard — all other entities resolve automatically because the integration uses stable, predictable entity IDs (`sensor.hymer_*`, `light.hymer_*`, etc.)
 
 > **Prerequisite**: Home Assistant 2022.11+ for tile card support.
 
@@ -118,13 +119,35 @@ Already correctly attributed (`device_class: power`, `state_class: measurement`)
 | `sensor.hymer_solar_power` | W | Solar output (voltage × current) |
 | `sensor.hymer_heater_electric_power` | W | Truma electric element (0/900/1800 W) |
 
-## Stale CAN sensor workarounds
+## ⚠️ Required: Engine Running (Corrected) template sensor
 
-The Hymer SCU caches the last value received from the Mercedes CAN bus. When the engine is turned off, the CAN bus goes silent without sending a final "off" update, so a few sensors hold stale values (e.g. `binary_sensor.hymer_engine` stays `on` while parked).
+> **The shipped dashboard YAML uses `binary_sensor.hymer_engine_running_corrected` on the Vehicle and Doors tabs. This template sensor does NOT exist out of the box — you must create it manually, or those tiles will show "Unavailable".**
 
-### Corrected engine running template
+The Mercedes Sprinter CAN bus goes silent when the engine is turned off — without sending a final "off" update. The SCU caches the last received value, so the raw `binary_sensor.hymer_engine` keeps showing **On** while parked. The template below cross-references ignition state and lock state to suppress the stale value.
 
-Add this template to `configuration.yaml` (or a packages file):
+### Create via HA UI (recommended)
+
+**Settings → Devices & Services → Helpers → + Create Helper → Template → Template a binary sensor**
+
+- **Name**: `Hymer Engine Running (Corrected)`
+- **Device class**: Running
+- **Icon**: `mdi:engine`
+- **State template**:
+
+  ```jinja
+  {% set ignition = states('sensor.hymer_ignition') %}
+  {% set locked = is_state('binary_sensor.hymer_lock', 'on') %}
+  {% set engine_raw = is_state('binary_sensor.hymer_engine', 'on') %}
+  {% if ignition in ['Off', 'Accessory'] or locked %}false{% else %}{{ engine_raw }}{% endif %}
+  ```
+
+- **Availability template**:
+
+  ```jinja
+  {{ states('sensor.hymer_ignition') not in ['unknown', 'unavailable'] }}
+  ```
+
+### Or add to `configuration.yaml`
 
 ```yaml
 template:
@@ -134,37 +157,29 @@ template:
         device_class: running
         icon: mdi:engine
         state: >
-          {% set ignition = states('sensor.hymer_ignition_state') %}
-          {% set engine_raw = is_state('binary_sensor.hymer_engine_running', 'on') %}
-          {% if ignition in ['Off', 'Accessory'] %}
+          {% set ignition = states('sensor.hymer_ignition') %}
+          {% set locked = is_state('binary_sensor.hymer_lock', 'on') %}
+          {% set engine_raw = is_state('binary_sensor.hymer_engine', 'on') %}
+          {% if ignition in ['Off', 'Accessory'] or locked %}
             false
           {% else %}
             {{ engine_raw }}
           {% endif %}
         availability: >
-          {{ states('sensor.hymer_ignition_state') not in ['unknown', 'unavailable'] }}
+          {{ states('sensor.hymer_ignition') not in ['unknown', 'unavailable'] }}
 ```
 
 | Condition | Result |
 |-----------|--------|
 | Ignition is `Off` or `Accessory` | Engine forced to **Off** |
-| Otherwise | Uses raw `binary_sensor.hymer_engine_running` |
+| Vehicle is locked | Engine forced to **Off** |
+| Otherwise | Uses the raw `binary_sensor.hymer_engine` value |
 
-Then in your dashboard:
+After creating the helper, the dashboard's Vehicle/Doors tabs will display the correct engine state automatically — no further changes needed.
 
-```yaml
-# Before (shows stale "on" while parked)
-- entity: binary_sensor.hymer_engine_running
-  name: Engine Running
+> **Tip**: hide the raw `binary_sensor.hymer_engine` via **Settings → Devices & Services → Entities** so it does not clutter the UI.
 
-# After (correctly shows "off" when ignition is off)
-- entity: binary_sensor.hymer_engine_running_corrected
-  name: Engine Running
-```
-
-> **Tip**: hide the original raw `binary_sensor.hymer_engine_running` via **Settings → Devices & Services → Entities** so it does not clutter the UI.
-
-### Known stale CAN sensors without an obvious override
+## Other stale CAN sensors without an obvious override
 
 | Sensor | Why no override |
 |--------|-----------------|
