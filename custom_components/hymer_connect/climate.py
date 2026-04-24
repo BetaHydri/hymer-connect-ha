@@ -219,6 +219,7 @@ class HymerHeaterClimate(
             _LOGGER.warning("Unknown fan mode: %s", fan_mode)
             return
 
+        fuel = self._get_fuel_type()
         await self.coordinator.async_send_multi_sensor_command([
             {"bus_id": 58, "sensor_id": 5, "str_value": mode_str},
             {"bus_id": 58, "sensor_id": 4, "str_value": fuel},
