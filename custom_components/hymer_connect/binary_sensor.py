@@ -272,6 +272,16 @@ BINARY_SENSOR_DESCRIPTIONS: tuple[HymerBinarySensorEntityDescription, ...] = (
         value_path="signalr_sensors.light_nightlight",
         icon="mdi:water-pump",
     ),
+    # --- Fridge door (bus 37, sid 2) ---
+    # SCU reports int 0/1, pia_decoder maps via _INT_LABELS to "Open"/"Closed".
+    HymerBinarySensorEntityDescription(
+        key="fridge_door",
+        translation_key="fridge_door",
+        device_class=BinarySensorDeviceClass.DOOR,
+        value_path="signalr_sensors.fridge_status",
+        on_value="Open",
+        icon="mdi:fridge-outline",
+    ),
     # --- Victron MultiPlus (bus 121) ---
     # Disabled by default — bus 121 not yet confirmed on S600.
     HymerBinarySensorEntityDescription(
@@ -350,4 +360,9 @@ class HymerConnectBinarySensor(
         value = _resolve_path(self.coordinator.data, path)
         if value is None:
             return None
-        return value == self.entity_description.on_value
+        on_value = self.entity_description.on_value
+        # Case-insensitive comparison for string values to handle
+        # SCU casing variations (e.g. "ON"/"On"/"on", "Open"/"OPEN").
+        if isinstance(value, str) and isinstance(on_value, str):
+            return value.upper() == on_value.upper()
+        return value == on_value

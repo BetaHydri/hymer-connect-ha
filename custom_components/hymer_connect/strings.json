@@ -168,6 +168,7 @@
       "truma_connected": { "name": "Truma connected" },
       "step_retracted": { "name": "Entry step" },
       "water_pump": { "name": "Water pump" },
+      "fridge_door": { "name": "Fridge door" },
       "victron_inverter_on": { "name": "Victron inverter" },
       "victron_charger_on": { "name": "Victron charger" }
     },

@@ -438,7 +438,7 @@ views:
         title: "❄️ Fridge Status"
         show_header_toggle: false
         entities:
-          - entity: sensor.hymer_fridge_status
+          - entity: binary_sensor.hymer_fridge_door
             name: Door
             icon: mdi:fridge-alert
 

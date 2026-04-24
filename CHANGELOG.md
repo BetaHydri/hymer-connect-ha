@@ -5,6 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.32.0] - 2026-04-24
+
+### Added
+
+- **Fridge door binary sensor** — New `binary_sensor.hymer_fridge_door` with `BinarySensorDeviceClass.DOOR`. Reads `fridge_status` (bus 37, sid 2) which the SCU reports as int 0/1, mapped to "Open"/"Closed" by the PIA decoder. Previously only exposed as a text sensor that stayed stuck on "Closed". Dashboard updated to use the new binary sensor.
+
+### Fixed
+
+- **Case-insensitive `is_on` for string-based binary sensors** — The `is_on` comparison now uses case-insensitive string matching for all string-valued binary sensors (doors, lock, main switch, chassis flags). Previously, if the SCU sent `"ON"` instead of `"On"`, the sensor would silently show the wrong state. Credit: Dan Simms' metadata-driven implementation (`dan-simms1/hymer-connect-ha`) uses device-class-aware string matching sets (`_DOOR_TRUE_VALUES`, `_CONNECTIVITY_TRUE_VALUES`, etc.) which highlighted this fragility in our per-entity `on_value` approach.
+- **Vehicle Bus Architecture documentation** — Added comprehensive README section covering CAN/LIN bus topology, dual-path BLE/LTE control architecture, Mermaid diagram, and bus summary table.
+
 ## [2.31.0] - 2026-04-23
 
 ### Fixed

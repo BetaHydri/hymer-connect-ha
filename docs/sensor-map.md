@@ -200,7 +200,7 @@ Slots 1-2 are shared across S600/S700. Slots 3-7 carry GPS data on the S600
 | Slot | Sensor Name | Notes |
 |------|------------|-------|
 | (37, 1) | `fridge_mode` | Fridge operating mode. Discovery: `Off` (string) |
-| (37, 2) | `fridge_status` | Fridge door state. EHG app correctly shows open/closed but HA entity stays "Closed". Suspected decoder issue — update may arrive via different protobuf path or depth. Needs mitmproxy capture. |
+| (37, 2) | `fridge_status` | Fridge door state. SCU reports int 0=Open, 1=Closed. Exposed as `binary_sensor.hymer_fridge_door` (v2.32.0). |
 
 ## Bus 43 — Seating overhead light
 
