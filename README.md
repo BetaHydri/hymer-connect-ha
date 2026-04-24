@@ -604,12 +604,31 @@ On the Grand Canyon S600, the CAN bus slots that carry speed, RPM, and engine to
 
 ## Vehicle Bus Architecture
 
-The SCU (Smart Control Unit) is the central gateway in the vehicle. It bridges multiple physical buses — **CAN** and **LIN** — and exposes all connected devices to the EHG cloud via the PIA protobuf protocol over a SignalR WebSocket. This is the bus topology as observed on the Grand Canyon S 600 CrossOver.
+The SCU (Smart Control Unit) is the central gateway in the vehicle. It bridges multiple physical buses — **CAN** and **LIN** — and exposes all connected devices via the PIA protobuf protocol. The EHG app supports **two independent control paths** to the SCU — both carry the same TLS-encrypted PIA protocol:
+
+| Path | Transport | When | Latency | Cloud required? |
+|------|-----------|------|---------|-----------------|
+| **BLE direct** | Bluetooth Low Energy (Nordic UART Service) | Phone is near the vehicle (BLE range ~10m) | ~50 ms | No — local only |
+| **LTE cloud** | Cellular → Azure SignalR WebSocket | Phone is away from the vehicle | ~500 ms–2 s | Yes |
+
+The EHG app automatically selects the control path based on proximity — it shows **"Bluetooth"** in the app UI when connected directly to the SCU via BLE, and **"LTE"** when routing through the cloud. Both paths send the same PIA protobuf commands; only the transport differs.
+
+> **Evidence from logcat capture (2026-04-19):** When sitting in the vehicle, the app uses the Nordic UART Service (NUS) over BLE GATT to communicate directly with the SCU. PIA commands are written to characteristic `6e400002-b5a3-f393-e0a9-e50e24dcca9e` (NUS RX), and the SCU responds with TLS-encrypted PIA data as notifications on `6e400003-b5a3-f393-e0a9-e50e24dcca9e` (NUS TX). The data prefix `0x17-03-02` confirms TLS 1.1 Application Data records — the same PIA protobuf payload is encrypted over TLS even on the local BLE link.
+
+> **Home Assistant always uses the LTE cloud path** via SignalR. The BLE direct path is only available to the EHG smartphone app when physically near the vehicle.
 
 ```mermaid
 graph TB
-    subgraph "EHG Cloud"
-        CLOUD["Azure SignalR Hub<br/>(PIA protocol over WebSocket)"]
+    subgraph "EHG Cloud (Azure)"
+        CLOUD["Azure SignalR Hub<br/>(PIA over WebSocket)"]
+    end
+
+    subgraph "Smartphone (EHG App)"
+        APP["HYMER Connect App"]
+    end
+
+    subgraph "Home Assistant"
+        HA["HYMER Connect Integration<br/>(SignalR WebSocket client)"]
     end
 
     subgraph "SCU — Smart Control Unit"
@@ -636,7 +655,10 @@ graph TB
         GPS["SCU Telemetry<br/>Bus 30 — GPS · LTE · BT devices"]
     end
 
-    CLOUD <-->|"cellular"| SCU
+    APP -.->|"① BLE direct (near vehicle)<br/>NUS GATT · TLS-encrypted PIA"| SCU
+    APP -->|"② LTE cloud (away)"| CLOUD
+    CLOUD <-->|"cellular (LTE)"| SCU
+    HA -->|"③ SignalR WebSocket<br/>(always cloud path)"| CLOUD
     SCU <--> CAN0
     SCU <--> CAN2
     SCU <--> LIN1
@@ -676,9 +698,10 @@ graph TB
 
 1. **Physical devices** (heater, fridge, lights, BMS, solar charger) communicate with the SCU over **CAN** or **LIN** buses, or are addressed directly via the SCU's internal **PIA bus**
 2. The **SCU** aggregates all bus data into **PIA protobuf messages** — each sensor is identified by a `(bus_id, sensor_id)` tuple
-3. The SCU transmits these messages to the **EHG cloud** via its built-in **LTE cellular modem**
-4. The cloud relays the data over **Azure SignalR** (WebSocket) to this Home Assistant integration
-5. The integration **decodes the protobuf** and maps each `(bus_id, sensor_id)` to a named HA entity
+3. The PIA messages are delivered over one of two paths:
+   - **BLE direct** (EHG app only, when near the vehicle): Phone ↔ BLE GATT (Nordic UART Service) ↔ SCU — TLS-encrypted PIA, no cloud roundtrip, ~50ms latency
+   - **LTE cloud** (EHG app when remote + Home Assistant always): Phone/HA → Azure SignalR → LTE cellular → SCU — same PIA protocol, ~500ms–2s latency
+4. The integration **decodes the protobuf** and maps each `(bus_id, sensor_id)` to a named HA entity
 
 > **Note:** The "PIA-addressed devices" in the diagram are not necessarily on a separate physical bus. The PIA protocol is a logical addressing layer — the SCU may internally route these over LIN, SPI, or proprietary wiring depending on the device. What matters for the integration is the `(bus_id, sensor_id)` addressing, not the physical wire.
 
