@@ -55,13 +55,12 @@ class HymerHeaterClimate(
     _attr_min_temp = MIN_TEMP
     _attr_max_temp = MAX_TEMP
     _attr_hvac_modes = [HVACMode.OFF, HVACMode.HEAT]
-    _attr_supported_features = (
-        ClimateEntityFeature.TARGET_TEMPERATURE
-        | ClimateEntityFeature.FAN_MODE
-    )
-    # Vent mode is read-only — can only be set from the physical Truma panel.
-    # When active, hvac_mode shows FAN_ONLY and fan_mode shows "Vent".
-    _attr_fan_modes = ["Eco", "High"]
+    _attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
+    # NOTE: The Truma SCU bus exposes NO writable fan-speed slot. Slot 58:5
+    # (water_heater_mode) was previously misused as fan_mode, which actually
+    # toggled the boiler ECO/HOT mode. Use the dedicated boiler select for that
+    # and the new heater air-mode select for OFF/Normal/Automatic (slot 58:11).
+    # Vent mode and the 1-10 numeric vent steps are physical-panel only.
     _attr_icon = "mdi:radiator"
 
     def __init__(
@@ -86,11 +85,6 @@ class HymerHeaterClimate(
         """Return current HVAC mode."""
         if self._optimistic_mode is not None:
             return self._optimistic_mode
-        # Check if fan is in VENT mode (ventilation only, no heating)
-        if self.coordinator.data:
-            fan = _resolve_path(self.coordinator.data, "signalr_sensors.heater_fan_speed")
-            if fan and str(fan).upper() == "VENT":
-                return HVACMode.FAN_ONLY
         setpoint = self._get_setpoint()
         if setpoint is not None and setpoint > HEATER_OFF_SETPOINT:
             return HVACMode.HEAT
@@ -101,27 +95,7 @@ class HymerHeaterClimate(
         """Return current HVAC action."""
         if self.hvac_mode == HVACMode.HEAT:
             return HVACAction.HEATING
-        if self.hvac_mode == HVACMode.FAN_ONLY:
-            return HVACAction.FAN
         return HVACAction.OFF
-
-    @property
-    def fan_mode(self) -> str | None:
-        """Return the current fan mode."""
-        if self.coordinator.data is None:
-            return None
-        val = _resolve_path(self.coordinator.data, "signalr_sensors.heater_fan_speed")
-        if val is None:
-            return None
-        fan_str = str(val).upper()
-        if fan_str == "ECO":
-            return "Eco"
-        if fan_str in ("HIGH", "HI", "HOT"):
-            return "High"
-        if fan_str == "VENT":
-            return "Vent"
-        # OFF means heater fan is not running
-        return "Eco"
 
     @property
     def current_temperature(self) -> float | None:
@@ -207,37 +181,11 @@ class HymerHeaterClimate(
         self._optimistic_temp = float(temp)
         self.async_write_ha_state()
 
-    async def async_set_fan_mode(self, fan_mode: str) -> None:
-        """Set fan mode.
-
-        Sends bus=58, sid=5. EHG metadata for slot 58:5 only accepts
-        the strings 'OFF', 'ECO', 'HOT' (not 'High'/'Hot'/etc.). The
-        physical Truma panel can also show VENT and numeric steps 1-10
-        but those are panel-only and not writable from the SCU bus.
-        """
-        mode_map = {"Eco": "ECO", "High": "HOT"}
-        mode_str = mode_map.get(fan_mode)
-        if mode_str is None:
-            _LOGGER.warning("Unknown fan mode: %s", fan_mode)
-            return
-
-        fuel = self._get_fuel_type()
-        await self.coordinator.async_send_multi_sensor_command([
-            {"bus_id": 58, "sensor_id": 5, "str_value": mode_str},
-            {"bus_id": 58, "sensor_id": 4, "str_value": fuel},
-        ])
-        self.async_write_ha_state()
-
     def _handle_coordinator_update(self) -> None:
         """Clear optimistic state when SCU confirms."""
         if self.coordinator.data and self._optimistic_mode is not None:
             setpoint = self._get_setpoint()
-            fan = _resolve_path(self.coordinator.data, "signalr_sensors.heater_fan_speed")
-            if self._optimistic_mode == HVACMode.FAN_ONLY:
-                if fan and str(fan).upper() == "VENT":
-                    self._optimistic_mode = None
-                    self._optimistic_temp = None
-            elif setpoint is not None:
+            if setpoint is not None:
                 if self._optimistic_mode == HVACMode.OFF and setpoint <= HEATER_OFF_SETPOINT:
                     self._optimistic_mode = None
                     self._optimistic_temp = None

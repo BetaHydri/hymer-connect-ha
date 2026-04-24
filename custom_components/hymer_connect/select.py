@@ -25,6 +25,9 @@ FRIDGE_OPTIONS = ["Off", "1", "2", "3", "4", "5"]
 # Boiler modes: Off, ECO, Turbo (HOT)
 BOILER_OPTIONS = ["Off", "ECO", "Turbo"]
 
+# Heater air mode (slot 58:11 heater_air_mode per EHG metadata)
+HEATER_AIR_MODE_OPTIONS = ["Off", "Normal", "Automatic"]
+
 # Heater energy source modes matching Truma panel display:
 #   FUEL  = Diesel only
 #   MIX 1 = Diesel + Electric 900W
@@ -46,6 +49,7 @@ async def async_setup_entry(
         HymerFridgeSelect(coordinator, entry),
         HymerBoilerSelect(coordinator, entry),
         HymerHeaterEnergySelect(coordinator, entry),
+        HymerHeaterAirModeSelect(coordinator, entry),
     ])
 
 
@@ -332,6 +336,82 @@ class HymerHeaterEnergySelect(
             _LOGGER.warning("Unknown heater energy option: %s", option)
             return
 
+        self._optimistic = option
+        self.async_write_ha_state()
+
+    def _handle_coordinator_update(self) -> None:
+        """Clear optimistic state when confirmed."""
+        if self._optimistic is not None and self.coordinator.data:
+            actual = self.current_option
+            if actual == self._optimistic:
+                self._optimistic = None
+        super()._handle_coordinator_update()
+
+
+class HymerHeaterAirModeSelect(
+    CoordinatorEntity[HymerConnectCoordinator], SelectEntity
+):
+    """Truma heater air mode select — Off / Normal / Automatic.
+
+    Per EHG metadata, slot 58:11 (heater_air_mode) accepts the strings
+    'OFF', 'Normal', 'Automatic'. This is the actual heater mode toggle
+    on the SCU bus (NOT slot 58:5 which is the water boiler mode).
+    """
+
+    _attr_has_entity_name = True
+    _attr_translation_key = "heater_air_mode_ctrl"
+    _attr_options = HEATER_AIR_MODE_OPTIONS
+    _attr_icon = "mdi:radiator"
+
+    def __init__(
+        self,
+        coordinator: HymerConnectCoordinator,
+        entry: ConfigEntry,
+    ) -> None:
+        """Initialize the heater air mode select entity."""
+        super().__init__(coordinator)
+        self._attr_unique_id = f"{entry.entry_id}_heater_air_mode_ctrl"
+        self._attr_device_info = {
+            "identifiers": {(DOMAIN, entry.entry_id)},
+            "name": "HYMER",
+            "manufacturer": MANUFACTURER,
+            "model": "Smart Interface Unit",
+        }
+        self._optimistic: str | None = None
+
+    @property
+    def current_option(self) -> str | None:
+        """Return the current heater air mode."""
+        if self._optimistic is not None:
+            return self._optimistic
+        if self.coordinator.data is None:
+            return None
+        # heater_operating_mode is the existing translation_key for slot 58:11
+        val = _resolve_path(
+            self.coordinator.data, "signalr_sensors.heater_operating_mode"
+        )
+        if val is None:
+            return None
+        val_str = str(val).strip()
+        if val_str.upper() in ("OFF", "0"):
+            return "Off"
+        if val_str.lower() == "normal":
+            return "Normal"
+        if val_str.lower() in ("automatic", "auto"):
+            return "Automatic"
+        return None
+
+    async def async_select_option(self, option: str) -> None:
+        """Set the heater air mode."""
+        mode_map = {"Off": "OFF", "Normal": "Normal", "Automatic": "Automatic"}
+        mode_str = mode_map.get(option)
+        if mode_str is None:
+            _LOGGER.warning("Unknown heater air mode option: %s", option)
+            return
+
+        await self.coordinator.async_send_light_command(
+            58, 11, str_value=mode_str
+        )
         self._optimistic = option
         self.async_write_ha_state()
 

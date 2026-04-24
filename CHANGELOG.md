@@ -5,6 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.36.0] - 2026-04-24
+
+### Fixed
+
+- **Climate fan_mode was actually controlling the boiler** — The Truma climate entity exposed an `Eco`/`High` fan mode that wrote to slot 58:5, but per EHG metadata that slot is `water_heater_mode` (the boiler), not a heater fan-speed slot. Selecting `High` on the climate card was silently turning the **boiler** to `HOT` while doing nothing to the heater fan. Removed `FAN_MODE` from the climate entity's supported features and the `Vent` HVAC mode (the SCU bus has no writable fan-speed slot — the 1–10 numeric vent steps and the panel `VENT` mode are physical-panel only).
+
+### Added
+
+- **Heater mode select** (`select.hymer_heater_mode`) writing to slot 58:11 (`heater_air_mode` per EHG metadata). Options: `Off` / `Normal` / `Automatic`. This is the actual heater on/off/auto mode toggle on the SCU bus.
+- Heater Mode tile on the Heating dashboard, next to Boiler Mode.
+- Translation entries for `heater_air_mode_ctrl` and the previously-missing `heater_energy_ctrl`.
+
 ## [2.35.2] - 2026-04-24
 
 ### Fixed
