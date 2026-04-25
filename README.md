@@ -26,7 +26,7 @@ Unlike the official EHG app, this integration gives you **full Home Assistant po
 | **Template sensors** (corrected engine status, computed solar power) | ❌ | ✅ |
 | **Always-on monitoring** (24/7, not just while app is open) | ❌ | ✅ |
 | **~100 entities** (vs ~20 in the EHG app) | ❌ | ✅ |
-| **SCU restart** (reboot the control unit remotely) | ❌ | ✅ |
+| **SCU restart** (reboot the control unit remotely) | ✅ | ✅ |
 
 > **⚠️ Important:** Real-time sensor data (70+ entities: GPS, battery, doors, heater, fridge, etc.) requires an **EHG Remote Access Refresh Token**. This token must be captured **once** from your phone using mitmproxy during the initial setup. Without it, only basic vehicle metadata (model, VIN, year) is available. See [Obtaining the EHG Refresh Token](#obtaining-the-ehg-refresh-token) for the step-by-step guide.
 
