@@ -305,6 +305,24 @@ protobuf depth 4 — one level deeper than the initial subscription response.
 The initial value was received correctly but subsequent open/close events were
 discarded. If you still see this on older versions, upgrade to v2.36.6+.
 
+### Symptom: Fridge door shows changes in EHG app but not in HA
+
+The EHG app connects via **BLE** (Bluetooth Low Energy) directly to the SCU
+when you are near the vehicle. This works even with **12V off** because BLE
+communication bypasses the cloud entirely.
+
+Home Assistant only has the **SignalR cloud path**. When 12V is off, the SCU
+enters standby and stops pushing passive sensor data (door state, temperatures,
+water levels) to the cloud. Commands (fridge on/off, lights) still work because
+the SCU echoes command responses, but passive sensors like the fridge door
+(bus 37) do not update.
+
+**Solution:** Turn 12V ON, wait for `SCU reconnected (scu_connected false→true)`
+in the HA log, then test the fridge door. You should see:
+```
+State change (37,2) fridge_status: 'Closed' → 'Open' (depth=4)
+```
+
 ### Symptom: "Command failed after reconnect+retry"
 
 The connection is fully broken and automatic recovery failed. Actions:
