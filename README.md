@@ -32,6 +32,8 @@ Unlike the official EHG app, this integration gives you **full Home Assistant po
 
 > **v2.33.0** — **SCU Restart button + fridge door fix!** New `button.hymer_restart_scu` with confirmation prompt. Fridge door binary sensor (`binary_sensor.hymer_fridge_door`). Case-insensitive string matching for all binary sensors. Shutdown-safe SignalR (no more `Session is closed` log noise). See [CHANGELOG](CHANGELOG.md) for full history.
 
+> **v2.36.6** — **Fridge door + window contact now update in real time!** Fixed depth-filter bug in PIA protobuf decoder that silently dropped real-time SCU push updates. `binary_sensor.hymer_fridge_door` and `binary_sensor.hymer_heater_window_contact` now track open/close events live.
+
 ### Energy Dashboard
 
 Monitor your motorhome's complete power flow at a glance — solar production, lithium battery state (SOC, SoH, voltage, temperature), habitation load draw, and charging status. All data comes directly from the vehicle's SCU via SignalR, updated every 60 seconds.

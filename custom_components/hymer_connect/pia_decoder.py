@@ -171,7 +171,7 @@ SENSOR_MAP: dict[tuple[int, int], tuple[str, str | None, str | None]] = {
     (27, 3): ("light_privat_group_color_temp", None, None),
     # Fridge (37)
     (37, 1): ("fridge_mode", None, None),
-    (37, 2): ("fridge_status", None, None),  # Fridge door state. EHG app shows door open/closed. HA entity may not update — needs investigation (depth filter or push-only update?)
+    (37, 2): ("fridge_status", None, None),  # Fridge door state (0=Open, 1=Closed). Real-time push updates arrive at depth 4.
     # Light: Sitzgruppe Dachschrank / Seating area overhead (bus 43)
     (43, 1): ("light_seating_overhead", None, None),
     (43, 2): ("light_seating_overhead_brightness", "%", None),
@@ -693,9 +693,16 @@ def _extract_sensors_recursive(
         # protobuf hierarchy.  Entries at depth >= 4 are misinterpreted
         # container structures that produce phantom sensor values (e.g.
         # fresh_water_level=0 at depth 5 overwriting the real value).
+        #
+        # Exception: known SENSOR_MAP entries at depth 4 are accepted.
+        # The SCU nests real-time push updates one level deeper than the
+        # initial subscription response.  Without this, sensors like
+        # fridge_status (37,2) and heater_window_switch_closed (58,14)
+        # silently stop updating after the initial state is received.
         sid_val = next((v for fn, wt, v in fields if fn == 1 and wt == 0), 0)
         bus_val = next((v for fn, wt, v in fields if fn == 2 and wt == 0), 0)
-        if sid_val < 1000 and bus_val < 1000 and depth <= 3:
+        is_known = (bus_val, sid_val) in SENSOR_MAP
+        if sid_val < 1000 and bus_val < 1000 and (depth <= 3 or (depth == 4 and is_known)):
             entry = _parse_sensor_entry(data)
             if entry and entry["value"] is not None:
                 key = (entry["bus_id"], entry["sensor_id"])
@@ -735,6 +742,14 @@ def _extract_sensors_recursive(
                             entry["bus_id"], entry["sensor_id"],
                             name, prev, val,
                         )
+                        # Log door/window state changes at INFO so they
+                        # are visible without enabling DEBUG logging.
+                        if name in ("fridge_status", "heater_window_switch_closed"):
+                            _LOGGER.info(
+                                "State change (%d,%d) %s: %r → %r (depth=%d)",
+                                entry["bus_id"], entry["sensor_id"],
+                                name, prev, val, depth,
+                            )
                 else:
                     fallback = f"bus{entry['bus_id']}_s{entry['sensor_id']}"
                     sensors[fallback] = entry["value"]

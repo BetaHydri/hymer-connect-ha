@@ -200,7 +200,7 @@ Slots 1-2 are shared across S600/S700. Slots 3-7 carry GPS data on the S600
 | Slot | Sensor Name | Notes |
 |------|------------|-------|
 | (37, 1) | `fridge_mode` | Fridge operating mode. Discovery: `Off` (string) |
-| (37, 2) | `fridge_status` | Fridge door state. SCU reports int 0=Open, 1=Closed. Exposed as `binary_sensor.hymer_fridge_door` (v2.32.0). |
+| (37, 2) | `fridge_status` | Fridge door state. SCU reports int 0=Open, 1=Closed. Exposed as `binary_sensor.hymer_fridge_door` (v2.32.0). Real-time push updates arrive at protobuf depth 4 — fixed in v2.36.6. |
 
 ## Bus 43 — Seating overhead light
 

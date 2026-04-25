@@ -1,6 +1,6 @@
 # SignalR Connection Architecture
 
-> **Last updated:** 2026-04-24 (v2.33.0)
+> **Last updated:** 2026-04-25 (v2.36.6)
 
 This document explains how the HYMER Connect integration maintains its real-time
 connection to the vehicle SCU (Smart Connectivity Unit) through Azure SignalR Service.
@@ -296,6 +296,15 @@ The integration auto-reconnects after the reboot.
 2. Check last "PIA re-subscription sent" log entry — should be within last 10 min
 3. If no resubscription logs, the connection is likely dead — check reconnection logs
 
+### Symptom: Fridge door / window contact stuck on initial state
+
+**Fixed in v2.36.6.** The PIA protobuf decoder's depth filter (`depth <= 3`)
+silently dropped real-time push updates for some sensors (e.g. `fridge_status`,
+`heater_window_switch_closed`) because the SCU nests state-change pushes at
+protobuf depth 4 — one level deeper than the initial subscription response.
+The initial value was received correctly but subsequent open/close events were
+discarded. If you still see this on older versions, upgrade to v2.36.6+.
+
 ### Symptom: "Command failed after reconnect+retry"
 
 The connection is fully broken and automatic recovery failed. Actions:
@@ -350,6 +359,6 @@ switch/light/device commands.
 | `coordinator.py` | Connection lifecycle, reconnection backoff, command routing |
 | `signalr_client.py` | WebSocket management, PIA protocol, keepalive, listen loop |
 | `api.py` | OAuth2 auth, token refresh, SignalR negotiate, REST API |
-| `pia_decoder.py` | Protobuf encode/decode for PIA sensor data and commands |
+| `pia_decoder.py` | Protobuf encode/decode for PIA sensor data and commands. Depth filter (depth ≤ 3, or depth 4 for known sensors) prevents phantom values |
 | `button.py` | SCU restart button entity (Request.command.restart) |
 | `const.py` | Timing constants, API URLs, header names |

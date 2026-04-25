@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.36.6] - 2026-04-25
+
+### Fixed
+
+- **Fridge door and heater window contact never updated after initial state** — The PIA protobuf decoder's depth filter (`depth <= 3`) silently dropped real-time SCU push updates for sensors like `fridge_status` (37,2) and `heater_window_switch_closed` (58,14). The initial subscription response nests sensors at depth 2–3 (so the initial "Closed" state was received), but real-time state-change pushes from the SCU arrive at depth 4 and were discarded. Relaxed the filter to accept known `SENSOR_MAP` entries at depth 4 while keeping the phantom-value protection for unknown entries at depth ≥ 4. `binary_sensor.hymer_fridge_door` and `binary_sensor.hymer_heater_window_contact` now update in real time when the physical door/window is opened or closed.
+
+### Added
+
+- **INFO-level logging for fridge door and window contact state changes** — State transitions for `fridge_status` and `heater_window_switch_closed` are now logged at INFO level (e.g. `State change (37,2) fridge_status: 'Closed' → 'Open' (depth=4)`) so changes are visible in the HA log without enabling DEBUG.
+
 ## [2.36.5] - 2026-04-25
 
 ### Changed
