@@ -59,6 +59,8 @@ Control your vehicle's electrical systems from Home Assistant:
 
 > **12V availability guard:** When the 12V main switch is off, all light entities and the water pump switch become **unavailable** in Home Assistant. Dashboard tile cards automatically gray them out and disable interaction, preventing commands to components that won't respond without habitation power. The fridge, boiler, heater, and the main switch itself remain controllable regardless of 12V state.
 
+> **12V and passive sensors:** With 12V off, the SCU enters standby and stops pushing **passive sensor data** (door state, temperatures, water levels) to the cloud. Commands (fridge on/off, lights) still work because the SCU echoes command responses. The EHG app can still see passive sensor changes in standby because it connects via **BLE** directly to the SCU — Home Assistant only has the cloud/SignalR path. To see fridge door open/close events or heater window contact changes in HA, **12V must be ON**.
+
 ### 💡 Light Controls
 
 Control 8 interior lights with on/off, brightness, and color temperature:
