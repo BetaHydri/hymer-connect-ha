@@ -104,7 +104,7 @@ class HymerSignalRClient:
         # exponential backoff and lose the connection. See issue #45.
         #
         # Safety cap: even in standby, force reconnect after STANDBY_MAX_SILENCE.
-        # If the connection died during a 12V ON toggle (SCU reboots, socket breaks
+        # If the connection died during a 12V ON toggle (SCU wakes up, socket breaks
         # but main_switch in sensor_data is still "Off"), the stale-data check
         # would never trigger without this cap. See issue #46.
         if self._last_data_received > 0:
@@ -307,10 +307,10 @@ class HymerSignalRClient:
         """Re-send UpdateTokens + resubscribe after SCU reconnect.
 
         Called when scu_connected transitions false→true (12V OFF→ON).
-        The SCU reboots and registers a new session at the Azure SignalR hub.
-        Without re-sending UpdateTokens, the hub's routing table is stale
-        and remote-access commands (lights, heater, fridge) are silently
-        rejected — while the 12V system command keeps working.
+        The SCU wakes from standby and registers a new session at the Azure
+        SignalR hub. Without re-sending UpdateTokens, the hub's routing table
+        is stale and remote-access commands (lights, heater, fridge) are
+        silently rejected — while the 12V system command keeps working.
         """
         if not self._ws or self._ws.closed or not self._connected:
             return
@@ -329,7 +329,7 @@ class HymerSignalRClient:
             )
             return
 
-        # Re-subscribe to get fresh sensor data from the rebooted SCU
+        # Re-subscribe to get fresh sensor data from the woken SCU
         try:
             await self._send_subscription()
             _LOGGER.info("Resubscribed after SCU reconnect")
@@ -509,11 +509,12 @@ class HymerSignalRClient:
                 )
 
                 # Detect SCU reconnect (scu_connected false→true).
-                # After 12V OFF→ON the SCU reboots and gets a new session
-                # at the Azure SignalR hub.  Our old UpdateTokens routing
-                # becomes stale → remote-access commands (lights, heater,
-                # fridge) are silently rejected.  Re-sending UpdateTokens
-                # + resubscribe restores command delivery immediately.
+                # After 12V OFF→ON the SCU wakes from standby and gets a new
+                # session at the Azure SignalR hub.  Our old UpdateTokens
+                # routing becomes stale → remote-access commands (lights,
+                # heater, fridge) are silently rejected.  Re-sending
+                # UpdateTokens + resubscribe restores command delivery
+                # immediately.
                 if "scu_connected" in sensor_data:
                     scu_now = sensor_data["scu_connected"]
                     if scu_now is True and self._scu_was_disconnected:

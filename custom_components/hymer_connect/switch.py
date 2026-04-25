@@ -133,10 +133,10 @@ class HymerConnectSwitch(
         the SignalR connection is likely stale. Force a reconnect by marking
         the client as disconnected so the coordinator reconnects on next poll.
 
-        The 12V main switch gets a longer delay (30s) because the SCU reboots
+        The 12V main switch gets a longer delay (30s) because the SCU wakes up
         on any 12V state change and pushes stale cached values during reconnect.
         """
-        # Main switch needs longer holdoff — SCU reboots on 12V changes
+        # Main switch needs longer holdoff — SCU wakes up on 12V changes
         is_main_switch = self.entity_description.key == "main_switch_ctrl"
         delay = 30 if is_main_switch else 15
         await asyncio.sleep(delay)
@@ -211,7 +211,7 @@ class HymerConnectSwitch(
         self._optimistic_set_at = time.monotonic()
         # Optimistically update main_switch in SignalR sensor_data so the
         # standby bypass in needs_reconnect doesn't block auto-recovery
-        # if the connection dies during the SCU reboot after 12V toggle.
+        # if the connection dies during the SCU wake-up after 12V toggle.
         client = self.coordinator.signalr_client
         if self.entity_description.key == "main_switch_ctrl" and client:
             client._sensor_data["main_switch"] = on_val if isinstance(on_val, str) else "On"

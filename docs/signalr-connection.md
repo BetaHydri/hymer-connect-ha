@@ -144,11 +144,12 @@ When the 12V main switch is off, the SCU enters standby:
 
 ### SCU Reconnect (12V Off → On)
 
-When 12V is toggled back ON **by the user**, the SCU reboots and registers a new session at Azure SignalR.
+When 12V is toggled back ON **by the user**, the SCU reinitialises (whether this is a
+full reboot or just a reconnection is unknown) and registers a new session at Azure SignalR.
 The integration detects this via `scu_connected` transitioning `false → true` and automatically:
 1. Re-sends UpdateTokens (refreshes routing at the hub)
 2. Re-subscribes to all sensor data
-3. Waits 2 seconds for SCU boot before acting
+3. Waits 2 seconds for SCU initialisation before acting
 
 This is a **read-only** recovery — it restores command delivery and data flow but
 does not send any switch commands. Without it, commands would be silently rejected
@@ -354,7 +355,7 @@ and will receive the completion message. Waiting would block the coordinator pol
 
 ### Why Detect SCU Reconnect via `scu_connected`?
 
-When 12V is toggled OFF→ON **by the user**, the SCU reboots and gets a new session at Azure SignalR.
+When 12V is toggled OFF→ON **by the user**, the SCU reinitialises and gets a new session at Azure SignalR.
 Our existing WebSocket stays open (it''s connected to the Azure hub, not directly to the SCU),
 but the hub''s routing table now points to the SCU''s new session. Without re-sending
 UpdateTokens, our commands go to the old (dead) session and are silently dropped.
