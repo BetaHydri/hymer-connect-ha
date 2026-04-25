@@ -357,17 +357,16 @@ without conflicts.
 
 From EHG app metadata extraction (Dan, April 2026). SCU component 121 = VictronMultiplus.
 **No data received** on S600 — even with Victron physically switched ON and entities
-manually enabled. The Victron MultiPlus communicates via **VE.Bus** protocol, which
-is apparently not bridged to the SCU's PIA bus on the S600. The slot definitions
-exist in the EHG app metadata (suggesting EHG planned or has support on some
-vehicle configurations).
+entities enabled. The Victron MultiPlus communicates via **VE.Bus** (RS-485), which
+is incompatible with the vehicle CAN bus. A Victron Cerbo GX cannot bridge this
+either — VE.Bus → VE.Can (250 kbps Victron-proprietary CAN) and VE.Bus → MQTT/Modbus
+are supported, but neither VE.Bus nor VE.Can can bridge to the vehicle CAN bus
+(different baud rates, protocols, and message structures).
 
-**Hypothesis:** Vehicles equipped with a **Victron Cerbo GX** (or similar GX device)
-may populate bus 121. The Cerbo acts as a protocol bridge (VE.Bus → CAN) and could
-feed Victron data to the SCU via CAN bus, which the SCU then exposes as PIA slots.
-The S600 does not have a Cerbo — only the bare MultiPlus 12/1600/70 wired directly
-via VE.Bus. Higher-spec models (e.g. MLT 580 4×4, B-Klasse ModernComfort) that
-ship with a Cerbo GX from the factory may see data on this bus.
+The slot definitions exist in the EHG app metadata, suggesting EHG may have a
+proprietary SCU-to-Victron interface (dedicated serial/LIN connection) on certain
+vehicle configurations, or these are placeholder definitions that were never
+implemented. No data has been observed on this bus on the S600.
 
 All entities disabled by default.
 

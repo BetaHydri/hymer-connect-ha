@@ -224,11 +224,11 @@ SENSOR_MAP: dict[tuple[int, int], tuple[str, str | None, str | None]] = {
     # Bus 121: Victron MultiPlus 12/1600/70 (inverter/charger)
     # Bus 121: Victron MultiPlus 12/1600/70 (inverter/charger)
     # Extracted from EHG app metadata by Dan (SCU component 121 = VictronMultiplus).
-    # NON-FUNCTIONAL on S600: no data received even with Victron physically ON and
-    # entities enabled. The Victron communicates via VE.Bus protocol which is not
-    # bridged to the SCU on the S600. Vehicles with a Victron Cerbo GX (VE.Bus →
-    # CAN bridge) may see data on this bus. Slot definitions kept for forward
-    # compatibility.
+    # NON-FUNCTIONAL on S600: no data received even with Victron physically ON.
+    # Victron uses VE.Bus (RS-485) which is incompatible with vehicle CAN. A Cerbo
+    # GX cannot bridge this either (VE.Can ≠ vehicle CAN). EHG may have a
+    # proprietary SCU-to-Victron interface on some configurations, or these are
+    # placeholder definitions. Kept for forward compatibility.
     # (121,1) and (121,9) are writable booleans (inverter_on, charger_on).
     (121, 1): ("victron_inverter_on", None, None),        # rw bool
     (121, 2): ("victron_inverter_state", None, None),      # r int
