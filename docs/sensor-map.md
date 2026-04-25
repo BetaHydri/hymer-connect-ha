@@ -353,10 +353,22 @@ See [PR #44](https://github.com/BetaHydri/hymer-connect-ha/pull/44) for the
 S700 observations. A model-aware sensor map is planned to support both models
 without conflicts.
 
-## Bus 121 — Victron MultiPlus 12/1600/70 (inverter/charger) — NOT YET CONFIRMED
+## Bus 121 — Victron MultiPlus 12/1600/70 (inverter/charger) — NON-FUNCTIONAL
 
 From EHG app metadata extraction (Dan, April 2026). SCU component 121 = VictronMultiplus.
-**Not detected** on S600 discovery scan 2026-04-23 (Victron physical switch may have been OFF).
+**No data received** on S600 — even with Victron physically switched ON and entities
+manually enabled. The Victron MultiPlus communicates via **VE.Bus** protocol, which
+is apparently not bridged to the SCU's PIA bus on the S600. The slot definitions
+exist in the EHG app metadata (suggesting EHG planned or has support on some
+vehicle configurations).
+
+**Hypothesis:** Vehicles equipped with a **Victron Cerbo GX** (or similar GX device)
+may populate bus 121. The Cerbo acts as a protocol bridge (VE.Bus → CAN) and could
+feed Victron data to the SCU via CAN bus, which the SCU then exposes as PIA slots.
+The S600 does not have a Cerbo — only the bare MultiPlus 12/1600/70 wired directly
+via VE.Bus. Higher-spec models (e.g. MLT 580 4×4, B-Klasse ModernComfort) that
+ship with a Cerbo GX from the factory may see data on this bus.
+
 All entities disabled by default.
 
 | Slot | Sensor Name | R/W | Type | Notes |

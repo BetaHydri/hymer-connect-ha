@@ -113,7 +113,7 @@ Real-time data from the **Voltronic MPP260CI** MPPT solar charger:
 | **Lights** | 8 interior lights (on/off, brightness, color temp), LED bar (on/off, brightness), Wohnen group, Privat group |
 | **Fuel** | Level (%), liters, consumption (L/100km), estimated range (computed) |
 | **System** | SCU connected/firmware, Truma firmware, LTE connected, paired BT devices |
-| **Victron** | Inverter on/off, charger on/off, voltages, currents, frequencies, device failure, firmware (bus 121 — disabled by default) |
+| **Victron** | Inverter on/off, charger on/off, voltages, currents, frequencies, device failure, firmware (bus 121 — disabled by default, **non-functional on S600**: the Victron uses VE.Bus which is not bridged to the SCU without a Cerbo GX) |
 | **Total** | **~130 entities** (sensors, binary sensors, lights, switches, climate, selects) from CAN bus, LIN bus, GPS, and connected components |
 
 ## Installation
@@ -419,6 +419,7 @@ The integration should work on **any EHG vehicle with an SCU**, but with some li
 | **Lights** | ⚠️ Partial | Light bus IDs (11, 12, 15, 16, 19, 21, 24, 43, 44) and their capabilities (brightness, color temp) are specific to the Grand Canyon S layout. Your vehicle may have different lights on different buses |
 | **Truma heater** (bus 58) | ⚠️ Depends | Only if your vehicle has a Truma heater connected via the SCU. Vehicles with Alde or other heating systems may use different bus IDs |
 | **Fridge** (bus 34) | ⚠️ Depends | Only if your vehicle has a Dometic/Thetford fridge connected via the SCU |
+| **Victron MultiPlus** (bus 121) | ❌ Not working on S600 | The Victron uses VE.Bus which is not bridged to the SCU on the S600. Entities are disabled by default and produce no data. May work on vehicles with a **Victron Cerbo GX** installed (the Cerbo bridges VE.Bus → CAN → SCU) |
 | **Solar** (bus 8) | ⚠️ Depends | Mapped for the Voltronic MPP260CI (S600) / MPP250Duo (S700) MPPT charger. Other solar setups may report on different bus IDs |
 | **Extended CAN** (bus 99) | ⚠️ Depends | On the S600: AdBlue, ambient temp, fuel range, gear. On the S700: lithium BMS (voltage, current, SoC, SoH). Slot meanings vary by vehicle configuration |
 
