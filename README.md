@@ -141,7 +141,7 @@ Three computed sensors derived from the CAN bus odometer and fuel level:
 | **Lights** | 8 interior lights (on/off, brightness, color temp), LED bar (on/off, brightness), Wohnen group, Privat group |
 | **Fuel** | Level (%), liters, consumption (L/100km), estimated range (computed) |
 | **System** | SCU connected/firmware, Truma firmware, LTE connected, paired BT devices, SCU restart button |
-| **Victron** | Inverter on/off, charger on/off, voltages, currents, frequencies, device failure, firmware (bus 121 — disabled by default) |
+| **Victron** | Inverter on/off, charger on/off, voltages, currents, frequencies, device failure, firmware (bus 121 — disabled by default, **non-functional on S600**: Victron uses VE.Bus which is not bridged to the SCU without a Cerbo GX) |
 | **Total** | **~130 entities** (sensors, binary sensors, lights, switches, climate, selects) from CAN bus, LIN bus, GPS, and connected components |
 
 ### � Dynamic Slot Discovery (v2.34.0+)
@@ -678,7 +678,7 @@ graph TB
         LEDBAR["LED Bar (outside)<br/>Bus 25 (primary) · Bus 22 (duplicate)"]
         FRIDGE["Thetford N4112A Fridge<br/>Bus 34 — Control (power · ECO · step)<br/>Bus 37 — Status (mode · door)"]
         TRUMA["Truma Combi D6E Heater<br/>Bus 49 — LIM module (FW · status)<br/>Bus 58 — Heater (setpoint · fan · fuel)"]
-        VICTRON["Victron MultiPlus 12/1600/70<br/>Bus 121 — Inverter · Charger<br/>(disabled by default)"]
+        VICTRON["Victron MultiPlus 12/1600/70<br/>Bus 121 — Inverter · Charger<br/>(disabled — no VE.Bus bridge on S600)"]
         GPS["SCU Telemetry<br/>Bus 30 — GPS · LTE · BT devices"]
     end
 
@@ -695,7 +695,7 @@ graph TB
     SCU <--> LEDBAR
     SCU <--> FRIDGE
     SCU <--> TRUMA
-    SCU <--> VICTRON
+    SCU -.-x VICTRON
     SCU --- GPS
 ```
 
@@ -719,7 +719,7 @@ graph TB
 | 49 | `truma` | PIA | Truma LIM module | Connected flag, status, firmware |
 | 58 | `heater` | PIA | Truma Combi D6E | Setpoint, fan speed, fuel type, electric power, operating mode |
 | 99 | `can2` | **CAN** | BOS LUX LiFePO4 BMS | Pack V/A/°C, SOC, SoH, capacity, charge detect, device failure |
-| 121 | — | PIA | Victron MultiPlus | Inverter/charger state, V/A/Hz, shore input (disabled by default) |
+| 121 | — | PIA | Victron MultiPlus | Inverter/charger state, V/A/Hz, shore input (disabled by default — **non-functional on S600**, may require Cerbo GX) |
 
 ### How Data Flows
 
