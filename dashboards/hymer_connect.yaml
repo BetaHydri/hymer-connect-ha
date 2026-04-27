@@ -67,6 +67,10 @@ views:
               action: toggle
               confirmation:
                 text: "Toggle 12V main switch? This controls all habitation devices."
+            icon_tap_action:
+              action: toggle
+              confirmation:
+                text: "Toggle 12V main switch? This controls all habitation devices."
           - type: tile
             entity: switch.hymer_water_pump
             name: Water Pump
@@ -279,6 +283,10 @@ views:
         icon: mdi:flash
         color: amber
         tap_action:
+          action: toggle
+          confirmation:
+            text: "Toggle 12V main switch? This controls all habitation devices."
+        icon_tap_action:
           action: toggle
           confirmation:
             text: "Toggle 12V main switch? This controls all habitation devices."
