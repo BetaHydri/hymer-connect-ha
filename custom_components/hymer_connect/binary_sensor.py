@@ -312,12 +312,14 @@ BINARY_SENSOR_DESCRIPTIONS: tuple[HymerBinarySensorEntityDescription, ...] = (
     ),
     # --- Fridge door (bus 37, sid 2) ---
     # SCU reports int 0/1, pia_decoder maps via _INT_LABELS to "Open"/"Closed".
-    # NOTE: The fridge door sensor only updates via SignalR when the SCU is
-    # fully online (12V ON). With 12V off, the SCU is in standby and does not
-    # push passive sensor changes to the cloud. The EHG app can still see door
-    # changes in standby because it connects via BLE directly to the SCU.
-    # Commands (e.g. fridge power on/off) work in standby because the SCU
-    # echoes command responses, but passive sensors like door state do not.
+    # KNOWN LIMITATION: The SCU never pushes fridge_status changes via the
+    # cloud/SignalR path. Across all captures (April 5–22, 2026), bus 37 sid 2
+    # is always uint=1 ("Closed") and never receives incremental push updates.
+    # The EHG app sees real-time door changes only via BLE (direct connection).
+    # This sensor will show the initial subscription value but won't update
+    # when the door is opened/closed — this is a SCU firmware limitation,
+    # not a bug in our code. A future BLE dual-path implementation could
+    # provide real-time fridge door updates.
     HymerBinarySensorEntityDescription(
         key="fridge_door",
         translation_key="fridge_door",
