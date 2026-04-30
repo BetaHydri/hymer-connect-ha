@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.37.0] - 2026-04-30
+
+### Added
+
+- **Sensor Discovery Tool: multi-brand support & JSON export** — The standalone `tools/discover_sensors.py` now accepts a `--brand` parameter (supports `hymer`, `eriba`, `buerstner`, `dethleffs`, `lmc`, `niesmann-bischoff`, `sunlight`, `carado`, `laika`) so non-HYMER vehicle owners can run sensor discovery against their SCU. Previously the tool hardcoded `brand="hymer"` which would fail authentication for other EHG brands. Results are auto-exported as a JSON file (`sensor_discovery_<brand>.json`) for easy sharing on GitHub issues. Use `--output <path>` to customize the export path. This is a standalone tool only — no changes to the HA integration code.
+- **Robust JWT scanning in token extractor** — `tools/capture_ehg_token.py` now uses generic JWT regex scanning (`eyJ...` pattern) across all request/response bodies, HTTP headers, and WebSocket messages instead of relying on specific JSON keys. Fixes token detection for vehicles where the token is not located under the expected `data.token` key or `ehgAccessToken` WebSocket field. Credit: @mvondemhagen for the detailed analysis ([#53](https://github.com/BetaHydri/hymer-connect-ha/issues/53)).
+
 ## [2.36.6] - 2026-04-25
 
 ### Fixed

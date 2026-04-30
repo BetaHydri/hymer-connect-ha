@@ -506,38 +506,89 @@ Similarly, if your vehicle has components that send data on bus/sensor IDs not y
 
 If you have a different EHG vehicle and want to help expand compatibility:
 
-1. **Install the integration** and check which sensors show data vs. "Unavailable"
-2. **Enable debug logging** by adding this to your `configuration.yaml`:
-   ```yaml
-   logger:
-     logs:
-       custom_components.hymer_connect: debug
-   ```
+#### Option 1: Run the Sensor Discovery Tool (recommended)
 
-   For production use, the recommended logger configuration is:
-   ```yaml
-   logger:
-     default: warning
-     logs:
-       custom_components.hymer_connect: warning
-       custom_components.hymer_connect.signalr_client: info
-       custom_components.hymer_connect.pia_decoder: warning
-       custom_components.hymer_connect.coordinator: info
-   ```
+The `tools/discover_sensors.py` script connects to the EHG cloud, subscribes to your vehicle's SCU, and captures a complete `(bus_id, sensor_id) → value` mapping table. It supports all EHG brands and auto-exports results as JSON.
 
-   | Logger | Level | What it shows |
-   |--------|-------|---------------|
-   | `hymer_connect` | `warning` | General integration warnings and errors |
-   | `signalr_client` | `info` | Connection lifecycle, reconnects, UpdateTokens status, SCU reconnect events |
-   | `signalr_client` | `debug` | Every SignalR message (very verbose) |
-   | `pia_decoder` | `debug` | Every decoded PIA sensor value (very verbose) |
-   | `coordinator` | `info` | REST API polling, SignalR reconnect scheduling |
+**Prerequisites:** Python 3.10+, `aiohttp` (`pip install aiohttp`), your EHG credentials, and the EHG refresh token (see [Obtaining the EHG Refresh Token](#obtaining-the-ehg-refresh-token)).
 
-3. **Open a GitHub issue** with:
-   - Your vehicle brand, model, and base vehicle (Sprinter/Ducato/Transit)
-   - Which sensors work and which show "Unavailable"
-   - Any debug log snippets showing unmapped `(bus_id, sensor_id)` pairs
-4. This helps map sensor IDs for different vehicle configurations and benefits all users
+```bash
+# Clone the repo
+git clone https://github.com/BetaHydri/hymer-connect-ha.git
+cd hymer-connect-ha
+
+# Install dependency
+pip install aiohttp
+
+# Set credentials (PowerShell)
+$env:HYMER_USERNAME = 'your@email.com'
+$env:HYMER_PASSWORD = 'yourpassword'
+$env:HYMER_EHG_REFRESH_TOKEN = 'eyJ...'  # your captured token
+
+# Set credentials (bash/zsh)
+export HYMER_USERNAME='your@email.com'
+export HYMER_PASSWORD='yourpassword'
+export HYMER_EHG_REFRESH_TOKEN='eyJ...'
+
+# Run discovery — replace 'eriba' with your brand
+python tools/discover_sensors.py --brand eriba --duration 180
+```
+
+**Supported brands:** `hymer`, `eriba`, `buerstner`, `dethleffs`, `lmc`, `niesmann-bischoff`, `sunlight`, `carado`, `laika`
+
+**While the script runs** (3 minutes by default), toggle lights, open/close the fridge door, change fridge mode, and trigger any other actions in the EHG app to generate sensor updates.
+
+The script produces:
+1. A printed table showing all `(bus_id, sensor_id)` pairs with values and mapped/unmapped status
+2. A JSON file (`tools/sensor_discovery_<brand>.json`) — **attach this file to a GitHub issue**
+
+Use `--output <path>` to customize the export filename, and `--duration <seconds>` to adjust the collection time.
+
+> **Note:** This is a standalone tool that connects to the EHG cloud directly. It does NOT modify your Home Assistant installation or the integration in any way.
+
+#### Option 2: Export from Home Assistant
+
+1. Go to **Developer Tools → States** in your Home Assistant
+2. Filter for your device name (e.g. `camper_eriba`, `hymer`)
+3. Copy/paste all entities with their current values into a GitHub issue
+
+#### Option 3: Enable debug logging
+
+Add this to your `configuration.yaml`:
+```yaml
+logger:
+  logs:
+    custom_components.hymer_connect: debug
+```
+
+For production use, the recommended logger configuration is:
+```yaml
+logger:
+  default: warning
+  logs:
+    custom_components.hymer_connect: warning
+    custom_components.hymer_connect.signalr_client: info
+    custom_components.hymer_connect.pia_decoder: warning
+    custom_components.hymer_connect.coordinator: info
+```
+
+| Logger | Level | What it shows |
+|--------|-------|---------------|
+| `hymer_connect` | `warning` | General integration warnings and errors |
+| `signalr_client` | `info` | Connection lifecycle, reconnects, UpdateTokens status, SCU reconnect events |
+| `signalr_client` | `debug` | Every SignalR message (very verbose) |
+| `pia_decoder` | `debug` | Every decoded PIA sensor value (very verbose) |
+| `coordinator` | `info` | REST API polling, SignalR reconnect scheduling |
+
+#### Open a GitHub issue
+
+Regardless of which option you use, **open a GitHub issue** with:
+- Your vehicle brand, model, and base vehicle (Sprinter/Ducato/Transit/Crafter)
+- The JSON sensor dump (from the discovery tool) or entity list (from HA)
+- Which sensors work and which show "Unavailable"
+- Any correlations you noticed between EHG app actions and sensor changes
+
+This helps map sensor IDs for different vehicle configurations and benefits all users
 
 ### Sensor Bus Map Reference
 
