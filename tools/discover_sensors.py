@@ -142,11 +142,48 @@ class SensorDiscovery:
         ))
         print("=" * 90)
 
+    def export_json(self, filepath: str) -> None:
+        """Export discovery results as JSON for sharing with developers."""
+        elapsed = time.monotonic() - self.start_time
+        result = {
+            "tool": "discover_sensors.py",
+            "duration_seconds": round(elapsed, 1),
+            "message_count": self.message_count,
+            "total_slots": len(self.all_sensors),
+            "buses": {},
+        }
+        for (bus_id, sensor_id) in sorted(self.all_sensors.keys()):
+            bus_key = str(bus_id)
+            if bus_key not in result["buses"]:
+                result["buses"][bus_key] = {"slots": {}}
+            values = self.all_sensors[(bus_id, sensor_id)]
+            types = list(self.sensor_types[(bus_id, sensor_id)])
+            mapped = SENSOR_MAP.get((bus_id, sensor_id))
+            slot_data = {
+                "latest_value": values[-1] if values else None,
+                "sample_count": len(values),
+                "value_types": types,
+                "mapped": mapped[0] if mapped else None,
+                "unit": mapped[1] if mapped else None,
+            }
+            result["buses"][bus_key]["slots"][str(sensor_id)] = slot_data
+
+        with open(filepath, "w", encoding="utf-8") as f:
+            json.dump(result, f, indent=2, default=str)
+        print("\n  📁 Results exported to: %s" % filepath)
+        print("     (Attach this file to the GitHub issue)")
+
 
 async def main():
     parser = argparse.ArgumentParser(description="Discover HYMER Connect SCU sensors")
     parser.add_argument("--duration", type=int, default=120,
                         help="Collection duration in seconds (default: 120)")
+    parser.add_argument("--brand", type=str, default="hymer",
+                        choices=["hymer", "buerstner", "dethleffs", "eriba", "lmc",
+                                 "niesmann-bischoff", "sunlight", "carado", "laika"],
+                        help="Vehicle brand (default: hymer)")
+    parser.add_argument("--output", type=str, default="",
+                        help="Export results to a JSON file (for sharing with developers)")
     args = parser.parse_args()
 
     # Get credentials from environment
@@ -175,8 +212,8 @@ async def main():
 
     async with aiohttp.ClientSession() as session:
         # Authenticate
-        print("Connecting to EHG cloud...")
-        api = HymerConnectApi(session)
+        print("Connecting to EHG cloud (brand: %s)..." % args.brand)
+        api = HymerConnectApi(session, brand=args.brand)
         await api.authenticate(username, password)
         print("Authenticated successfully")
 
@@ -229,6 +266,14 @@ async def main():
         
         # Print results
         discovery.print_results()
+
+        # Export JSON if requested
+        if args.output:
+            discovery.export_json(args.output)
+        else:
+            # Auto-export with default name
+            default_output = os.path.join(os.path.dirname(__file__), "sensor_discovery_%s.json" % args.brand)
+            discovery.export_json(default_output)
 
 
 if __name__ == "__main__":
