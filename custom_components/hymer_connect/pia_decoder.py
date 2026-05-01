@@ -2,17 +2,26 @@
 
 Decodes Base64-encoded Protobuf payloads from SignalR PiaResponse messages.
 Encodes PiaRequest subscription messages for sensor data streaming.
+
+Sensor mappings can be extended at runtime via JSON overlay files in the
+``sensor_maps/`` directory.  Call :func:`load_sensor_map_overlay` at startup
+to merge a brand/model-specific JSON file into the base ``SENSOR_MAP``.
 """
 
 from __future__ import annotations
 
 import base64
+import json
 import logging
 import struct
 import time
+from pathlib import Path
 from typing import Any
 
 _LOGGER = logging.getLogger(__name__)
+
+# Directory containing JSON overlay files
+_SENSOR_MAPS_DIR = Path(__file__).parent / "sensor_maps"
 
 # Discovery mode: tracks all sensor value changes (mapped and unmapped)
 # and logs them at INFO level. Helps identify what unknown bus/sensor
@@ -264,6 +273,91 @@ SENSOR_MAP: dict[tuple[int, int], tuple[str, str | None, str | None]] = {
     (121, 18): ("victron_device_failure", None, None),
     (121, 19): ("victron_firmware", None, None),
 }
+
+# Track whether overlays have already been loaded (prevents re-loading on
+# integration reload, since SENSOR_MAP is module-level and persists).
+_overlays_loaded: set[str] = set()
+
+
+def _load_json_overlay(filename: str) -> int:
+    """Load a single JSON overlay file and merge it into SENSOR_MAP.
+
+    The JSON file must have a ``"sensors"`` dict with keys like ``"60,1"``
+    and values like ``["dometic_fridge_mode", null, null]``.
+
+    Overlay entries **override** existing entries for the same (bus, slot).
+
+    Returns:
+        Number of entries merged.
+    """
+    path = _SENSOR_MAPS_DIR / filename
+    if not path.is_file():
+        return 0
+
+    try:
+        with open(path, encoding="utf-8") as f:
+            data = json.load(f)
+    except (json.JSONDecodeError, OSError) as exc:
+        _LOGGER.error("Failed to load sensor map %s: %s", filename, exc)
+        return 0
+
+    sensors = data.get("sensors", {})
+    count = 0
+    for key_str, value in sensors.items():
+        parts = key_str.split(",")
+        if len(parts) != 2:
+            continue
+        bus_id, sensor_id = int(parts[0].strip()), int(parts[1].strip())
+        name = value[0]
+        unit = value[1]
+        transform = value[2] if len(value) > 2 else None
+        SENSOR_MAP[(bus_id, sensor_id)] = (name, unit, transform)
+        count += 1
+    return count
+
+
+def load_sensor_map(brand: str) -> None:
+    """Load sensor map overlays for the given brand.
+
+    Loads ``base.json`` (shared infrastructure) first, then the brand-specific
+    overlay (e.g. ``hymer.json``, ``eriba.json``).  Both files are optional —
+    if they don't exist, only the hardcoded SENSOR_MAP is used.
+
+    This function is idempotent: calling it multiple times with the same brand
+    is safe and will not re-load files.
+
+    Args:
+        brand: The EHG brand key (e.g. ``"hymer"``, ``"eriba"``, ``"buerstner"``).
+    """
+    cache_key = f"brand:{brand}"
+    if cache_key in _overlays_loaded:
+        return
+
+    base_count = 0
+    brand_count = 0
+
+    if "base" not in _overlays_loaded:
+        base_count = _load_json_overlay("base.json")
+        _overlays_loaded.add("base")
+        if base_count:
+            _LOGGER.info("Sensor map: loaded base.json (%d entries)", base_count)
+
+    brand_file = f"{brand}.json"
+    brand_count = _load_json_overlay(brand_file)
+    if brand_count:
+        _LOGGER.info(
+            "Sensor map: loaded %s (%d entries, %d overrides)",
+            brand_file, brand_count, brand_count,
+        )
+    else:
+        _LOGGER.debug("Sensor map: no brand overlay for '%s' (using base only)", brand)
+
+    _overlays_loaded.add(cache_key)
+    _LOGGER.info(
+        "Sensor map ready: %d total entries (base=%d + %s=%d + hardcoded)",
+        len(SENSOR_MAP), base_count, brand, brand_count,
+    )
+
 
 # Human-readable mappings for raw SCU string values
 _VALUE_LABELS: dict[str, dict[str, str]] = {

@@ -68,6 +68,11 @@ async def async_setup_entry(
     scu_urn = entry.data.get(CONF_SCU_URN, "")
     ehg_refresh_token = entry.data.get(CONF_EHG_REFRESH_TOKEN, "")
 
+    # Load sensor map: base (shared) + brand-specific overlay
+    from .pia_decoder import load_sensor_map
+
+    load_sensor_map(brand)
+
     coordinator = HymerConnectCoordinator(
         hass, api, session, entry,
         vehicle_urn=vehicle_urn,

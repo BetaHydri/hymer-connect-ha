@@ -1,0 +1,6 @@
+{
+  "_comment": "Eriba brand overlay (Car 602, VW Crafter, Dometic compressor fridge). Bus 60 mappings are already in the base SENSOR_MAP (safe additive). Future: VW Crafter CAN bus 1 overrides, Eriba-specific light buses.",
+  "_vehicles": ["Car 602"],
+  "_contributed_by": "@mvondemhagen (GitHub issue #54)",
+  "sensors": {}
+}
