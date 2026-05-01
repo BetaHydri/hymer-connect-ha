@@ -1,1 +1,6 @@
-{"_comment": "HYMER brand overlay (Grand Canyon S600/S700, Mercedes Sprinter).", "sensors": {}}
+{
+  "_comment": "HYMER brand overlay (Grand Canyon S600/S700, Mercedes Sprinter).",
+  "_doc": "Add HYMER-specific sensor overrides here. Entries override base.json and the hardcoded SENSOR_MAP.",
+  "_vehicles": ["Grand Canyon S 600 CrossOver", "Grand Canyon S 700"],
+  "sensors": {}
+}

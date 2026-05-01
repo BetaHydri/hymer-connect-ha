@@ -613,9 +613,41 @@ Regardless of which option you use, **open a GitHub issue** with:
 
 This helps map sensor IDs for different vehicle configurations and benefits all users
 
+#### Option 4: Contribute a JSON overlay file (v2.41.0+)
+
+If you've identified bus/slot mappings for your brand, you can contribute them directly as a JSON file. The integration loads per-brand overlay files from `custom_components/hymer_connect/sensor_maps/` at startup.
+
+**JSON syntax:**
+
+```json
+{
+  "_comment": "Eriba brand overlay — add your sensor overrides here",
+  "sensors": {
+    "60,1": ["dometic_fridge_mode", null, null],
+    "60,2": ["dometic_fridge_level", null, null],
+    "60,9": ["dometic_fridge_power_source", null, null],
+    "99,1": ["bms_voltage", "V", null],
+    "1,1":  ["odometer", "km", "div1000"]
+  }
+}
+```
+
+**Format:**
+- Keys: `"bus_id,sensor_id"` as a string (e.g. `"60,1"`)
+- Values: `[sensor_name, unit_or_null, transform_or_null]`
+- Units: `"V"`, `"A"`, `"°C"`, `"%"`, `"W"`, `"Hz"`, `"bar"`, `"km"`, `"m"`, `"min"`, `"Ah"`, `"h"`, or `null`
+- Transforms: `null` (raw value), `"div10"`, `"div100"`, `"div1000"`, `"div3600"` (seconds → hours)
+- Fields starting with `_` are comments and ignored by the loader
+
+**Available brand files:** `base.json`, `hymer.json`, `eriba.json`, `buerstner.json`, `dethleffs.json`, `lmc.json`, `niesmann-bischoff.json`, `sunlight.json`, `carado.json`, `laika.json`, `freeontour.json`
+
+**How it works:** At startup, the integration loads `base.json` first (shared sensors), then `{brand}.json` based on the brand you selected during setup. Overlay entries **override** the hardcoded `SENSOR_MAP` for matching `(bus, slot)` keys.
+
+To contribute: fork the repo, edit `sensor_maps/{your_brand}.json`, and open a PR.
+
 ### Sensor Bus Map Reference
 
-A complete slot-by-slot reference for the S600 is available in [`docs/sensor-map.md`](docs/sensor-map.md). This documents every `(bus_id, sensor_id)` mapping with units, transforms, and known S700 conflicts.
+A complete slot-by-slot reference is available in [`docs/sensor-map.md`](docs/sensor-map.md). This documents every `(bus_id, sensor_id)` mapping with units, transforms, and multi-brand coverage.
 
 ## Stale CAN Sensor Workarounds
 

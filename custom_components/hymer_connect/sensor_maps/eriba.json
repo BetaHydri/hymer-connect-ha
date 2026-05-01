@@ -1,1 +1,12 @@
-{"_comment": "Eriba brand overlay (Car 602, VW Crafter, Dometic fridge). Contributed by @mvondemhagen (#54).", "sensors": {}}
+{
+  "_comment": "Eriba brand overlay (Car 602, VW Crafter, Dometic fridge).",
+  "_contributed_by": "@mvondemhagen (GitHub issue #54)",
+  "_vehicles": ["Car 602"],
+  "_doc": "Bus 60 (Dometic fridge) is already in the hardcoded SENSOR_MAP. Add Eriba-specific overrides here when light bus mappings differ from the S600.",
+  "_example_light_override": {
+    "_comment": "Example: if Eriba bus 43 is NOT seating overhead but a different light",
+    "43,1": ["light_eriba_ceiling_2", null, null],
+    "43,2": ["light_eriba_ceiling_2_brightness", "%", null]
+  },
+  "sensors": {}
+}

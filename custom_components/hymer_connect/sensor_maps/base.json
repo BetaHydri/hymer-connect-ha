@@ -1,1 +1,16 @@
-{"_comment": "Shared sensor mappings for ALL EHG vehicles. Currently empty - shared mappings are in the hardcoded SENSOR_MAP.", "sensors": {}}
+{
+  "_comment": "Shared sensor mappings for ALL EHG vehicles.",
+  "_doc": [
+    "Keys are 'bus_id,sensor_id' strings (e.g. '60,1').",
+    "Values are arrays: [sensor_name, unit_or_null, transform_or_null].",
+    "Transforms: null=raw, 'div10', 'div100', 'div1000', 'div3600'.",
+    "Entries here override the hardcoded SENSOR_MAP in pia_decoder.py.",
+    "Use this file for sensors shared across ALL brands."
+  ],
+  "_example": {
+    "60,1": ["dometic_fridge_mode", null, null],
+    "99,1": ["bms_voltage", "V", null],
+    "1,1": ["odometer", "km", "div1000"]
+  },
+  "sensors": {}
+}
