@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.40.0] - 2026-05-02
+
+### Added
+
+- **Per-brand JSON sensor map overlays** — The integration now supports dynamic sensor mappings via JSON files in `sensor_maps/`. At startup, it loads `base.json` (shared infrastructure) followed by `{brand}.json` (brand-specific overrides) based on the brand selected during setup. This enables community-contributed mappings without modifying Python code. All 10 EHG brands have template files ready for contributions. (#54)
+
 ## [2.39.0] - 2026-05-01
 
 ### Added
