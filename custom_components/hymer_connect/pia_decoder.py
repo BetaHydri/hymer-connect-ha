@@ -169,9 +169,23 @@ SENSOR_MAP: dict[tuple[int, int], tuple[str, str | None, str | None]] = {
     (27, 1): ("light_privat_group", None, None),
     (27, 2): ("light_privat_group_brightness", "%", None),
     (27, 3): ("light_privat_group_color_temp", None, None),
-    # Fridge (37)
+    # Fridge (37) — ThetfordT2000 (Thetford N4112A on S600)
     (37, 1): ("fridge_mode", None, None),
     (37, 2): ("fridge_status", None, None),  # Fridge door state (0=Open, 1=Closed). SCU never pushes changes via SignalR — BLE-only for real-time updates.
+    # Dometic compressor fridge (bus 60) — DometicCompressorFridge
+    # Eriba Car 602 (2025, VW Crafter) — confirmed by @mvondemhagen (issue #54).
+    # S600/S700 have Thetford on bus 34/37 and will never see bus 60.
+    # Safe additive mapping — no conflict with existing vehicles.
+    (60, 1): ("dometic_fridge_mode", None, None),       # user_mode: "Silent Mode"/"Performance Cooling"/"Turbo Mode" (rw)
+    (60, 2): ("dometic_fridge_level", None, None),      # temperature: cooling level 1-5 (rw)
+    (60, 8): ("dometic_fridge_power", None, None),      # power_on: bool (rw)
+    (60, 9): ("dometic_fridge_power_source", None, None),  # power_source: "DC12V power" (r)
+    (60, 10): ("dometic_cibus_on", None, None),         # cibus_on: bool (r)
+    (60, 11): ("dometic_compressor_on", None, None),    # compressor_on: bool (r)
+    (60, 12): ("dometic_condenser_fan", None, None),    # condenser_fan_on: bool (r)
+    (60, 13): ("dometic_fridge_type", None, None),      # ctype: "Compressor" (r)
+    (60, 16): ("dometic_fridge_warning", None, None),   # warning_error_information: int 0-127 (r)
+    (60, 17): ("dometic_fridge_ai_type", None, None),   # aitype: "Refrigeration" (r)
     # Light: Sitzgruppe Dachschrank / Seating area overhead (bus 43)
     (43, 1): ("light_seating_overhead", None, None),
     (43, 2): ("light_seating_overhead_brightness", "%", None),

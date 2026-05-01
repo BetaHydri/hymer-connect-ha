@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.39.0] - 2026-05-01
+
+### Added
+
+- **Dometic compressor fridge support (bus 60)** — First Eriba-specific mapping! Vehicles with a Dometic compressor fridge (e.g. Eriba Car 602) now get 9 named entities instead of generic "Discovered" slots. Includes fridge mode (Silent/Performance/Turbo), cooling level (1–5), power source, compressor status, condenser fan, fridge type, and warning codes. Confirmed by @mvondemhagen on Eriba Car 602 (2025, VW Crafter). This is a safe additive mapping — S600/S700 vehicles with Thetford fridges (bus 34/37) are unaffected since they never see bus 60 data. (#54)
+
 ## [2.38.0] - 2026-05-01
 
 ### Added

@@ -316,6 +316,45 @@ SIGNALR_SENSORS: tuple[HymerSensorEntityDescription, ...] = (
         value_path="signalr_sensors.fridge_status",
         icon="mdi:fridge-outline",
     ),
+    # --- Dometic Compressor Fridge (bus 60) ---
+    # Eriba Car 602 (2025) — confirmed by @mvondemhagen (issue #54).
+    # S600/S700 have Thetford on bus 34/37 and never see bus 60.
+    HymerSensorEntityDescription(
+        key="dometic_fridge_mode",
+        translation_key="dometic_fridge_mode",
+        value_path="signalr_sensors.dometic_fridge_mode",
+        icon="mdi:fridge",
+    ),
+    HymerSensorEntityDescription(
+        key="dometic_fridge_level",
+        translation_key="dometic_fridge_level",
+        value_path="signalr_sensors.dometic_fridge_level",
+        icon="mdi:fridge",
+    ),
+    HymerSensorEntityDescription(
+        key="dometic_fridge_power_source",
+        translation_key="dometic_fridge_power_source",
+        value_path="signalr_sensors.dometic_fridge_power_source",
+        icon="mdi:power-plug",
+    ),
+    HymerSensorEntityDescription(
+        key="dometic_fridge_type",
+        translation_key="dometic_fridge_type",
+        value_path="signalr_sensors.dometic_fridge_type",
+        icon="mdi:fridge-industrial-outline",
+    ),
+    HymerSensorEntityDescription(
+        key="dometic_fridge_ai_type",
+        translation_key="dometic_fridge_ai_type",
+        value_path="signalr_sensors.dometic_fridge_ai_type",
+        icon="mdi:fridge-variant-outline",
+    ),
+    HymerSensorEntityDescription(
+        key="dometic_fridge_warning",
+        translation_key="dometic_fridge_warning",
+        value_path="signalr_sensors.dometic_fridge_warning",
+        icon="mdi:fridge-alert",
+    ),
     # --- BOS LUX BMS (bus 99) ---
     HymerSensorEntityDescription(
         key="bms_voltage",

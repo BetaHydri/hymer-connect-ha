@@ -142,11 +142,28 @@ Three computed sensors derived from the CAN bus odometer and fuel level:
 | **Chassis** | Parking brake, aux heater available/state, cruise control, downhill assist, coolant warning, motor oil warning, wiping water empty |
 | **Heating** | Truma connected/status/firmware, fan speed, fuel type, electric power (0/900/1800W), setpoint, operating mode |
 | **Fridge** | Mode (cooling step), door status (binary sensor), ECO/Quiet mode, power on/off |
+| **Fridge (Dometic)** | Mode (Silent/Performance/Turbo), cooling level (1–5), power source, compressor status, condenser fan, fridge type, warning codes — for vehicles with Dometic compressor fridges (e.g. Eriba Car 602) |
 | **Lights** | 8 interior lights (on/off, brightness, color temp), LED bar (on/off, brightness), Wohnen group, Privat group |
 | **Fuel** | Level (%), liters, consumption (L/100km), estimated range (computed) |
 | **System** | SCU connected/firmware, Truma firmware, LTE connected, paired BT devices, SCU restart button |
 | **Victron** | Inverter on/off, charger on/off, voltages, currents, frequencies, device failure, firmware (bus 121 — disabled by default, **non-functional**: Victron uses VE.Bus/RS-485 which is incompatible with the vehicle CAN bus) |
 | **Total** | **~130 entities** (sensors, binary sensors, lights, switches, climate, selects) from CAN bus, LIN bus, GPS, and connected components |
+
+### 🚐 Multi-Brand Notes (Eriba, Bürstner, Dethleffs, etc.)
+
+The sensor map was built on a **HYMER Grand Canyon S 600 CrossOver** (Mercedes Sprinter, Thetford N4112A fridge, Truma Combi D6E). Other EHG brands share the same SCU and PIA protocol but may have different appliances on different buses.
+
+**What works on all vehicles:**
+- Battery, solar, GPS, SCU/Truma firmware (buses 3, 8, 30, 45, 49, 58, 99) — shared infrastructure
+- Heater controls (Truma, bus 58) — if same Truma model
+- Water levels, main switch, charger (bus 3)
+
+**What differs by vehicle model:**
+- **Fridge**: Thetford N4112A uses buses 34/37 (S600), Dometic compressor uses bus 60 (Eriba). Both are mapped — the SCU only reports buses for hardware that's actually installed, so there's no conflict.
+- **Lights**: The 8 light entities (bus 11/12/15/16/19/21/43/44) are hardcoded for the S600 layout. On vehicles with different lighting circuits, some lights **will not work** even though the entity appears in HA. This is not a dashboard issue — the integration sends PIA commands to specific bus IDs, and if the Eriba has a different light on that bus (or no light at all), the command won't work. Model-specific light overlays are planned for a future release.
+- **Vehicle CAN bus (bus 1)**: Mercedes Sprinter vs VW Crafter may have different slot semantics for doors, ignition, and chassis flags.
+
+> **Eriba users**: The Dometic fridge sensors (mode, level, power source, compressor status) should appear automatically. Lights that don't respond can be disabled in the entity registry. Use the [Dynamic Slot Discovery](#dynamic-slot-discovery-v2340) to identify unmapped sensors on your vehicle and [contribute your findings](#how-you-can-help).
 
 ### � Dynamic Slot Discovery (v2.34.0+)
 

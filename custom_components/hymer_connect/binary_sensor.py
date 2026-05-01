@@ -328,6 +328,29 @@ BINARY_SENSOR_DESCRIPTIONS: tuple[HymerBinarySensorEntityDescription, ...] = (
         on_value="Open",
         icon="mdi:fridge-outline",
     ),
+    # --- Dometic Compressor Fridge (bus 60) ---
+    # Eriba Car 602 — confirmed by @mvondemhagen (issue #54).
+    HymerBinarySensorEntityDescription(
+        key="dometic_fridge_power",
+        translation_key="dometic_fridge_power",
+        device_class=BinarySensorDeviceClass.POWER,
+        value_path="signalr_sensors.dometic_fridge_power",
+        icon="mdi:fridge",
+    ),
+    HymerBinarySensorEntityDescription(
+        key="dometic_compressor_on",
+        translation_key="dometic_compressor_on",
+        device_class=BinarySensorDeviceClass.RUNNING,
+        value_path="signalr_sensors.dometic_compressor_on",
+        icon="mdi:fridge-industrial",
+    ),
+    HymerBinarySensorEntityDescription(
+        key="dometic_condenser_fan",
+        translation_key="dometic_condenser_fan",
+        device_class=BinarySensorDeviceClass.RUNNING,
+        value_path="signalr_sensors.dometic_condenser_fan",
+        icon="mdi:fan",
+    ),
     # --- Victron MultiPlus (bus 121) ---
     # Disabled by default — bus 121 not yet confirmed on S600.
     HymerBinarySensorEntityDescription(
