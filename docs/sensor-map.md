@@ -1,15 +1,26 @@
-# PIA Sensor Bus Map — Grand Canyon S 600 CrossOver
+# PIA Sensor Bus Map
 
-> **Vehicle:** HYMER Grand Canyon S 600 CrossOver (2025)
-> **Base:** Mercedes Sprinter 419 CDI
+> **Primary vehicle:** HYMER Grand Canyon S 600 CrossOver (2025), Mercedes Sprinter 419 CDI
 > **SCU Firmware:** 1.12.0.0
 > **Validated:** April 2026 via mitmproxy captures + live HA correlation
 > **Discovery scan:** 2026-04-23 — 129 sensors, 129 mapped, 0 unmapped. Vehicle-verified at Unterföhring.
 
 This document maps every known `(bus_id, sensor_id)` slot to its sensor name,
-unit, and value transform as observed on the S600. Other models (e.g. the S700)
-may have different slot assignments on buses 1, 3, 8, 30, and 99 — see the
-[Compatibility section](../README.md#compatibility-with-other-vehicles) in the README.
+unit, and value transform. The base map was built on the S600 but includes
+additive mappings from other EHG vehicles:
+
+- **Bus 60** (Dometic compressor fridge) — contributed by @mvondemhagen on Eriba Car 602 (#54)
+
+Other models (e.g. the S700) may have different slot assignments — see the
+[Multi-Brand Notes](../README.md#-multi-brand-notes-eriba-bürstner-dethleffs-etc) in the README.
+
+### Dynamic JSON overlays (v2.41.0+)
+
+Starting with v2.41.0, the integration supports per-brand JSON overlay files
+in `custom_components/hymer_connect/sensor_maps/`. At startup, it loads
+`base.json` (shared) + `{brand}.json` (brand-specific), merging entries into
+the hardcoded `SENSOR_MAP`. This allows brand-specific bus overrides without
+modifying Python code. See the [README](../README.md#-multi-brand-notes-eriba-bürstner-dethleffs-etc) for details.
 
 ## Bus 1 — VehicleSignal (Mercedes Sprinter chassis CAN)
 
@@ -251,6 +262,26 @@ misnomer kept for backwards-compatibility with existing dashboards/history.
 | (58, 12) | `heater_response_error` (EHG: `response_error`) | — | Response error flag (bool). `r` |
 | (58, 13) | `heater_shoreline_connected` (EHG: `shoreline_connected`) | — | Shoreline connected flag (bool). `r` |
 | (58, 14) | `heater_window_switch_closed` (EHG: `window_switch_closed`) | — | Window contact closed (diesel safety interlock, bool). `r` |
+
+## Bus 60 — Dometic Compressor Fridge (DometicCompressorFridge)
+
+> **Vehicles:** Eriba Car 602 (2025, VW Crafter). Not present on S600/S700 (which use Thetford on buses 34/37).
+> **Contributed by:** @mvondemhagen ([#54](https://github.com/BetaHydri/hymer-connect-ha/issues/54))
+
+| Slot | Sensor Name | Unit | Transform | Notes |
+|------|------------|------|-----------|-------|
+| (60, 1) | `dometic_fridge_mode` | — | — | User mode: "Silent Mode" / "Performance Cooling" / "Turbo Mode" (rw) |
+| (60, 2) | `dometic_fridge_level` | — | — | Cooling level 1–5 (rw) |
+| (60, 8) | `dometic_fridge_power` | — | — | Power on/off (rw, bool) |
+| (60, 9) | `dometic_fridge_power_source` | — | — | Power source: "DC12V power" (r) |
+| (60, 10) | `dometic_cibus_on` | — | — | CiBus communication active (r, bool) |
+| (60, 11) | `dometic_compressor_on` | — | — | Compressor running (r, bool) |
+| (60, 12) | `dometic_condenser_fan` | — | — | Condenser fan running (r, bool) |
+| (60, 13) | `dometic_fridge_type` | — | — | Compressor type: "Compressor" (r) |
+| (60, 16) | `dometic_fridge_warning` | — | — | Warning/error code 0–127 (r) |
+| (60, 17) | `dometic_fridge_ai_type` | — | — | AI type: "Refrigeration" (r) |
+
+> **EHG app metadata** defines 21 slots for bus 60 (`DometicCompressorFridge`, kind: `fridge`). Slots 3–7, 14–15, 18–21 are unmapped (not yet observed in live data). See `docs/ehg-app-metadata.md` for the full slot definitions.
 
 ## Bus 99 — BOS LUX LiFePO4 BMS (4×80Ah)
 
