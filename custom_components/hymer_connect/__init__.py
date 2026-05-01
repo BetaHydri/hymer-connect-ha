@@ -71,7 +71,7 @@ async def async_setup_entry(
     # Load sensor map: base (shared) + brand-specific overlay
     from .pia_decoder import load_sensor_map
 
-    load_sensor_map(brand)
+    await hass.async_add_executor_job(load_sensor_map, brand)
 
     coordinator = HymerConnectCoordinator(
         hass, api, session, entry,
