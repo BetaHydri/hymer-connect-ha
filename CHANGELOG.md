@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.41.0] - 2026-05-02
+
+### Added
+
+- **Per-brand JSON sensor map overlays** — Loads `base.json` + `{brand}.json` from `sensor_maps/` at startup. Brand is read from the config flow selection. All 10 EHG brand templates included. Empty overlays are no-ops — all mappings come from the hardcoded SENSOR_MAP until brand-specific overrides are contributed.
+- **EHG token configurable via Options flow** — Add or update the EHG Remote Access Refresh Token at any time via Settings → Integrations → HYMER Connect → Configure. Also available during re-authentication.
+
 ## [2.39.0] - 2026-05-01
 
 ### Added
