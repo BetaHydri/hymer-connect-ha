@@ -1,0 +1,7 @@
+{
+  "_comment": "Eriba Car 602 (2025, VW Crafter) — Dometic compressor fridge overlay",
+  "_doc": "This overlay adds bus 60 (DometicCompressorFridge) mappings. These are already in the base SENSOR_MAP since bus 60 never conflicts with other vehicles. This file serves as a template for future brand-specific overlays that need to override base mappings.",
+  "_contributed_by": "@mvondemhagen (GitHub issue #54)",
+  "sensors": {
+  }
+}

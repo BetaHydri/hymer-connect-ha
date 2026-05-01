@@ -2,17 +2,26 @@
 
 Decodes Base64-encoded Protobuf payloads from SignalR PiaResponse messages.
 Encodes PiaRequest subscription messages for sensor data streaming.
+
+Sensor mappings can be extended at runtime via JSON overlay files in the
+``sensor_maps/`` directory.  Call :func:`load_sensor_map_overlay` at startup
+to merge a brand/model-specific JSON file into the base ``SENSOR_MAP``.
 """
 
 from __future__ import annotations
 
 import base64
+import json
 import logging
 import struct
 import time
+from pathlib import Path
 from typing import Any
 
 _LOGGER = logging.getLogger(__name__)
+
+# Directory containing JSON overlay files
+_SENSOR_MAPS_DIR = Path(__file__).parent / "sensor_maps"
 
 # Discovery mode: tracks all sensor value changes (mapped and unmapped)
 # and logs them at INFO level. Helps identify what unknown bus/sensor
@@ -264,6 +273,62 @@ SENSOR_MAP: dict[tuple[int, int], tuple[str, str | None, str | None]] = {
     (121, 18): ("victron_device_failure", None, None),
     (121, 19): ("victron_firmware", None, None),
 }
+
+
+def load_sensor_map_overlay(filename: str) -> int:
+    """Load a JSON overlay file and merge it into SENSOR_MAP.
+
+    The JSON file must have a ``"sensors"`` dict with keys like ``"60,1"``
+    and values like ``["dometic_fridge_mode", null, null]``.
+
+    Overlay entries **override** existing entries for the same (bus, slot)
+    key, allowing brand-specific mappings to replace base definitions.
+
+    Args:
+        filename: Name of the JSON file in the ``sensor_maps/`` directory
+                  (e.g. ``"eriba_crafter.json"``).
+
+    Returns:
+        Number of entries merged.
+    """
+    path = _SENSOR_MAPS_DIR / filename
+    if not path.is_file():
+        _LOGGER.warning("Sensor map overlay not found: %s", path)
+        return 0
+
+    try:
+        with open(path, encoding="utf-8") as f:
+            data = json.load(f)
+    except (json.JSONDecodeError, OSError) as exc:
+        _LOGGER.error("Failed to load sensor map overlay %s: %s", filename, exc)
+        return 0
+
+    sensors = data.get("sensors", {})
+    count = 0
+    for key_str, value in sensors.items():
+        parts = key_str.split(",")
+        if len(parts) != 2:
+            continue
+        bus_id, sensor_id = int(parts[0]), int(parts[1])
+        name = value[0]
+        unit = value[1]  # None in JSON = null
+        transform = value[2] if len(value) > 2 else None
+        SENSOR_MAP[(bus_id, sensor_id)] = (name, unit, transform)
+        count += 1
+
+    _LOGGER.info(
+        "Loaded sensor map overlay %s: %d entries merged into SENSOR_MAP (total: %d)",
+        filename, count, len(SENSOR_MAP),
+    )
+    return count
+
+
+def get_available_overlays() -> list[str]:
+    """Return a list of available JSON overlay filenames."""
+    if not _SENSOR_MAPS_DIR.is_dir():
+        return []
+    return [f.name for f in _SENSOR_MAPS_DIR.glob("*.json")]
+
 
 # Human-readable mappings for raw SCU string values
 _VALUE_LABELS: dict[str, dict[str, str]] = {
