@@ -144,6 +144,7 @@ class HymerConnectConfigFlow(ConfigFlow, domain=DOMAIN):
                         CONF_PASSWORD: user_input[CONF_PASSWORD],
                         CONF_ACCESS_TOKEN: tokens["access_token"],
                         CONF_REFRESH_TOKEN: tokens["refresh_token"],
+                        CONF_EHG_REFRESH_TOKEN: user_input.get(CONF_EHG_REFRESH_TOKEN, reauth_entry.data.get(CONF_EHG_REFRESH_TOKEN, "")),
                     },
                 )
 
@@ -156,6 +157,10 @@ class HymerConnectConfigFlow(ConfigFlow, domain=DOMAIN):
                         default=reauth_entry.data.get(CONF_USERNAME, ""),
                     ): str,
                     vol.Required(CONF_PASSWORD): str,
+                    vol.Optional(
+                        CONF_EHG_REFRESH_TOKEN,
+                        default=reauth_entry.data.get(CONF_EHG_REFRESH_TOKEN, ""),
+                    ): str,
                 }
             ),
             errors=errors,
@@ -174,11 +179,21 @@ class HymerConnectOptionsFlow(OptionsFlow):
     ) -> ConfigFlowResult:
         """Manage the options."""
         if user_input is not None:
+            # EHG token is stored in config_entry.data (auth-related),
+            # not in options.  Update data if the token changed.
+            new_token = user_input.pop(CONF_EHG_REFRESH_TOKEN, "")
+            current_token = self._config_entry.data.get(CONF_EHG_REFRESH_TOKEN, "")
+            if new_token != current_token:
+                new_data = {**self._config_entry.data, CONF_EHG_REFRESH_TOKEN: new_token}
+                self.hass.config_entries.async_update_entry(
+                    self._config_entry, data=new_data
+                )
             return self.async_create_entry(title="", data=user_input)
 
         current_capacity = self._config_entry.options.get(
             CONF_TANK_CAPACITY, DEFAULT_TANK_CAPACITY_LITERS
         )
+        current_ehg_token = self._config_entry.data.get(CONF_EHG_REFRESH_TOKEN, "")
 
         return self.async_show_form(
             step_id="init",
@@ -188,6 +203,10 @@ class HymerConnectOptionsFlow(OptionsFlow):
                         CONF_TANK_CAPACITY,
                         default=current_capacity,
                     ): vol.All(vol.Coerce(int), vol.Range(min=30, max=200)),
+                    vol.Optional(
+                        CONF_EHG_REFRESH_TOKEN,
+                        default=current_ehg_token,
+                    ): str,
                 }
             ),
         )

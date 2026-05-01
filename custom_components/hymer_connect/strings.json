@@ -19,7 +19,11 @@
         "description": "The HYMER Connect integration needs to re-authenticate your account.",
         "data": {
           "username": "Email",
-          "password": "Password"
+          "password": "Password",
+          "ehg_refresh_token": "EHG Remote Access Refresh Token (optional)"
+        },
+        "data_description": {
+          "ehg_refresh_token": "Update or add the EHG token here. Leave unchanged to keep the current token."
         }
       }
     },
@@ -197,10 +201,12 @@
       "init": {
         "title": "HYMER Connect Options",
         "data": {
-          "tank_capacity_liters": "Diesel tank capacity (liters)"
+          "tank_capacity_liters": "Diesel tank capacity (liters)",
+          "ehg_refresh_token": "EHG Remote Access Refresh Token"
         },
         "data_description": {
-          "tank_capacity_liters": "Size of the diesel tank in liters. Common values: 71 L (Sprinter 314/316 CDI), 93 L (Sprinter 419/519 CDI standard). Used to compute fuel level in liters, consumption (L/100km), and estimated range."
+          "tank_capacity_liters": "Size of the diesel tank in liters. Common values: 71 L (Sprinter 314/316 CDI), 93 L (Sprinter 419/519 CDI standard). Used to compute fuel level in liters, consumption (L/100km), and estimated range.",
+          "ehg_refresh_token": "The long-lived token obtained during BLE pairing. Required for real-time sensor data via SignalR. Capture it via mitmproxy — see the README for instructions. Leave empty to disable SignalR."
         }
       }
     }

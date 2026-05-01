@@ -34,6 +34,8 @@ Unlike the official EHG app, this integration gives you **full Home Assistant po
 
 > **v2.36.6** — **Fridge door + window contact now update in real time!** Fixed depth-filter bug in PIA protobuf decoder that silently dropped real-time SCU push updates. `binary_sensor.hymer_fridge_door` and `binary_sensor.hymer_heater_window_contact` now track open/close events live.
 
+> **v2.38.0** — **EHG token configurable via Options!** You can now add or update your EHG Remote Access Refresh Token at any time via **Settings → Integrations → HYMER Connect → Configure** — no need to remove and re-add the integration. The token field is also available during re-authentication.
+
 ### Energy Dashboard
 
 Monitor your motorhome's complete power flow at a glance — solar production, lithium battery state (SOC, SoH, voltage, temperature), habitation load draw, and charging status. All data comes directly from the vehicle's SCU via SignalR, updated every 60 seconds.
@@ -212,10 +214,12 @@ A ready-to-use tile-based Lovelace dashboard optimized for mobile and desktop:
 1. Go to **Settings > Devices & Services > + Add Integration**
 2. Search for **HYMER Connect**
 3. Select your brand and enter your HYMER Connect app credentials
-4. Paste your **EHG Remote Access Refresh Token** (see below)
+4. *(Optional)* Paste your **EHG Remote Access Refresh Token** (see below) — you can also add it later via **Configure**
 5. The integration creates sensor entities for your vehicle
 
 > **Without the refresh token**, the integration provides only REST API data (vehicle model, VIN, year). **With the refresh token**, you get ~100 real-time entities via SignalR.
+
+> **Adding or updating the EHG token later:** Go to **Settings → Devices & Services → HYMER Connect → Configure**. The options dialog lets you paste or update the token at any time without removing the integration. The integration reloads automatically and starts streaming real-time data within seconds.
 
 > **⏳ Sensors show "unknown" until the vehicle connects.** The SCU (Smart Interface Unit) in your vehicle must establish a SignalR WebSocket connection to the cloud before sensor data flows. This happens automatically when:
 > - The vehicle's 12V main switch is ON, and
@@ -348,9 +352,11 @@ The token is also saved to `tools/captured_ehg_token.txt`.
 #### 8. Add the token to Home Assistant
 
 1. Go to **Settings → Devices & Services**
-2. Find **HYMER Connect** and click **Configure** (or re-add the integration)
+2. Find **HYMER Connect** and click **Configure**
 3. Paste the token into the **EHG Remote Access Refresh Token** field
-4. Save — real-time sensor data will start flowing within seconds
+4. Save — the integration reloads automatically and real-time sensor data will start flowing within seconds
+
+> **Tip:** You can update the token at any time using the same **Configure** dialog. No need to remove and re-add the integration.
 
 #### 9. Clean up your phone
 

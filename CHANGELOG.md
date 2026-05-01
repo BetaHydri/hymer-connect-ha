@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.38.0] - 2026-05-01
+
+### Added
+
+- **EHG token configurable via Options flow** — The EHG Remote Access Refresh Token can now be added or updated at any time via **Settings → Integrations → HYMER Connect → Configure**. Previously, changing the token required removing and re-adding the entire integration. The token field is pre-filled with the current value and triggers an automatic integration reload when changed.
+- **EHG token in re-authentication flow** — When the integration triggers a re-authentication (e.g. after password change), the EHG token field is now included so users can update it during the re-auth process.
+
 ## [2.37.0] - 2026-04-30
 
 ### Added
