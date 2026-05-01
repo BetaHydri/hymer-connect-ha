@@ -1,0 +1,4 @@
+{
+  "_comment": "Shared sensor mappings for ALL EHG vehicles. Entries here are loaded first, before any brand overlay. Currently empty because all shared mappings live in the hardcoded SENSOR_MAP dict in pia_decoder.py. As we migrate mappings from Python to JSON, shared entries will move here.",
+  "sensors": {}
+}

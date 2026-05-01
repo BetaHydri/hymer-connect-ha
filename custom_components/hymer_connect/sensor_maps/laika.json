@@ -1,0 +1,4 @@
+{
+  "_comment": "laika brand overlay. No vehicle-specific mappings yet. Contribute your sensor data: https://github.com/BetaHydri/hymer-connect-ha/issues",
+  "sensors": {}
+}

@@ -274,33 +274,31 @@ SENSOR_MAP: dict[tuple[int, int], tuple[str, str | None, str | None]] = {
     (121, 19): ("victron_firmware", None, None),
 }
 
+# Track whether overlays have already been loaded (prevents re-loading on
+# integration reload, since SENSOR_MAP is module-level and persists).
+_overlays_loaded: set[str] = set()
 
-def load_sensor_map_overlay(filename: str) -> int:
-    """Load a JSON overlay file and merge it into SENSOR_MAP.
+
+def _load_json_overlay(filename: str) -> int:
+    """Load a single JSON overlay file and merge it into SENSOR_MAP.
 
     The JSON file must have a ``"sensors"`` dict with keys like ``"60,1"``
     and values like ``["dometic_fridge_mode", null, null]``.
 
-    Overlay entries **override** existing entries for the same (bus, slot)
-    key, allowing brand-specific mappings to replace base definitions.
-
-    Args:
-        filename: Name of the JSON file in the ``sensor_maps/`` directory
-                  (e.g. ``"eriba_crafter.json"``).
+    Overlay entries **override** existing entries for the same (bus, slot).
 
     Returns:
         Number of entries merged.
     """
     path = _SENSOR_MAPS_DIR / filename
     if not path.is_file():
-        _LOGGER.warning("Sensor map overlay not found: %s", path)
         return 0
 
     try:
         with open(path, encoding="utf-8") as f:
             data = json.load(f)
     except (json.JSONDecodeError, OSError) as exc:
-        _LOGGER.error("Failed to load sensor map overlay %s: %s", filename, exc)
+        _LOGGER.error("Failed to load sensor map %s: %s", filename, exc)
         return 0
 
     sensors = data.get("sensors", {})
@@ -309,25 +307,56 @@ def load_sensor_map_overlay(filename: str) -> int:
         parts = key_str.split(",")
         if len(parts) != 2:
             continue
-        bus_id, sensor_id = int(parts[0]), int(parts[1])
+        bus_id, sensor_id = int(parts[0].strip()), int(parts[1].strip())
         name = value[0]
-        unit = value[1]  # None in JSON = null
+        unit = value[1]
         transform = value[2] if len(value) > 2 else None
         SENSOR_MAP[(bus_id, sensor_id)] = (name, unit, transform)
         count += 1
-
-    _LOGGER.info(
-        "Loaded sensor map overlay %s: %d entries merged into SENSOR_MAP (total: %d)",
-        filename, count, len(SENSOR_MAP),
-    )
     return count
 
 
-def get_available_overlays() -> list[str]:
-    """Return a list of available JSON overlay filenames."""
-    if not _SENSOR_MAPS_DIR.is_dir():
-        return []
-    return [f.name for f in _SENSOR_MAPS_DIR.glob("*.json")]
+def load_sensor_map(brand: str) -> None:
+    """Load sensor map overlays for the given brand.
+
+    Loads ``base.json`` (shared infrastructure) first, then the brand-specific
+    overlay (e.g. ``hymer.json``, ``eriba.json``).  Both files are optional —
+    if they don't exist, only the hardcoded SENSOR_MAP is used.
+
+    This function is idempotent: calling it multiple times with the same brand
+    is safe and will not re-load files.
+
+    Args:
+        brand: The EHG brand key (e.g. ``"hymer"``, ``"eriba"``, ``"buerstner"``).
+    """
+    cache_key = f"brand:{brand}"
+    if cache_key in _overlays_loaded:
+        return
+
+    base_count = 0
+    brand_count = 0
+
+    if "base" not in _overlays_loaded:
+        base_count = _load_json_overlay("base.json")
+        _overlays_loaded.add("base")
+        if base_count:
+            _LOGGER.info("Sensor map: loaded base.json (%d entries)", base_count)
+
+    brand_file = f"{brand}.json"
+    brand_count = _load_json_overlay(brand_file)
+    if brand_count:
+        _LOGGER.info(
+            "Sensor map: loaded %s (%d entries, %d overrides)",
+            brand_file, brand_count, brand_count,
+        )
+    else:
+        _LOGGER.debug("Sensor map: no brand overlay for '%s' (using base only)", brand)
+
+    _overlays_loaded.add(cache_key)
+    _LOGGER.info(
+        "Sensor map ready: %d total entries (base=%d + %s=%d + hardcoded)",
+        len(SENSOR_MAP), base_count, brand, brand_count,
+    )
 
 
 # Human-readable mappings for raw SCU string values

@@ -1,0 +1,5 @@
+{
+  "_comment": "HYMER brand overlay (Grand Canyon S600/S700, Mercedes Sprinter). Currently empty because all HYMER mappings are in the hardcoded SENSOR_MAP. Future: bus 1 Mercedes CAN overrides, S600-specific light buses.",
+  "_vehicles": ["Grand Canyon S 600 CrossOver", "Grand Canyon S 700"],
+  "sensors": {}
+}

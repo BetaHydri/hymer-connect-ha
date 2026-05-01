@@ -68,14 +68,10 @@ async def async_setup_entry(
     scu_urn = entry.data.get(CONF_SCU_URN, "")
     ehg_refresh_token = entry.data.get(CONF_EHG_REFRESH_TOKEN, "")
 
-    # Load brand-specific sensor map overlays (if available)
-    from .pia_decoder import get_available_overlays, load_sensor_map_overlay
+    # Load sensor map: base (shared) + brand-specific overlay
+    from .pia_decoder import load_sensor_map
 
-    overlays = get_available_overlays()
-    if overlays:
-        for overlay_file in overlays:
-            load_sensor_map_overlay(overlay_file)
-            _LOGGER.debug("Loaded sensor map overlay: %s", overlay_file)
+    load_sensor_map(brand)
 
     coordinator = HymerConnectCoordinator(
         hass, api, session, entry,
