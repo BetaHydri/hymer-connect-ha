@@ -12,8 +12,9 @@ additive mappings from other EHG vehicles:
 
 - **Bus 60** (Dometic compressor fridge) — contributed by @mvondemhagen on Eriba Car 602 (#54)
 
-Other models (e.g. the S700) may have different slot assignments — see the
-[Multi-Brand Notes](../README.md#-multi-brand-notes-eriba-bürstner-dethleffs-etc) in the README.
+Slot assignments are identical on S600 and S700 Grand Canyon models — both use
+the same SCU component types and bus IDs (confirmed by @dan-simms1 in [#37](https://github.com/BetaHydri/hymer-connect-ha/issues/37)).
+Other EHG brands may differ — see the [Multi-Brand Notes](../README.md#-multi-brand-notes-eriba-bürstner-dethleffs-etc) in the README.
 
 ### Dynamic JSON overlays (v2.41.0+, fully JSON-driven since v2.43.0)
 
@@ -160,7 +161,7 @@ Entries **without** a `platform` field are decode-only — they appear in `coord
 | (3, 7) | `chassis_battery_voltage` | V | — | Starter battery voltage |
 | (3, 8) | `fresh_water_level_ebl` | % | — | **Fresh water level** from EBL402 tank input (per S700 PR #44). Discovery: `0` with empty tank. |
 | (3, 9) | `grey_water_level_ebl` | % | — | **Grey water level** from EBL402 tank input (per S700 PR #44). Discovery: `0` with empty tank. |
-| (3, 10) | `battery_soc` | % | — | Battery state of charge. Discovery: 95%. (⚠️ S700: Ah capacity, not %) |
+| (3, 10) | `battery_soc` | % | — | Battery state of charge. Discovery: 95% |
 | (3, 11) | `battery_type` | — | — | "AGM/Lithium" |
 | (3, 12–18) | `switch_12v_1..7` | — | — | 12V switch channels |
 | (3, 19) | `solar_voltage_sentinel` | V | — | Always 3276.8 (sentinel). Real solar on bus 8 |
@@ -170,11 +171,11 @@ Entries **without** a `platform` field are decode-only — they appear in `coord
 
 ## Bus 8 — Voltronic MPP260CI (MPPT solar charger)
 
-All 7 slots are solar charger data. Some code labels in `pia_decoder.py` still
-carry legacy names from an earlier S700-based sensor map where bus 8 was the
-grey water / ventilation bus. The actual sensor values are from the Voltronic
-MPPT charger. Solar power is computed as `voltage × current` instead of reading
-the raw slot (8, 7) directly.
+All 7 slots are solar charger data — same layout on both S600 (MPP260CI) and
+S700 (MPP250Duo). Some code labels in `pia_decoder.py` still carry legacy names
+from an earlier incorrect sensor map where bus 8 was wrongly labeled as grey
+water / ventilation. Solar power is computed as `voltage × current` instead of
+reading the raw slot (8, 7) directly.
 
 | Slot | Sensor Name | Unit | Notes |
 |------|------------|------|-------|
@@ -271,18 +272,20 @@ Discovered by `tools/discover_sensors.py`. Same structure as Bus 24 (All Wohnen 
 
 ## Bus 30 — ScuSignals (GPS + SCU telemetry)
 
-Slots 1-2 are shared across S600/S700. Slots 3-7 carry GPS data on the S600
-(confirmed via live traces 2026-04-19) but LTE/BT telemetry on the S700.
+Slots 1-2 carry GPS coordinates and time. Slots 3-7 carry GPS data on the S600
+(confirmed via live traces 2026-04-19). Whether the S700 reports the same slot
+assignment for slots 3-7 is unconfirmed — Dan's APK metadata shows both GPS
+and LTE/BT labels for this bus. Slots 8-14 are SCU telemetry flags.
 
 | Slot | Sensor Name | Unit | Notes |
 |------|------------|------|-------|
-| (30, 1) | `gps_coordinates` | — | Lat,Lng string (shared S600/S700) |
-| (30, 2) | `gps_utc_time` | — | SCU internal time (shared S600/S700) |
-| (30, 3) | `gps_signal_quality` | — | Confirmed "excellent" on S600. S700: `lte_connection_quality` |
-| (30, 4) | `gps_fix` | — | Confirmed `true` on S600. S700: `lte_connection_state` |
-| (30, 5) | `gps_altitude` | m | Confirmed 13.1m on S600. S700: `scu_voltage` (V) |
-| (30, 6) | `gps_satellites` | — | Confirmed 3 on S600. S700: `paired_bt_devices` |
-| (30, 7) | `gps_heading` | ° | Confirmed 0° on S600. S700: `connected_bt_devices` |
+| (30, 1) | `gps_coordinates` | — | Lat,Lng string |
+| (30, 2) | `gps_utc_time` | — | SCU internal time |
+| (30, 3) | `gps_signal_quality` | — | Confirmed "excellent" on S600 |
+| (30, 4) | `gps_fix` | — | Confirmed `true` on S600 |
+| (30, 5) | `gps_altitude` | m | Confirmed 13.1m on S600 |
+| (30, 6) | `gps_satellites` | — | Confirmed 3 on S600 |
+| (30, 7) | `gps_heading` | ° | Confirmed 0° on S600 |
 | (30, 8) | `scu_flag_1` | — | `False` — unknown flag |
 | (30, 9) | `lte_connected` | — | `True` — LTE connection state |
 | (30, 10) | `scu_flag_2` | — | `False` — unknown flag |
@@ -382,17 +385,18 @@ misnomer kept for backwards-compatibility with existing dashboards/history.
 
 ## Bus 99 — BOS LUX LiFePO4 BMS (4×80Ah)
 
-On the S600, bus 99 carries extended CAN data (AdBlue, ambient temp, fuel range,
-gear). On the S700, the same bus carries LiFePO4 BMS data. The sensor names
-below reflect the S700 BMS layout. Legacy S600 code labels are noted where
-they differ.
+Bus 99 is the BOS LUX LiFePO4 BMS on **both** S600 and S700 — same slot layout.
+The old labels (AdBlue, engine torque, fuel range, gear) were incorrect; they
+were remnants of an earlier wrong sensor map. Corrected by @dan-simms1 in
+[#37](https://github.com/BetaHydri/hymer-connect-ha/issues/37). Legacy code
+labels are noted below for historical reference only.
 
 | Slot | Sensor Name | Unit | Notes |
 |------|------------|------|-------|
 | (99, 1) | `bms_voltage` | V | BMS pack voltage. Legacy code label: `adblue_temp` |
 | (99, 2) | `bms_current` | A | BMS current, negative = discharging. Legacy code label: `engine_torque` |
 | (99, 3) | `bms_temperature` | °C | Pack cell temperature. Legacy code label: `ambient_temp` |
-| (99, 4) | `lithium_soc` | % | Battery SOC (shared S600/S700) |
+| (99, 4) | `lithium_soc` | % | Battery SOC |
 | (99, 5) | `bms_time_remaining` | min | Estimated runtime. Legacy code label: `fuel_range` |
 | (99, 6) | `bms_state_of_health` | % | Battery SoH. Legacy code label: `current_gear` |
 | (99, 7) | `bms_capacity_remaining` | Ah | Remaining capacity. Legacy code label: `total_fuel_used` |
@@ -473,13 +477,6 @@ diesel tank capacity (default: 93 L for Sprinter 419/519 CDI).
 **Tank capacity configuration:**
 Settings → Integrations → HYMER Connect → Configure → "Diesel tank capacity"
 Range: 30–200 L. Common Sprinter values: 71 L (314/316 CDI), 93 L (419/519 CDI standard).
-
-## S700 Conflicts Legend
-
-Slots marked with ⚠️ have **different meanings on the Grand Canyon S700**.
-See [PR #44](https://github.com/BetaHydri/hymer-connect-ha/pull/44) for the
-S700 observations. A model-aware sensor map is planned to support both models
-without conflicts.
 
 ## Bus 121 — Victron MultiPlus 12/1600/70 (inverter/charger) — NON-FUNCTIONAL
 
