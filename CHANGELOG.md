@@ -5,6 +5,24 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.43.0] - 2026-05-02
+
+### Changed
+
+- **SENSOR_MAP fully migrated to JSON** — All 151 sensor decode entries (previously hardcoded in `pia_decoder.py`) now live in JSON files. The hardcoded Python dict is empty — everything is loaded from JSON at startup.
+- **Proper base/brand split** — `base.json` contains only truly universal buses shared by ALL EHG vehicles (buses 1, 3, 30, 45 = 63 entries). S600/S700-specific hardware (lights, solar, fridge, heater, BMS, Victron = 88 entries) moved to `hymer.json`. At startup the integration loads `base.json` + `{brand}.json` (e.g. `hymer.json` for HYMER users, `eriba.json` for Eriba users).
+- **Entity definitions in JSON** — Each JSON sensor entry can now carry full HA entity metadata: `platform`, `device_class`, `state_class`, `icon`, `on_value`, and `enabled`. The `sensor.py` and `binary_sensor.py` platforms dynamically build entity descriptions from this metadata at setup time.
+- **Dometic fridge entities now Eriba-only** — The 6 Dometic sensor entities and 3 binary sensor entities (bus 60) are defined in `eriba.json` only. HYMER/S600 users no longer see "unknown" Dometic entities.
+- **Victron (bus 121) disabled by default** — All Victron entities remain in `hymer.json` but with `"enabled": false`. The VE.Bus hardware is non-functional via SCU on known vehicles.
+- **Eriba overlay upgraded to object format** — `eriba.json` uses the new object format with entity metadata (backward-compatible array format still supported).
+- **Static exceptions kept for special entities** — 10 sensor entities (REST, computed, cross-referenced) and 4 binary sensor entities (computed, cross-referenced) remain hardcoded in Python because they need special value logic that JSON cannot express.
+
+### Migration Notes
+
+- **Non-breaking upgrade** — All entity unique IDs, keys, and names are identical to v2.42.0. No entities are renamed or removed. You do **not** need to remove and re-add the integration.
+- **HACS users**: Update normally via HACS. The new `base.json` and `hymer.json` files are included in the HACS deployment.
+- **Manual installs**: Ensure the entire `sensor_maps/` directory (including `base.json` and `hymer.json`) is copied to `custom_components/hymer_connect/sensor_maps/`.
+
 ## [2.42.0] - 2026-05-02
 
 ### Changed

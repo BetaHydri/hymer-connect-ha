@@ -3,9 +3,10 @@
 Decodes Base64-encoded Protobuf payloads from SignalR PiaResponse messages.
 Encodes PiaRequest subscription messages for sensor data streaming.
 
-Sensor mappings can be extended at runtime via JSON overlay files in the
-``sensor_maps/`` directory.  Call :func:`load_sensor_map` at startup
-to merge a brand-specific JSON file into the base ``SENSOR_MAP``.
+Sensor mappings and entity definitions are loaded at runtime from JSON files
+in the ``sensor_maps/`` directory.  Call :func:`load_sensor_map` at startup
+to populate :data:`SENSOR_MAP` and :data:`ENTITY_DEFS` from ``base.json``
+and an optional brand-specific overlay (e.g. ``eriba.json``).
 """
 
 from __future__ import annotations
@@ -33,234 +34,13 @@ _discovery_previous: dict[str, Any] = {}
 
 # Sensor key map: (bus_id, sensor_id) → (name, unit, value_transform)
 # value_transform: None=raw, "div10"=divide by 10, "div100"=divide by 100, "div1000"=divide by 1000, "div3600"=seconds to hours
-SENSOR_MAP: dict[tuple[int, int], tuple[str, str | None, str | None]] = {
-    # can0 — Vehicle CAN bus
-    # Note: Bus 1 slot assignments confirmed via EHG app correlation (2026-04-20).
-    # (1,2) reads 72.72 while parked = EHG app shows "Dieselfüllstand 73%" = fuel level.
-    # (1,5) reads 167040 div100 = 1670 = km to next service, not RPM.
-    # (1,9) reads ~9°C while parked cold = outside temp, not coolant.
-    #
-    # Door mapping confirmed at vehicle 2026-04-20:
-    #   Original code had (1,11)=driver, (1,12)=passenger, (1,13)=sliding.
-    #   At vehicle: "Passenger" sensor (1,12) reacted to the DRIVER door,
-    #               "Sliding" sensor (1,13) reacted to the PASSENGER door.
-    #   (1,11) did NOT update on S600 at all.
-    # Corrected: (1,12)=driver, (1,13)=passenger. (1,11)/(1,14) kept for other models.
-    # Note: S700 PR #44 maps these differently — per-vehicle overlays needed.
-    (1, 1): ("odometer", "km", "div1000"),
-    (1, 2): ("fuel_level", "%", None),
-    (1, 3): ("lock_status", None, None),
-    (1, 4): ("handbrake", None, None),
-    (1, 5): ("distance_to_service", "km", "div100"),
-    (1, 6): ("adblue_level", "%", None),
-    (1, 7): ("engine_hours", "h", "div3600"),
-    (1, 8): ("vin_text", None, None),
-    (1, 9): ("outside_temperature", "°C", None),  # Mercedes bumper sensor = cockpit "Außentemperatur" (confirmed 13→16°C tracking weather 2026-04-20)
-    (1, 10): ("engine_running", None, None),
-    (1, 11): ("wiping_water_empty", None, None),  # S700 PR #44: washer fluid low warning (was door_sliding — never updated on S600)
-    (1, 12): ("door_driver", None, None),
-    (1, 13): ("door_passenger", None, None),
-    (1, 14): ("motor_oil_warning", None, None),  # S700 PR #44: engine oil warning (was door_rear — never updated on S600)
-    (1, 15): ("ignition_state", None, None),
-    (1, 16): ("seatbelt_warning", None, None),
-    # Slots 17-22: Chassis state flags (confirmed matching S700 via PR #44).
-    # Previously mislabelled as vehicle lights — (1,18) reading "ON" while
-    # parked proved it was the parking brake, not the headlamp.
-    (1, 17): ("coolant_warning", None, None),
-    (1, 18): ("parking_brake", None, None),
-    (1, 19): ("standheizung_available", None, None),
-    (1, 20): ("standheizung_state", None, None),
-    (1, 21): ("cruise_control_can", None, None),
-    (1, 22): ("downhill_assist", None, None),
-    (1, 23): ("language", None, None),
-    # lin1 — Habitation electrics
-    (3, 1): ("main_switch", None, None),
-    (3, 2): ("power_source", None, None),
-    (3, 3): ("charger_active", None, None),
-    (3, 4): ("charge_phase", None, None),
-    (3, 5): ("battery_voltage", "V", None),
-    (3, 6): ("battery_current", "A", None),
-    (3, 7): ("chassis_battery_voltage", "V", None),
-    (3, 8): ("fresh_water_level_ebl", "%", None),   # EBL402 tank input — fresh water (per S700 PR #44, confirmed: 0 with empty tank)
-    (3, 9): ("grey_water_level_ebl", "%", None),    # EBL402 tank input — grey water (per S700 PR #44, confirmed: 0 with empty tank)
-    (3, 10): ("battery_soc", "%", None),
-    (3, 11): ("battery_type", None, None),
-    (3, 12): ("switch_12v_1", None, None),
-    (3, 13): ("switch_12v_2", None, None),
-    (3, 14): ("switch_12v_3", None, None),
-    (3, 15): ("switch_12v_4", None, None),
-    (3, 16): ("switch_12v_5", None, None),
-    (3, 17): ("switch_12v_6", None, None),
-    (3, 18): ("switch_12v_7", None, None),
-    (3, 19): ("solar_voltage_sentinel", "V", None),  # Always 3276.8 — real voltage is on bus 8
-    (3, 20): ("solar_connected", None, None),
-    (3, 21): ("solar_charger_status", None, None),
-    (3, 22): ("shoreline_connected", None, None),
-    # Light: Schlafzimmer Ambientebeleuchtung / Bedroom ambient (bus 15)
-    # sid=1: on/off, sid=2: brightness (WRITE only), sid=3: color_temp
-    (15, 1): ("light_bedroom_ambient", None, None),
-    (15, 2): ("light_bedroom_ambient_brightness", "%", None),
-    (15, 3): ("light_bedroom_ambient_color_temp", None, None),
-    # Light: Badezimmer Deckenbeleuchtung / Bathroom ceiling (bus 19)
-    (19, 1): ("light_bathroom_ceiling", None, None),
-    (19, 2): ("light_bathroom_ceiling_brightness", "%", None),
-    # lin2 — Voltronic MPP260CI solar charger + climate
-    # sid=2/3 are solar voltage/current from the Voltronic MPPT charger,
-    # confirmed by live correlation with app Energy display (fluctuating V/A).
-    (8, 1): ("gray_water_sensor", None, None),
-    (8, 2): ("solar_voltage", "V", None),
-    (8, 3): ("solar_current", "A", None),
-    (8, 4): ("vent_1", None, None),
-    (8, 5): ("vent_2", None, None),
-    (8, 6): ("vent_3", None, None),
-    (8, 7): ("tire_pressure", "bar", None),
-    # Light: Wohnraum Deckenbeleuchtung / Living room ceiling (bus 11)
-    (11, 1): ("light_living_ceiling", None, None),
-    (11, 2): ("light_living_ceiling_brightness", "%", None),
-    # Light: Wohnraum Ambientebeleuchtung / Living room ambient (bus 12)
-    (12, 1): ("light_living_ambient", None, None),
-    (12, 2): ("light_living_ambient_brightness", "%", None),
-    (12, 3): ("light_living_ambient_color_temp", None, None),
-    # GPS (30)
-    (30, 1): ("gps_coordinates", None, None),
-    (30, 2): ("gps_utc_time", None, None),
-    (30, 3): ("gps_signal_quality", None, None),
-    (30, 4): ("gps_fix", None, None),
-    (30, 5): ("gps_altitude", "m", None),
-    (30, 6): ("gps_satellites", None, None),
-    (30, 7): ("gps_heading", "\u00b0", None),
-    # Slots 8-14: SCU/LTE/BT telemetry (unconfirmed — best-guess from S700 mapping + observed values)
-    (30, 8): ("scu_flag_1", None, None),          # False — unknown flag
-    (30, 9): ("lte_connected", None, None),         # True — LTE connection state
-    (30, 10): ("scu_flag_2", None, None),           # False — unknown flag
-    (30, 11): ("paired_bt_devices", None, None),    # 3 — BT paired device count (confirmed)
-    (30, 12): ("scu_flag_5", None, None),           # True — unknown flag (not BT connected, phones are remote)
-    (30, 13): ("scu_flag_3", None, None),           # False — unknown flag
-    (30, 14): ("scu_flag_4", None, None),           # False — unknown flag
-    # Heating / Fridge control (34)
-    # sid=1: fridge power (bool), sid=2: fridge ECO mode (bool),
-    # sid=3: fridge cooling step (uint 1-5)
-    (34, 1): ("fridge_power", None, None),
-    (34, 2): ("fridge_eco", None, None),
-    (34, 3): ("fridge_cooling_step", None, None),
-    (34, 4): ("heat_ctrl_4", None, None),
-    (34, 5): ("heat_ctrl_5", None, None),
-    (34, 6): ("heat_ctrl_6", None, None),
-    (34, 7): ("heat_setpoint_raw", None, "div1000"),
-    # Light: Nachtlicht / Night light (bus 16)
-    (16, 1): ("light_nightlight", None, None),
-    (16, 2): ("light_nightlight_brightness", "%", None),
-    # Light: Küchenbeleuchtung / Kitchen (bus 21)
-    (21, 1): ("light_kitchen", None, None),
-    (21, 2): ("light_kitchen_brightness", "%", None),
-    (21, 3): ("light_kitchen_color_temp", None, None),
-    # Water tanks — bus 22 = fresh water, bus 25 = grey water
-    # Raw uint is inverted: 100 = empty (0%), 0 = full (100%)
-    # Old releases showed both as 0-6% when empty — confirmed inverted scale
-    # Water tank — bus 22 = fresh water
-    # Raw uint value is direct percentage (confirmed: empty tanks show ~15% raw = <10% in EHG app)
-    (22, 1): ("light_led_bar_2", None, None),        # Outside LED bar (same as bus 25). Confirmed at vehicle 2026-04-23: NOT fresh water.
-    (22, 2): ("light_led_bar_2_brightness", "%", None),
-    # Light group: All Wohnen / All living area lights (bus 24)
-    # Sending (24,1)=true toggles all living area lights (ceiling, ambient, kitchen, seating).
-    # NOT an individual outside light — verified 2026-04-22.
-    (24, 1): ("light_wohnen_group", None, None),
-    (24, 2): ("light_wohnen_group_brightness", "%", None),
-    (24, 3): ("light_wohnen_group_color_temp", None, None),
-    # Light: LED bar / Outside LED bar (bus 25) — confirmed via mitmproxy 2026-04-22
-    # EHG app sends on/off (25,1) + brightness (25,2) when toggling LED bar.
-    # Previously mislabelled as grey water. Issue #46 resolved.
-    (25, 1): ("light_led_bar", None, None),
-    (25, 2): ("light_led_bar_brightness", "%", None),
-    # Light group: All Privat / All private lights (bus 27) — discovered 2026-04-22
-    # Same structure as bus 24 (All Wohnen group). Sending (27,1)=true toggles
-    # all bedroom/bath lights. NOT the outside LED bar.
-    (27, 1): ("light_privat_group", None, None),
-    (27, 2): ("light_privat_group_brightness", "%", None),
-    (27, 3): ("light_privat_group_color_temp", None, None),
-    # Fridge (37) — ThetfordT2000 (Thetford N4112A on S600)
-    (37, 1): ("fridge_mode", None, None),
-    (37, 2): ("fridge_status", None, None),  # Fridge door state (0=Open, 1=Closed). SCU never pushes changes via SignalR — BLE-only for real-time updates.
-    # Dometic compressor fridge (bus 60) — moved to sensor_maps/eriba.json (v2.42.0)
-    # S600/S700 with Thetford on bus 34/37 never see bus 60 data.
-    # Light: Sitzgruppe Dachschrank / Seating area overhead (bus 43)
-    (43, 1): ("light_seating_overhead", None, None),
-    (43, 2): ("light_seating_overhead_brightness", "%", None),
-    # Light: Schlafzimmer Dachschrank / Bedroom overhead (bus 44)
-    (44, 1): ("light_bedroom_overhead", None, None),
-    (44, 2): ("light_bedroom_overhead_brightness", "%", None),
-    # SCU (45)
-    (45, 8): ("scu_connected", None, None),
-    (45, 9): ("scu_sensor_9", None, None),
-    (45, 10): ("scu_sensor_10", None, None),
-    (45, 11): ("scu_firmware", None, None),
-    # Truma (49)
-    (49, 8): ("truma_connected", None, None),
-    (49, 10): ("truma_status", None, None),
-    (49, 11): ("truma_firmware", None, None),
-    # Truma heater (58) — TrumaCombi_DE (diesel + electric variant)
-    # Verified against EHG app metadata (component_kinds.json: "TrumaCombi_DE").
-    # Comments on the right are the canonical EHG slot names; we keep our
-    # historical key names where entities/translations are already bound to
-    # them, to avoid breaking user dashboards & history. Slots (58,10/12/13/14)
-    # were generic placeholders with no entity bindings, so they get the
-    # canonical names directly.
-    (58, 4): ("heater_fuel_type", None, None),          # EHG: heater_air_energy_source ('Diesel'|'Electricity'|'Both')
-    (58, 5): ("heater_fan_speed", None, None),          # EHG: water_heater_mode ('OFF'|'ECO'|'HOT')
-    (58, 6): ("heater_fuel_type_2", None, None),        # EHG: heater_water_energy_source ('Diesel'|'Electricity'|'Both')
-    (58, 7): ("heater_state", None, None),              # EHG: panel_busy (bool)
-    (58, 8): ("heater_setpoint", "\u00b0C", None),      # EHG: target_air_temperature (rw, -273..30 °C)
-    (58, 9): ("heater_electric_power", "W", None),      # EHG: power_limit (rw, W) — electric element setpoint
-    (58, 10): ("heater_combi_error", None, None),       # EHG: combi_error (bool)
-    (58, 11): ("heater_operating_mode", None, None),    # EHG: heater_air_mode ('OFF'|'Normal'|'Automatic')
-    (58, 12): ("heater_response_error", None, None),    # EHG: response_error (bool)
-    (58, 13): ("heater_shoreline_connected", None, None),  # EHG: shoreline_connected (bool, Truma-side)
-    (58, 14): ("heater_window_switch_closed", None, None), # EHG: window_switch_closed (bool) — diesel safety interlock
-    # can2 — BOS LUX LiFePO4 Battery Management System (4×80Ah)
-    # Confirmed: S600 CrossOver has BOS 2.0 lithium battery, not AGM.
-    # Bus 99 is the BMS, not extended chassis CAN. Matches S700 (PR #44).
-    # (99,1) reads 13.35 = BMS pack voltage, not AdBlue temp.
-    # (99,6) reads 100 = SoH 100% (new battery), not gear position.
-    (99, 1): ("bms_voltage", "V", None),
-    (99, 2): ("bms_current", "A", None),
-    (99, 3): ("bms_temperature", "°C", None),
-    (99, 4): ("lithium_soc", "%", None),
-    (99, 5): ("bms_time_remaining", "min", None),
-    (99, 6): ("bms_state_of_health", "%", None),
-    (99, 7): ("bms_capacity_remaining", "Ah", None),
-    (99, 8): ("lithium_soc_2", "%", None),
-    (99, 9): ("bms_charge_detected", None, None),
-    (99, 10): ("bms_device_failure", None, None),
+# v2.43.0+: Populated at runtime from sensor_maps/base.json + brand overlay.
+SENSOR_MAP: dict[tuple[int, int], tuple[str, str | None, str | None]] = {}
 
-    # Bus 121: Victron MultiPlus 12/1600/70 (inverter/charger)
-    # Bus 121: Victron MultiPlus 12/1600/70 (inverter/charger)
-    # Extracted from EHG app metadata by Dan (SCU component 121 = VictronMultiplus).
-    # NON-FUNCTIONAL on S600: no data received even with Victron physically ON.
-    # Victron uses VE.Bus (RS-485) which is incompatible with vehicle CAN. A Cerbo
-    # GX cannot bridge this either (VE.Can ≠ vehicle CAN). EHG may have a
-    # proprietary SCU-to-Victron interface on some configurations, or these are
-    # placeholder definitions. Kept for forward compatibility.
-    # (121,1) and (121,9) are writable booleans (inverter_on, charger_on).
-    (121, 1): ("victron_inverter_on", None, None),        # rw bool
-    (121, 2): ("victron_inverter_state", None, None),      # r int
-    (121, 3): ("victron_inverter_l1_voltage", "V", None),
-    (121, 4): ("victron_inverter_l1_current", "A", None),
-    (121, 5): ("victron_inverter_l1_frequency", "Hz", None),
-    (121, 6): ("victron_inverter_l2_voltage", "V", None),
-    (121, 7): ("victron_inverter_l2_current", "A", None),
-    (121, 8): ("victron_inverter_l2_frequency", "Hz", None),
-    (121, 9): ("victron_charger_on", None, None),          # rw bool
-    (121, 10): ("victron_charger_state", None, None),
-    (121, 11): ("victron_charge_voltage", "V", None),
-    (121, 12): ("victron_charge_current", "A", None),
-    (121, 13): ("victron_max_charge_current", "A", None),  # rw
-    (121, 14): ("victron_input_current_limit", "A", None), # rw
-    (121, 15): ("victron_input_voltage", "V", None),
-    (121, 16): ("victron_input_current", "A", None),
-    (121, 17): ("victron_input_frequency", "Hz", None),
-    (121, 18): ("victron_device_failure", None, None),
-    (121, 19): ("victron_firmware", None, None),
-}
+# Entity metadata loaded from JSON overlays.  Populated by load_sensor_map().
+# Key: sensor name (str).  Value: dict with platform, device_class, etc.
+# Only entries with a ``"platform"`` field in the JSON appear here.
+ENTITY_DEFS: dict[str, dict[str, Any]] = {}
 
 # Track whether overlays have already been loaded (prevents re-loading on
 # integration reload, since SENSOR_MAP is module-level and persists).
@@ -268,10 +48,16 @@ _overlays_loaded: set[str] = set()
 
 
 def _load_json_overlay(filename: str) -> int:
-    """Load a single JSON overlay file and merge it into SENSOR_MAP.
+    """Load a single JSON overlay file and merge into SENSOR_MAP / ENTITY_DEFS.
 
-    The JSON file must have a ``"sensors"`` dict with keys like ``"60,1"``
-    and values like ``["dometic_fridge_mode", null, null]``.
+    Supports two value formats per sensor entry:
+
+    * **Array** (v2.42 compat): ``["name", "unit", "transform"]``
+    * **Object** (v2.43+): ``{"name": "…", "unit": "…", "platform": "sensor", …}``
+
+    Object entries with a ``"platform"`` key are also stored in
+    :data:`ENTITY_DEFS` so that ``sensor.py`` / ``binary_sensor.py`` can
+    build HA entity descriptions at runtime.
 
     Overlay entries **override** existing entries for the same (bus, slot).
 
@@ -289,6 +75,11 @@ def _load_json_overlay(filename: str) -> int:
         _LOGGER.error("Failed to load sensor map %s: %s", filename, exc)
         return 0
 
+    _ENTITY_FIELDS = (
+        "platform", "device_class", "state_class", "icon",
+        "on_value", "enabled", "entity_category",
+    )
+
     sensors = data.get("sensors", {})
     count = 0
     for key_str, value in sensors.items():
@@ -296,9 +87,25 @@ def _load_json_overlay(filename: str) -> int:
         if len(parts) != 2:
             continue
         bus_id, sensor_id = int(parts[0].strip()), int(parts[1].strip())
-        name = value[0]
-        unit = value[1]
-        transform = value[2] if len(value) > 2 else None
+
+        if isinstance(value, list):
+            # v2.42 backward compat: [name, unit, transform]
+            name = value[0]
+            unit = value[1] if len(value) > 1 else None
+            transform = value[2] if len(value) > 2 else None
+        elif isinstance(value, dict):
+            name = value.get("name", f"bus{bus_id}_s{sensor_id}")
+            unit = value.get("unit")
+            transform = value.get("transform")
+            # Store entity metadata when a platform is declared
+            if "platform" in value:
+                meta = {k: value[k] for k in _ENTITY_FIELDS if k in value}
+                if unit is not None:
+                    meta["unit"] = unit
+                ENTITY_DEFS[name] = meta
+        else:
+            continue
+
         SENSOR_MAP[(bus_id, sensor_id)] = (name, unit, transform)
         count += 1
     return count
@@ -307,9 +114,13 @@ def _load_json_overlay(filename: str) -> int:
 def load_sensor_map(brand: str) -> None:
     """Load sensor map overlays for the given brand.
 
-    Loads ``base.json`` (shared infrastructure) first, then the brand-specific
-    overlay (e.g. ``hymer.json``, ``eriba.json``).  Both files are optional —
-    if they don't exist, only the hardcoded SENSOR_MAP is used.
+    Loads ``base.json`` (shared across all EHG brands) first, then the
+    brand-specific overlay (e.g. ``eriba.json``).  Populates both
+    :data:`SENSOR_MAP` (decode layer) and :data:`ENTITY_DEFS` (entity
+    metadata for ``sensor.py`` / ``binary_sensor.py``).
+
+    ``base.json`` is required — if missing, an error is logged and no
+    sensor mappings will be available.  The brand overlay is optional.
 
     This function is idempotent: calling it multiple times with the same brand
     is safe and will not re-load files.
@@ -329,6 +140,11 @@ def load_sensor_map(brand: str) -> None:
         _overlays_loaded.add("base")
         if base_count:
             _LOGGER.info("Sensor map: loaded base.json (%d entries)", base_count)
+        else:
+            _LOGGER.error(
+                "Sensor map: base.json missing or empty — no sensor mappings loaded! "
+                "Ensure sensor_maps/base.json is present in custom_components/hymer_connect/."
+            )
 
     brand_file = f"{brand}.json"
     brand_count = _load_json_overlay(brand_file)

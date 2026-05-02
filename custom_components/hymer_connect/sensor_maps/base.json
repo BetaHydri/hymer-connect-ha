@@ -1,16 +1,375 @@
 {
-  "_comment": "Shared sensor mappings for ALL EHG vehicles.",
+  "_comment": "Shared sensor & entity definitions for ALL EHG vehicles (v2.43.0+).",
   "_doc": [
-    "Keys are 'bus_id,sensor_id' strings (e.g. '60,1').",
-    "Values are arrays: [sensor_name, unit_or_null, transform_or_null].",
-    "Transforms: null=raw, 'div10', 'div100', 'div1000', 'div3600'.",
-    "Entries here override the hardcoded SENSOR_MAP in pia_decoder.py.",
-    "Use this file for sensors shared across ALL brands."
+    "Only entries guaranteed on every SCU belong here (buses 1, 3, 30, 45).",
+    "Brand/model-specific buses go in hymer.json, eriba.json, etc.",
+    "",
+    "Keys: bus_id,sensor_id. Values: objects with decode + entity metadata.",
+    "Decode: name (required), unit, transform (div10/div100/div1000/div3600).",
+    "Entity: platform (sensor|binary_sensor), device_class, state_class,",
+    "        icon, on_value (binary only), enabled (default true).",
+    "No platform = decode-only (value stored but no HA entity created).",
+    "Array format [name, unit, transform] still supported for backward compat."
   ],
-  "_example": {
-    "60,1": ["dometic_fridge_mode", null, null],
-    "99,1": ["bms_voltage", "V", null],
-    "1,1": ["odometer", "km", "div1000"]
-  },
-  "sensors": {}
+  "sensors": {
+    "1,1": {
+      "name": "odometer",
+      "unit": "km",
+      "transform": "div1000",
+      "platform": "sensor",
+      "device_class": "distance",
+      "state_class": "total_increasing",
+      "icon": "mdi:counter"
+    },
+    "1,2": {
+      "name": "fuel_level",
+      "unit": "%",
+      "platform": "sensor",
+      "state_class": "measurement",
+      "icon": "mdi:fuel"
+    },
+    "1,3": {
+      "name": "lock_status",
+      "platform": "binary_sensor",
+      "device_class": "lock",
+      "on_value": "Unlocked",
+      "icon": "mdi:lock"
+    },
+    "1,4": {
+      "name": "handbrake",
+      "platform": "binary_sensor",
+      "on_value": 1,
+      "icon": "mdi:car-brake-parking"
+    },
+    "1,5": {
+      "name": "distance_to_service",
+      "unit": "km",
+      "transform": "div100",
+      "platform": "sensor",
+      "state_class": "measurement",
+      "icon": "mdi:wrench-clock"
+    },
+    "1,6": {
+      "name": "adblue_level",
+      "unit": "%",
+      "platform": "sensor",
+      "state_class": "measurement",
+      "icon": "mdi:car-coolant-level"
+    },
+    "1,7": {
+      "name": "engine_hours",
+      "unit": "h",
+      "transform": "div3600",
+      "platform": "sensor",
+      "state_class": "total_increasing",
+      "icon": "mdi:engine-outline"
+    },
+    "1,8": {
+      "name": "vin_text"
+    },
+    "1,9": {
+      "name": "outside_temperature",
+      "unit": "°C",
+      "platform": "sensor",
+      "device_class": "temperature",
+      "state_class": "measurement",
+      "icon": "mdi:thermometer"
+    },
+    "1,10": {
+      "name": "engine_running",
+      "platform": "binary_sensor",
+      "device_class": "running",
+      "icon": "mdi:engine"
+    },
+    "1,11": {
+      "name": "wiping_water_empty",
+      "platform": "binary_sensor",
+      "device_class": "problem",
+      "on_value": "On",
+      "icon": "mdi:wiper-wash"
+    },
+    "1,12": {
+      "name": "door_driver",
+      "platform": "binary_sensor",
+      "device_class": "door",
+      "on_value": "Open",
+      "icon": "mdi:car-door"
+    },
+    "1,13": {
+      "name": "door_passenger",
+      "platform": "binary_sensor",
+      "device_class": "door",
+      "on_value": "Open",
+      "icon": "mdi:car-door"
+    },
+    "1,14": {
+      "name": "motor_oil_warning",
+      "platform": "binary_sensor",
+      "device_class": "problem",
+      "on_value": "On",
+      "icon": "mdi:oil"
+    },
+    "1,15": {
+      "name": "ignition_state",
+      "platform": "sensor",
+      "icon": "mdi:key"
+    },
+    "1,16": {
+      "name": "seatbelt_warning"
+    },
+    "1,17": {
+      "name": "coolant_warning",
+      "platform": "binary_sensor",
+      "device_class": "problem",
+      "on_value": "On",
+      "icon": "mdi:coolant-temperature"
+    },
+    "1,18": {
+      "name": "parking_brake",
+      "platform": "binary_sensor",
+      "on_value": "On",
+      "icon": "mdi:car-brake-parking"
+    },
+    "1,19": {
+      "name": "standheizung_available",
+      "platform": "binary_sensor",
+      "on_value": "On",
+      "icon": "mdi:radiator"
+    },
+    "1,20": {
+      "name": "standheizung_state",
+      "platform": "binary_sensor",
+      "device_class": "heat",
+      "on_value": "On",
+      "icon": "mdi:radiator"
+    },
+    "1,21": {
+      "name": "cruise_control_can",
+      "platform": "binary_sensor",
+      "on_value": "On",
+      "icon": "mdi:car-cruise-control"
+    },
+    "1,22": {
+      "name": "downhill_assist",
+      "platform": "binary_sensor",
+      "on_value": "On",
+      "icon": "mdi:arrow-down-bold"
+    },
+    "1,23": {
+      "name": "language"
+    },
+    "3,1": {
+      "name": "main_switch",
+      "platform": "binary_sensor",
+      "device_class": "power",
+      "on_value": "On",
+      "icon": "mdi:power"
+    },
+    "3,2": {
+      "name": "power_source",
+      "platform": "sensor",
+      "icon": "mdi:power-plug"
+    },
+    "3,3": {
+      "name": "charger_active",
+      "platform": "binary_sensor",
+      "device_class": "battery_charging",
+      "icon": "mdi:battery-charging"
+    },
+    "3,4": {
+      "name": "charge_phase"
+    },
+    "3,5": {
+      "name": "battery_voltage",
+      "unit": "V",
+      "platform": "sensor",
+      "device_class": "voltage",
+      "state_class": "measurement",
+      "icon": "mdi:battery"
+    },
+    "3,6": {
+      "name": "battery_current",
+      "unit": "A",
+      "platform": "sensor",
+      "device_class": "current",
+      "state_class": "measurement",
+      "icon": "mdi:current-dc"
+    },
+    "3,7": {
+      "name": "chassis_battery_voltage",
+      "unit": "V",
+      "platform": "sensor",
+      "device_class": "voltage",
+      "state_class": "measurement",
+      "icon": "mdi:car-battery"
+    },
+    "3,8": {
+      "name": "fresh_water_level_ebl",
+      "unit": "%",
+      "platform": "sensor",
+      "state_class": "measurement",
+      "icon": "mdi:water"
+    },
+    "3,9": {
+      "name": "grey_water_level_ebl",
+      "unit": "%",
+      "platform": "sensor",
+      "state_class": "measurement",
+      "icon": "mdi:water-opacity"
+    },
+    "3,10": {
+      "name": "battery_soc",
+      "unit": "%"
+    },
+    "3,11": {
+      "name": "battery_type",
+      "platform": "sensor",
+      "icon": "mdi:battery-check"
+    },
+    "3,12": {
+      "name": "switch_12v_1"
+    },
+    "3,13": {
+      "name": "switch_12v_2"
+    },
+    "3,14": {
+      "name": "switch_12v_3"
+    },
+    "3,15": {
+      "name": "switch_12v_4"
+    },
+    "3,16": {
+      "name": "switch_12v_5"
+    },
+    "3,17": {
+      "name": "switch_12v_6"
+    },
+    "3,18": {
+      "name": "switch_12v_7"
+    },
+    "3,19": {
+      "name": "solar_voltage_sentinel",
+      "unit": "V"
+    },
+    "3,20": {
+      "name": "solar_connected",
+      "platform": "binary_sensor",
+      "device_class": "plug",
+      "on_value": 1,
+      "icon": "mdi:solar-power"
+    },
+    "3,21": {
+      "name": "solar_charger_status",
+      "platform": "sensor",
+      "icon": "mdi:solar-power-variant"
+    },
+    "3,22": {
+      "name": "shoreline_connected",
+      "platform": "binary_sensor",
+      "device_class": "plug",
+      "on_value": 1,
+      "icon": "mdi:power-plug"
+    },
+    "30,1": {
+      "name": "gps_coordinates",
+      "platform": "sensor",
+      "icon": "mdi:map-marker"
+    },
+    "30,2": {
+      "name": "gps_utc_time",
+      "platform": "sensor",
+      "icon": "mdi:clock-outline"
+    },
+    "30,3": {
+      "name": "gps_signal_quality",
+      "platform": "sensor",
+      "icon": "mdi:signal"
+    },
+    "30,4": {
+      "name": "gps_fix",
+      "platform": "binary_sensor",
+      "device_class": "connectivity",
+      "icon": "mdi:crosshairs-gps"
+    },
+    "30,5": {
+      "name": "gps_altitude",
+      "unit": "m",
+      "platform": "sensor",
+      "state_class": "measurement",
+      "icon": "mdi:altimeter"
+    },
+    "30,6": {
+      "name": "gps_satellites",
+      "platform": "sensor",
+      "state_class": "measurement",
+      "icon": "mdi:satellite-variant"
+    },
+    "30,7": {
+      "name": "gps_heading",
+      "unit": "°",
+      "platform": "sensor",
+      "state_class": "measurement",
+      "icon": "mdi:compass"
+    },
+    "30,8": {
+      "name": "scu_flag_1",
+      "platform": "sensor",
+      "icon": "mdi:help-circle-outline",
+      "enabled": false
+    },
+    "30,9": {
+      "name": "lte_connected",
+      "platform": "sensor",
+      "icon": "mdi:signal-4g",
+      "enabled": false
+    },
+    "30,10": {
+      "name": "scu_flag_2",
+      "platform": "sensor",
+      "icon": "mdi:help-circle-outline",
+      "enabled": false
+    },
+    "30,11": {
+      "name": "paired_bt_devices",
+      "platform": "sensor",
+      "state_class": "measurement",
+      "icon": "mdi:bluetooth-connect",
+      "enabled": false
+    },
+    "30,12": {
+      "name": "scu_flag_5",
+      "platform": "sensor",
+      "icon": "mdi:help-circle-outline",
+      "enabled": false
+    },
+    "30,13": {
+      "name": "scu_flag_3",
+      "platform": "sensor",
+      "icon": "mdi:help-circle-outline",
+      "enabled": false
+    },
+    "30,14": {
+      "name": "scu_flag_4",
+      "platform": "sensor",
+      "icon": "mdi:help-circle-outline",
+      "enabled": false
+    },
+    "45,8": {
+      "name": "scu_connected",
+      "platform": "binary_sensor",
+      "device_class": "connectivity",
+      "icon": "mdi:access-point"
+    },
+    "45,9": {
+      "name": "scu_sensor_9"
+    },
+    "45,10": {
+      "name": "scu_sensor_10"
+    },
+    "45,11": {
+      "name": "scu_firmware",
+      "platform": "sensor",
+      "icon": "mdi:chip"
+    }
+  }
 }

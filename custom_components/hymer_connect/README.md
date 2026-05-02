@@ -12,7 +12,7 @@ Custom integration to connect your HYMER / Erwin Hymer Group motorhome or carava
 
 > **⚠️ Important:** Real-time sensor data (70+ entities: GPS, battery, doors, heater, fridge, etc.) requires an **EHG Remote Access Refresh Token**. This token must be captured **once** from your phone using mitmproxy during the initial setup. Without it, only basic vehicle metadata (model, VIN, year) is available. See [Obtaining the EHG Refresh Token](#obtaining-the-ehg-refresh-token) for the step-by-step guide.
 
-> **v2.36.6** — **Fridge door + window contact now update in real time!** Fixed depth-filter bug in PIA protobuf decoder that silently dropped real-time SCU push updates at depth 4. `binary_sensor.hymer_fridge_door` and `binary_sensor.hymer_heater_window_contact` now track open/close events. See [CHANGELOG](CHANGELOG.md) for full history.
+> **v2.43.0** — **JSON-driven sensor & entity definitions!** All sensor mappings and entity metadata now loaded from `sensor_maps/base.json` + `{brand}.json`. Non-HYMER users can add sensors and entities by editing their brand's JSON file — no Python code required. See [CHANGELOG](CHANGELOG.md) for full history.
 
 > **v2.30.2** — **Vehicle-verified sensor mappings!** Doors confirmed (driver + passenger on PIA). Fuel consumption sensors + configurable tank capacity.
 

@@ -14,100 +14,109 @@ additive mappings from other EHG vehicles:
 Other models (e.g. the S700) may have different slot assignments — see the
 [Multi-Brand Notes](../README.md#-multi-brand-notes-eriba-bürstner-dethleffs-etc) in the README.
 
-### Dynamic JSON overlays (v2.41.0+)
+### Dynamic JSON overlays (v2.41.0+, fully JSON-driven since v2.43.0)
 
-Starting with v2.41.0, the integration supports per-brand JSON overlay files
-in `custom_components/hymer_connect/sensor_maps/`. At startup, it loads
-`base.json` (shared) + `{brand}.json` (brand-specific), merging entries into
-the hardcoded `SENSOR_MAP`. This allows brand-specific bus overrides without
-modifying Python code.
+Starting with v2.43.0, **all** sensor mappings and entity definitions are loaded
+from JSON files in `custom_components/hymer_connect/sensor_maps/`.  The hardcoded
+Python `SENSOR_MAP` dict is empty — everything comes from JSON.
 
-#### JSON file format
+At startup the integration loads `base.json` (universal buses shared by all EHG
+brands) + `{brand}.json` (brand-specific overlays, e.g. `hymer.json` for S600/S700).
+
+#### JSON file format (v2.43.0+ object format)
+
+Each sensor entry is a JSON object with **decode fields** (how the raw protobuf
+value is processed) and optional **entity fields** (how the HA entity is configured):
 
 ```json
 {
   "_comment": "Description (ignored by loader)",
   "sensors": {
-    "bus_id,sensor_id": ["sensor_name", "unit_or_null", "transform_or_null"]
-  }
-}
-```
-
-| Field | Description | Examples |
-|-------|-------------|----------|
-| **Key** | `"bus_id,sensor_id"` string | `"60,1"`, `"1,9"`, `"99,1"` |
-| **sensor_name** | Internal sensor name (lowercase, underscores) | `"dometic_fridge_mode"`, `"bms_voltage"` |
-| **unit** | HA unit string or `null` | `"V"`, `"A"`, `"°C"`, `"%"`, `"W"`, `"km"`, `"bar"`, `null` |
-| **transform** | Value transform or `null` | `null` (raw), `"div10"`, `"div100"`, `"div1000"`, `"div3600"` |
-
-Fields starting with `_` (e.g. `_comment`, `_doc`, `_example`) are ignored by the loader.
-
-#### Available overlay files
-
-| File | Loaded when | Purpose |
-|------|-------------|---------|
-| `base.json` | Always (first) | Shared sensors for all EHG vehicles |
-| `hymer.json` | Brand = HYMER | HYMER-specific overrides (Mercedes CAN, Thetford fridge, S600 lights) |
-| `eriba.json` | Brand = Eriba | Eriba-specific overrides (VW Crafter CAN, Dometic fridge, Eriba lights) |
-| `buerstner.json` | Brand = Bürstner | Community-contributed |
-| `dethleffs.json` | Brand = Dethleffs | Community-contributed |
-| `lmc.json` | Brand = LMC | Community-contributed |
-| `niesmann-bischoff.json` | Brand = Niesmann+Bischoff | Community-contributed |
-| `sunlight.json` | Brand = Sunlight | Community-contributed |
-| `carado.json` | Brand = Carado | Community-contributed |
-| `laika.json` | Brand = Laika | Community-contributed |
-| `freeontour.json` | Brand = FreeOnTour | Community-contributed |
-
-#### Loading order and precedence
-
-```
-1. SENSOR_MAP (hardcoded Python dict)    ← base mappings, 161 entries
-2. + base.json (shared overrides)        ← overrides hardcoded entries
-3. + {brand}.json (brand overrides)      ← overrides base + hardcoded entries
-```
-
-Later entries win — a brand file can override anything in base or the hardcoded map.
-
-#### Current scope and roadmap
-
-| Phase | Status | What JSON controls |
-|-------|--------|--------------------|
-| **Phase 1** (v2.41.0) | ✅ Done | Sensor name, unit, and transform for `(bus, slot)` pairs |
-| **Phase 2** (planned) | 🔜 | Migrate all hardcoded SENSOR_MAP entries to JSON — Python dict becomes empty |
-| **Phase 3** (future) | 📋 | Full entity definitions in JSON: type (sensor/binary_sensor/light/switch), device_class, icon, state_class, writeable controls |
-
-**Phase 3 target format:**
-
-```json
-{
-  "sensors": {
-    "60,1": {
-      "name": "dometic_fridge_mode",
-      "type": "sensor",
-      "device_class": null,
-      "state_class": null,
-      "icon": "mdi:fridge",
-      "unit": null
+    "1,1": {
+      "name": "odometer",
+      "unit": "km",
+      "transform": "div1000",
+      "platform": "sensor",
+      "device_class": "distance",
+      "state_class": "total_increasing",
+      "icon": "mdi:counter"
     },
-    "60,8": {
-      "name": "dometic_fridge_power",
-      "type": "binary_sensor",
-      "device_class": "power",
-      "icon": "mdi:fridge"
+    "1,10": {
+      "name": "engine_running",
+      "platform": "binary_sensor",
+      "device_class": "running",
+      "icon": "mdi:engine"
     },
-    "43,1": {
-      "name": "light_dining",
-      "type": "light",
-      "bus_id": 43,
-      "has_brightness": true,
-      "has_color_temp": false,
-      "icon": "mdi:ceiling-light"
+    "1,8": {
+      "name": "vin_text"
     }
   }
 }
 ```
 
-This would allow community contributors to define **complete HA entities** — sensors, binary sensors, lights, switches — purely from JSON, without any Python code changes.
+**Decode fields** (how the raw value is processed):
+
+| Field | Required | Description | Examples |
+|-------|----------|-------------|----------|
+| `name` | **Yes** | Sensor name — becomes the HA entity key and translation key | `"odometer"`, `"bms_voltage"` |
+| `unit` | No | HA unit string | `"V"`, `"A"`, `"°C"`, `"%"`, `"W"`, `"km"`, `"bar"`, `"m"`, `"min"`, `"Ah"`, `"h"` |
+| `transform` | No | Value transform | `"div10"`, `"div100"`, `"div1000"`, `"div3600"` (seconds → hours) |
+
+**Entity fields** (how the HA entity is configured — all optional):
+
+| Field | Description | Examples |
+|-------|-------------|----------|
+| `platform` | `"sensor"` or `"binary_sensor"`. If omitted, the entry is decode-only (value stored in coordinator data but no HA entity created). | `"sensor"`, `"binary_sensor"` |
+| `device_class` | HA device class string | `"temperature"`, `"voltage"`, `"current"`, `"door"`, `"running"`, `"power"`, `"lock"` |
+| `state_class` | HA state class | `"measurement"`, `"total_increasing"` |
+| `icon` | MDI icon | `"mdi:thermometer"`, `"mdi:battery"` |
+| `on_value` | Binary sensor only — the raw value that means "on" | `"Open"`, `"On"`, `1`, `true` (default: `true`) |
+| `enabled` | Set to `false` to disable the entity by default (user can enable in entity registry) | `false` |
+
+Fields starting with `_` (e.g. `_comment`, `_doc`, `_vehicles`) are ignored by the loader.
+
+> **Backward compat:** The old v2.41/v2.42 array format `["name", "unit", "transform"]` is still accepted for decode-only entries but does not support entity metadata.
+
+#### Available overlay files
+
+| File | Entries | Buses | Loaded when | Purpose |
+|------|---------|-------|-------------|---------|
+| `base.json` | 63 | 1, 3, 30, 45 | Always (first) | Universal sensors shared by ALL EHG vehicles |
+| `hymer.json` | 88 | 8, 11–27, 34, 37, 43–44, 49, 58, 99, 121 | Brand = HYMER | S600/S700: lights, Voltronic solar, Thetford fridge, Truma, BOS BMS, Victron |
+| `eriba.json` | 33 | 18, 59, 60, 93 | Brand = Eriba | Eriba Car 602: Dometic fridge, shower light, Truma AC, furniture light |
+| `buerstner.json` | — | — | Brand = Bürstner | Community-contributed (empty) |
+| `dethleffs.json` | — | — | Brand = Dethleffs | Community-contributed (empty) |
+| `lmc.json` | — | — | Brand = LMC | Community-contributed (empty) |
+| `niesmann-bischoff.json` | — | — | Brand = Niesmann+Bischoff | Community-contributed (empty) |
+| `sunlight.json` | — | — | Brand = Sunlight | Community-contributed (empty) |
+| `carado.json` | — | — | Brand = Carado | Community-contributed (empty) |
+| `laika.json` | — | — | Brand = Laika | Community-contributed (empty) |
+| `freeontour.json` | — | — | Brand = FreeOnTour | Community-contributed (empty) |
+
+#### Loading order and precedence
+
+```
+1. base.json (universal sensors)         ← 63 entries (buses 1, 3, 30, 45)
+2. + {brand}.json (brand-specific)       ← overrides base entries for same (bus, slot)
+```
+
+Later entries win — a brand file can override anything in base.
+
+#### How entity creation works (v2.43.0+)
+
+```
+JSON "sensors" entry with "platform" field
+    ↓
+pia_decoder.load_sensor_map() stores in SENSOR_MAP (decode) + ENTITY_DEFS (entity metadata)
+    ↓
+sensor.py / binary_sensor.py call _build_dynamic_sensors() / _build_dynamic_binary_sensors()
+    ↓
+HA entity descriptions created from ENTITY_DEFS at setup time
+    ↓
+Entities appear in HA with correct device_class, icon, state_class, etc.
+```
+
+Entries **without** a `platform` field are decode-only — they appear in `coordinator.data["signalr_sensors"]` but don't create an HA entity. This is useful for raw slots that are consumed by computed sensors (e.g. `lithium_soc` is decode-only, consumed by the static `battery_soc` entity which reads from it).
 
 ## Bus 1 — VehicleSignal (Mercedes Sprinter chassis CAN)
 

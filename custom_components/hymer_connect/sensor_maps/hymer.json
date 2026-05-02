@@ -1,6 +1,491 @@
 {
   "_comment": "HYMER brand overlay (Grand Canyon S600/S700, Mercedes Sprinter).",
-  "_doc": "Add HYMER-specific sensor overrides here. Entries override base.json and the hardcoded SENSOR_MAP.",
-  "_vehicles": ["Grand Canyon S 600 CrossOver", "Grand Canyon S 700"],
-  "sensors": {}
+  "_doc": "S600/S700-specific buses: lights (11-27, 43-44), Voltronic solar (8), Thetford fridge (34/37), Truma heater (49/58), BOS BMS (99), Victron (121).",
+  "_vehicles": [
+    "Grand Canyon S 600 CrossOver",
+    "Grand Canyon S 700"
+  ],
+  "sensors": {
+    "8,1": {
+      "name": "gray_water_sensor"
+    },
+    "8,2": {
+      "name": "solar_voltage",
+      "unit": "V",
+      "platform": "sensor",
+      "device_class": "voltage",
+      "state_class": "measurement",
+      "icon": "mdi:solar-power-variant"
+    },
+    "8,3": {
+      "name": "solar_current",
+      "unit": "A",
+      "platform": "sensor",
+      "device_class": "current",
+      "state_class": "measurement",
+      "icon": "mdi:solar-power"
+    },
+    "8,4": {
+      "name": "vent_1"
+    },
+    "8,5": {
+      "name": "vent_2"
+    },
+    "8,6": {
+      "name": "vent_3"
+    },
+    "8,7": {
+      "name": "tire_pressure",
+      "unit": "bar",
+      "platform": "sensor",
+      "device_class": "pressure",
+      "state_class": "measurement",
+      "icon": "mdi:car-tire-alert"
+    },
+    "11,1": {
+      "name": "light_living_ceiling",
+      "platform": "binary_sensor",
+      "device_class": "light",
+      "icon": "mdi:ceiling-light"
+    },
+    "11,2": {
+      "name": "light_living_ceiling_brightness",
+      "unit": "%",
+      "platform": "sensor",
+      "state_class": "measurement",
+      "icon": "mdi:ceiling-light"
+    },
+    "12,1": {
+      "name": "light_living_ambient",
+      "platform": "binary_sensor",
+      "device_class": "light",
+      "icon": "mdi:wall-sconce-flat"
+    },
+    "12,2": {
+      "name": "light_living_ambient_brightness",
+      "unit": "%",
+      "platform": "sensor",
+      "state_class": "measurement",
+      "icon": "mdi:wall-sconce-flat"
+    },
+    "12,3": {
+      "name": "light_living_ambient_color_temp"
+    },
+    "15,1": {
+      "name": "light_bedroom_ambient",
+      "platform": "binary_sensor",
+      "device_class": "light",
+      "icon": "mdi:wall-sconce-flat"
+    },
+    "15,2": {
+      "name": "light_bedroom_ambient_brightness",
+      "unit": "%"
+    },
+    "15,3": {
+      "name": "light_bedroom_ambient_color_temp"
+    },
+    "16,1": {
+      "name": "light_nightlight",
+      "platform": "binary_sensor",
+      "device_class": "light",
+      "icon": "mdi:lightbulb-night"
+    },
+    "16,2": {
+      "name": "light_nightlight_brightness",
+      "unit": "%"
+    },
+    "19,1": {
+      "name": "light_bathroom_ceiling",
+      "platform": "binary_sensor",
+      "device_class": "light",
+      "icon": "mdi:ceiling-light"
+    },
+    "19,2": {
+      "name": "light_bathroom_ceiling_brightness",
+      "unit": "%",
+      "platform": "sensor",
+      "state_class": "measurement",
+      "icon": "mdi:ceiling-light"
+    },
+    "21,1": {
+      "name": "light_kitchen",
+      "platform": "binary_sensor",
+      "device_class": "light",
+      "icon": "mdi:ceiling-light"
+    },
+    "21,2": {
+      "name": "light_kitchen_brightness",
+      "unit": "%",
+      "platform": "sensor",
+      "state_class": "measurement",
+      "icon": "mdi:ceiling-light"
+    },
+    "21,3": {
+      "name": "light_kitchen_color_temp"
+    },
+    "22,1": {
+      "name": "light_led_bar_2"
+    },
+    "22,2": {
+      "name": "light_led_bar_2_brightness",
+      "unit": "%",
+      "platform": "sensor",
+      "state_class": "measurement",
+      "icon": "mdi:led-strip",
+      "enabled": false
+    },
+    "24,1": {
+      "name": "light_wohnen_group"
+    },
+    "24,2": {
+      "name": "light_wohnen_group_brightness",
+      "unit": "%"
+    },
+    "24,3": {
+      "name": "light_wohnen_group_color_temp"
+    },
+    "25,1": {
+      "name": "light_led_bar"
+    },
+    "25,2": {
+      "name": "light_led_bar_brightness",
+      "unit": "%"
+    },
+    "27,1": {
+      "name": "light_privat_group"
+    },
+    "27,2": {
+      "name": "light_privat_group_brightness",
+      "unit": "%"
+    },
+    "27,3": {
+      "name": "light_privat_group_color_temp"
+    },
+    "34,1": {
+      "name": "fridge_power"
+    },
+    "34,2": {
+      "name": "fridge_eco"
+    },
+    "34,3": {
+      "name": "fridge_cooling_step"
+    },
+    "34,4": {
+      "name": "heat_ctrl_4"
+    },
+    "34,5": {
+      "name": "heat_ctrl_5"
+    },
+    "34,6": {
+      "name": "heat_ctrl_6"
+    },
+    "34,7": {
+      "name": "heat_setpoint_raw",
+      "transform": "div1000"
+    },
+    "37,1": {
+      "name": "fridge_mode",
+      "platform": "sensor",
+      "icon": "mdi:fridge"
+    },
+    "37,2": {
+      "name": "fridge_status",
+      "platform": "sensor",
+      "icon": "mdi:fridge-outline"
+    },
+    "43,1": {
+      "name": "light_seating_overhead",
+      "platform": "binary_sensor",
+      "device_class": "light",
+      "icon": "mdi:ceiling-light"
+    },
+    "43,2": {
+      "name": "light_seating_overhead_brightness",
+      "unit": "%",
+      "platform": "sensor",
+      "state_class": "measurement",
+      "icon": "mdi:ceiling-light"
+    },
+    "44,1": {
+      "name": "light_bedroom_overhead",
+      "platform": "binary_sensor",
+      "device_class": "light",
+      "icon": "mdi:ceiling-light"
+    },
+    "44,2": {
+      "name": "light_bedroom_overhead_brightness",
+      "unit": "%",
+      "platform": "sensor",
+      "state_class": "measurement",
+      "icon": "mdi:ceiling-light"
+    },
+    "49,8": {
+      "name": "truma_connected",
+      "platform": "binary_sensor",
+      "device_class": "connectivity",
+      "icon": "mdi:radiator"
+    },
+    "49,10": {
+      "name": "truma_status",
+      "platform": "sensor",
+      "icon": "mdi:radiator"
+    },
+    "49,11": {
+      "name": "truma_firmware",
+      "platform": "sensor",
+      "icon": "mdi:chip"
+    },
+    "58,4": {
+      "name": "heater_fuel_type",
+      "platform": "sensor",
+      "icon": "mdi:gas-burner"
+    },
+    "58,5": {
+      "name": "heater_fan_speed",
+      "platform": "sensor",
+      "icon": "mdi:fan",
+      "enabled": false
+    },
+    "58,6": {
+      "name": "heater_fuel_type_2"
+    },
+    "58,7": {
+      "name": "heater_state",
+      "platform": "sensor",
+      "icon": "mdi:radiator"
+    },
+    "58,8": {
+      "name": "heater_setpoint",
+      "unit": "°C",
+      "platform": "sensor",
+      "device_class": "temperature",
+      "icon": "mdi:thermostat"
+    },
+    "58,9": {
+      "name": "heater_electric_power",
+      "unit": "W",
+      "platform": "sensor",
+      "device_class": "power",
+      "state_class": "measurement",
+      "icon": "mdi:radiator"
+    },
+    "58,10": {
+      "name": "heater_combi_error",
+      "platform": "binary_sensor",
+      "device_class": "problem",
+      "icon": "mdi:alert-circle"
+    },
+    "58,11": {
+      "name": "heater_operating_mode",
+      "platform": "sensor",
+      "icon": "mdi:radiator"
+    },
+    "58,12": {
+      "name": "heater_response_error",
+      "platform": "binary_sensor",
+      "device_class": "problem",
+      "icon": "mdi:alert"
+    },
+    "58,13": {
+      "name": "heater_shoreline_connected",
+      "platform": "binary_sensor",
+      "device_class": "plug",
+      "icon": "mdi:power-plug"
+    },
+    "58,14": {
+      "name": "heater_window_switch_closed",
+      "platform": "binary_sensor",
+      "device_class": "window",
+      "icon": "mdi:window-closed-variant"
+    },
+    "99,1": {
+      "name": "bms_voltage",
+      "unit": "V",
+      "platform": "sensor",
+      "device_class": "voltage",
+      "state_class": "measurement",
+      "icon": "mdi:battery-charging"
+    },
+    "99,2": {
+      "name": "bms_current",
+      "unit": "A",
+      "platform": "sensor",
+      "device_class": "current",
+      "state_class": "measurement",
+      "icon": "mdi:current-dc"
+    },
+    "99,3": {
+      "name": "bms_temperature",
+      "unit": "°C",
+      "platform": "sensor",
+      "device_class": "temperature",
+      "state_class": "measurement",
+      "icon": "mdi:thermometer"
+    },
+    "99,4": {
+      "name": "lithium_soc",
+      "unit": "%"
+    },
+    "99,5": {
+      "name": "bms_time_remaining",
+      "unit": "min",
+      "platform": "sensor",
+      "state_class": "measurement",
+      "icon": "mdi:clock-outline"
+    },
+    "99,6": {
+      "name": "bms_state_of_health",
+      "unit": "%",
+      "platform": "sensor",
+      "state_class": "measurement",
+      "icon": "mdi:battery-heart"
+    },
+    "99,7": {
+      "name": "bms_capacity_remaining",
+      "unit": "Ah",
+      "platform": "sensor",
+      "state_class": "measurement",
+      "icon": "mdi:battery"
+    },
+    "99,8": {
+      "name": "lithium_soc_2",
+      "unit": "%"
+    },
+    "99,9": {
+      "name": "bms_charge_detected"
+    },
+    "99,10": {
+      "name": "bms_device_failure"
+    },
+    "121,1": {
+      "name": "victron_inverter_on",
+      "platform": "binary_sensor",
+      "device_class": "power",
+      "icon": "mdi:power-plug",
+      "enabled": false
+    },
+    "121,2": {
+      "name": "victron_inverter_state",
+      "platform": "sensor",
+      "icon": "mdi:power-plug",
+      "enabled": false
+    },
+    "121,3": {
+      "name": "victron_inverter_l1_voltage",
+      "unit": "V",
+      "platform": "sensor",
+      "device_class": "voltage",
+      "state_class": "measurement",
+      "icon": "mdi:flash",
+      "enabled": false
+    },
+    "121,4": {
+      "name": "victron_inverter_l1_current",
+      "unit": "A",
+      "platform": "sensor",
+      "device_class": "current",
+      "state_class": "measurement",
+      "icon": "mdi:current-ac",
+      "enabled": false
+    },
+    "121,5": {
+      "name": "victron_inverter_l1_frequency",
+      "unit": "Hz",
+      "platform": "sensor",
+      "device_class": "frequency",
+      "state_class": "measurement",
+      "icon": "mdi:sine-wave",
+      "enabled": false
+    },
+    "121,6": {
+      "name": "victron_inverter_l2_voltage",
+      "unit": "V"
+    },
+    "121,7": {
+      "name": "victron_inverter_l2_current",
+      "unit": "A"
+    },
+    "121,8": {
+      "name": "victron_inverter_l2_frequency",
+      "unit": "Hz"
+    },
+    "121,9": {
+      "name": "victron_charger_on",
+      "platform": "binary_sensor",
+      "device_class": "battery_charging",
+      "icon": "mdi:battery-charging",
+      "enabled": false
+    },
+    "121,10": {
+      "name": "victron_charger_state",
+      "platform": "sensor",
+      "icon": "mdi:battery-charging",
+      "enabled": false
+    },
+    "121,11": {
+      "name": "victron_charge_voltage",
+      "unit": "V",
+      "platform": "sensor",
+      "device_class": "voltage",
+      "state_class": "measurement",
+      "icon": "mdi:flash",
+      "enabled": false
+    },
+    "121,12": {
+      "name": "victron_charge_current",
+      "unit": "A",
+      "platform": "sensor",
+      "device_class": "current",
+      "state_class": "measurement",
+      "icon": "mdi:current-dc",
+      "enabled": false
+    },
+    "121,13": {
+      "name": "victron_max_charge_current",
+      "unit": "A"
+    },
+    "121,14": {
+      "name": "victron_input_current_limit",
+      "unit": "A"
+    },
+    "121,15": {
+      "name": "victron_input_voltage",
+      "unit": "V",
+      "platform": "sensor",
+      "device_class": "voltage",
+      "state_class": "measurement",
+      "icon": "mdi:power-plug",
+      "enabled": false
+    },
+    "121,16": {
+      "name": "victron_input_current",
+      "unit": "A",
+      "platform": "sensor",
+      "device_class": "current",
+      "state_class": "measurement",
+      "icon": "mdi:current-ac",
+      "enabled": false
+    },
+    "121,17": {
+      "name": "victron_input_frequency",
+      "unit": "Hz",
+      "platform": "sensor",
+      "device_class": "frequency",
+      "state_class": "measurement",
+      "icon": "mdi:sine-wave",
+      "enabled": false
+    },
+    "121,18": {
+      "name": "victron_device_failure",
+      "platform": "sensor",
+      "icon": "mdi:alert-circle",
+      "enabled": false
+    },
+    "121,19": {
+      "name": "victron_firmware",
+      "platform": "sensor",
+      "icon": "mdi:chip",
+      "enabled": false
+    }
+  }
 }

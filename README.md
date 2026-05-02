@@ -34,6 +34,8 @@ Unlike the official EHG app, this integration gives you **full Home Assistant po
 
 > **v2.36.6** — **Fridge door + window contact now update in real time!** Fixed depth-filter bug in PIA protobuf decoder that silently dropped real-time SCU push updates. `binary_sensor.hymer_fridge_door` and `binary_sensor.hymer_heater_window_contact` now track open/close events live.
 
+> **v2.43.0** — **JSON-driven sensor & entity definitions!** All sensor mappings AND entity metadata (device class, icon, state class, enabled state) are now loaded from JSON files at startup instead of being hardcoded in Python. Universal sensors live in `base.json` (63 entries), brand-specific hardware in `hymer.json` (88 entries for S600/S700) or `eriba.json` (33 entries for Car 602). This means new sensors and brands can be added by editing JSON files — no Python changes required. **Upgrade note:** This is a non-breaking change. All entity unique IDs, keys, and names remain identical. You do **not** need to remove and re-add the integration. Simply update via HACS and restart HA.
+
 > **v2.38.0** — **EHG token configurable via Options!** You can now add or update your EHG Remote Access Refresh Token at any time via **Settings → Integrations → HYMER Connect → Configure** — no need to remove and re-add the integration. The token field is also available during re-authentication.
 
 ### Energy Dashboard
@@ -153,21 +155,26 @@ Three computed sensors derived from the CAN bus odometer and fuel level:
 
 The sensor map was built on a **HYMER Grand Canyon S 600 CrossOver** (Mercedes Sprinter, Thetford N4112A fridge, Truma Combi D6E). Other EHG brands share the same SCU and PIA protocol but may have different appliances on different buses.
 
-**What works on all vehicles:**
-- Battery, solar, GPS, SCU/Truma firmware (buses 3, 8, 30, 45, 49, 58, 99) — shared infrastructure
-- Heater controls (Truma, bus 58) — if same Truma model
-- Water levels, main switch, charger (bus 3)
+**What works on all vehicles** (defined in `base.json`):
+- Vehicle CAN: odometer, fuel, doors, ignition, engine status, chassis flags (bus 1)
+- Habitation electrics: battery, water levels, main switch, charger, shore power (bus 3)
+- GPS: coordinates, altitude, heading, satellites, signal (bus 30)
+- SCU: connected status, firmware version (bus 45)
 
-**What differs by vehicle model:**
-- **Fridge**: Thetford N4112A uses buses 34/37 (S600), Dometic compressor uses bus 60 (Eriba). Both are mapped — the SCU only reports buses for hardware that's actually installed, so there's no conflict.
-- **Lights**: The 8 light entities (bus 11/12/15/16/19/21/43/44) are hardcoded for the S600 layout. On vehicles with different lighting circuits, some lights **will not work** even though the entity appears in HA. This is not a dashboard issue — the integration sends PIA commands to specific bus IDs, and if the Eriba has a different light on that bus (or no light at all), the command won't work. Model-specific light overlays are planned for a future release.
-- **Vehicle CAN bus (bus 1)**: Mercedes Sprinter vs VW Crafter may have different slot semantics for doors, ignition, and chassis flags.
+**What differs by vehicle model** (defined in brand overlays):
+- **Fridge**: Thetford N4112A uses buses 34/37 (`hymer.json`), Dometic compressor uses bus 60 (`eriba.json`). The SCU only reports buses for hardware that's actually installed, so there's no conflict.
+- **Lights**: The S600 light entities (bus 11/12/15/16/19/21/43/44) are defined in `hymer.json`. Eriba lights on different buses (bus 18 shower, bus 93 furniture) are in `eriba.json`. You can add or override light mappings in your brand's JSON overlay without changing any Python code.
+- **Solar**: Voltronic MPP260CI (bus 8) is in `hymer.json`. Other solar chargers may use different bus IDs.
+- **Heater**: Truma Combi D6E (buses 49/58) is in `hymer.json`. Vehicles with Truma Combi E (bus 6) or Alde need different mappings.
+- **BMS**: BOS LUX LiFePO4 (bus 99) is in `hymer.json`.
+- **Victron**: MultiPlus (bus 121) is in `hymer.json` but all entities disabled by default — VE.Bus hardware is non-functional via SCU.
+- **Vehicle CAN bus (bus 1)**: Mercedes Sprinter vs VW Crafter may have different slot semantics for doors, ignition, and chassis flags. Brand overlays can override individual slots.
 
-> **Eriba users**: The Dometic fridge sensors (mode, level, power source, compressor status) should appear automatically. Lights that don't respond can be disabled in the entity registry. Use the [Dynamic Slot Discovery](#dynamic-slot-discovery-v2340) to identify unmapped sensors on your vehicle and [contribute your findings](#how-you-can-help).
+> **Eriba users** (v2.43.0+): Your `eriba.json` already defines Dometic fridge sensors (bus 60), shower light (bus 18), Truma Aventa AC placeholder slots (bus 59), and bedroom furniture light (bus 93). With the new JSON-driven architecture, you can **add sensors and entities yourself** without waiting for a release or writing Python code. See the [Self-Service Guide for Non-HYMER Brands](#-self-service-guide-for-non-hymer-brands-v2430) below.
 
 ### � Dynamic Slot Discovery (v2.34.0+)
 
-The integration's named sensor map (`SENSOR_MAP`) was reverse-engineered on a HYMER Grand Canyon S 600 CrossOver. **All other EHG brands (Eriba, Bürstner, Dethleffs, LMC, Niesmann+Bischoff, Sunlight, Carado, Laika, FreeOnTour) share the same SCU hardware and PIA protobuf protocol**, but the slot layout can differ — different floor plans, different appliance models, different option packages can place sensors on bus/slot pairs that are not yet in the map.
+The integration's sensor map is loaded from JSON files in `sensor_maps/` (see `base.json` for shared definitions and `{brand}.json` for brand overlays). The base map was reverse-engineered on a HYMER Grand Canyon S 600 CrossOver. **All other EHG brands (Eriba, Bürstner, Dethleffs, LMC, Niesmann+Bischoff, Sunlight, Carado, Laika, FreeOnTour) share the same SCU hardware and PIA protobuf protocol**, but the slot layout can differ — different floor plans, different appliance models, different option packages can place sensors on bus/slot pairs that are not yet in the map.
 
 To make every reported value visible regardless of brand or model, the integration now **automatically creates a generic diagnostic sensor for any `(bus_id, sensor_id)` pair the SCU reports that is not present in `SENSOR_MAP`**:
 
@@ -185,13 +192,82 @@ To make every reported value visible regardless of brand or model, the integrati
 
 **Contributing your findings:**
 
-If you identify what an unmapped slot does on your brand/model, please open an issue or PR adding the mapping to `custom_components/hymer_connect/pia_decoder.py` (`SENSOR_MAP`). Once added, the next release will replace the generic discovered entity with a properly named one with appropriate units and device class.
+If you identify what an unmapped slot does on your brand/model, please open an issue or PR adding the mapping to `custom_components/hymer_connect/sensor_maps/base.json` (shared across all brands) or `sensor_maps/{brand}.json` (brand-specific). Once added, the next release will replace the generic discovered entity with a properly named one with appropriate units and device class.
 
 > **Existing entities are unaffected.** Discovered entities only ever cover slots that are *not* in `SENSOR_MAP` — there is no collision possible with the named sensors.
 
-### �🗺️ Device Tracker
+### 🛠️ Self-Service Guide for Non-HYMER Brands (v2.43.0+)
 
-GPS-based device tracker for vehicle location on the HA map.
+With the JSON-driven architecture, you can **add new sensors, rename slots, set icons, and create HA entities yourself** — no Python code, no waiting for a release. This is especially useful for Eriba, Bürstner, Dethleffs, and other EHG brands where the sensor bus layout differs from the S600.
+
+#### What you can do yourself
+
+| Task | How | Example |
+|------|-----|---------|
+| **Name a discovered slot** | Add a decode-only entry to your brand's JSON | `"18,1": {"name": "light_shower_ambient"}` |
+| **Create a sensor entity** | Add `"platform": "sensor"` + metadata | `"59,3": {"name": "ac_temperature", "unit": "°C", "platform": "sensor", "device_class": "temperature", "icon": "mdi:thermometer"}` |
+| **Create a binary sensor** | Add `"platform": "binary_sensor"` + metadata | `"60,8": {"name": "dometic_fridge_power", "platform": "binary_sensor", "device_class": "power", "icon": "mdi:fridge"}` |
+| **Override a base entry** | Use the same `"bus,slot"` key in your brand file | Your brand file wins over `base.json` for that slot |
+| **Disable an entity by default** | Add `"enabled": false` | `"121,1": {"name": "victron_inverter_on", ..., "enabled": false}` |
+
+#### Step-by-step: Adding a new sensor for your vehicle
+
+**Example:** You discovered that bus 59, slot 3 reports your Truma Aventa AC's target temperature.
+
+1. **Edit your brand's JSON file** — e.g. `custom_components/hymer_connect/sensor_maps/eriba.json`:
+
+   ```json
+   "59,3": {
+     "name": "ac_aventa_target_temp",
+     "unit": "°C",
+     "platform": "sensor",
+     "device_class": "temperature",
+     "state_class": "measurement",
+     "icon": "mdi:air-conditioner"
+   }
+   ```
+
+2. **Add a translation** in `custom_components/hymer_connect/translations/en.json`:
+
+   ```json
+   "sensor": {
+     ...
+     "ac_aventa_target_temp": { "name": "AC target temperature" }
+   }
+   ```
+
+3. **Restart Home Assistant** — the integration reloads the JSON at startup and creates the entity automatically.
+
+4. **Verify** — go to **Developer Tools → States** and search for your new entity. It should show the raw value from the SCU.
+
+5. **Contribute** — open a PR with your changes so other Eriba users benefit too!
+
+#### What you cannot do via JSON (yet)
+
+- **Light entities** (on/off + brightness control) — still hardcoded in `light.py` because they need write-command logic
+- **Switch entities** (12V main, water pump) — still hardcoded in `switch.py`
+- **Select entities** (fridge mode, boiler mode) — still hardcoded in `select.py`
+- **Climate entities** (Truma heater) — still hardcoded in `climate.py`
+- **Computed sensors** (solar power = V×A, fuel liters, charge phase idle override) — need Python logic
+
+These will be addressed in future phases. For now, writable controls require a code change + PR.
+
+#### Tips for slot discovery
+
+1. Enable **debug logging** for the PIA decoder:
+   ```yaml
+   logger:
+     logs:
+       custom_components.hymer_connect.pia_decoder: info
+   ```
+2. Look for `Discovered unmapped slot` log entries — these are bus/slot pairs the SCU reports but aren't in any JSON file yet.
+3. Enable the discovered diagnostic entities in **Settings → Devices → HYMER Connect → "+N entities not shown"**.
+4. Toggle things in the EHG app (lights, AC, fridge settings) and watch which discovered slots change value.
+5. Once identified, add the mapping to your brand JSON and restart HA.
+
+> **Current Eriba overlay (`eriba.json`):** 33 entries across buses 18 (shower light), 59 (Truma Aventa AC — 8 placeholder slots awaiting identification), 60 (Dometic fridge — 21 slots, 9 with entities), and 93 (bedroom furniture light). The bus 59 AC slots are particularly ripe for mapping — if you have a Truma Aventa and can correlate EHG app actions with slot values, please share your findings!
+
+### 🗺️ Device Tracker
 
 ### 📱 Modern Dashboard (included)
 
@@ -617,33 +693,41 @@ This helps map sensor IDs for different vehicle configurations and benefits all 
 
 If you've identified bus/slot mappings for your brand, you can contribute them directly as a JSON file. The integration loads per-brand overlay files from `custom_components/hymer_connect/sensor_maps/` at startup.
 
-**JSON syntax:**
+**JSON syntax (v2.43.0+ object format):**
 
 ```json
 {
   "_comment": "Eriba brand overlay — add your sensor overrides here",
   "sensors": {
-    "60,1": ["dometic_fridge_mode", null, null],
-    "60,2": ["dometic_fridge_level", null, null],
-    "60,9": ["dometic_fridge_power_source", null, null],
-    "99,1": ["bms_voltage", "V", null],
-    "1,1":  ["odometer", "km", "div1000"]
+    "60,1":  {"name": "dometic_fridge_mode", "platform": "sensor", "icon": "mdi:fridge"},
+    "60,8":  {"name": "dometic_fridge_power", "platform": "binary_sensor", "device_class": "power", "icon": "mdi:fridge"},
+    "60,11": {"name": "dometic_compressor_on", "platform": "binary_sensor", "device_class": "running", "icon": "mdi:fridge-industrial"},
+    "99,1":  {"name": "bms_voltage", "unit": "V", "platform": "sensor", "device_class": "voltage", "state_class": "measurement", "icon": "mdi:battery-charging"},
+    "1,1":   {"name": "odometer", "unit": "km", "transform": "div1000", "platform": "sensor", "device_class": "distance", "state_class": "total_increasing", "icon": "mdi:counter"}
   }
 }
 ```
 
-**Format:**
-- Keys: `"bus_id,sensor_id"` as a string (e.g. `"60,1"`)
-- Values: `[sensor_name, unit_or_null, transform_or_null]`
-- Units: `"V"`, `"A"`, `"°C"`, `"%"`, `"W"`, `"Hz"`, `"bar"`, `"km"`, `"m"`, `"min"`, `"Ah"`, `"h"`, or `null`
-- Transforms: `null` (raw value), `"div10"`, `"div100"`, `"div1000"`, `"div3600"` (seconds → hours)
-- Fields starting with `_` are comments and ignored by the loader
+**Decode fields** (how the raw protobuf value is processed):
+- `name` (required): Sensor name — becomes the HA entity key and translation key
+- `unit`: Unit string (`"V"`, `"A"`, `"°C"`, `"%"`, `"W"`, `"Hz"`, `"bar"`, `"km"`, `"m"`, `"min"`, `"Ah"`, `"h"`, or `null`)
+- `transform`: Value transform (`null` = raw, `"div10"`, `"div100"`, `"div1000"`, `"div3600"` seconds → hours)
+
+**Entity fields** (how the HA entity is configured — all optional):
+- `platform`: `"sensor"` or `"binary_sensor"` — if omitted, the entry is decode-only (no HA entity created)
+- `device_class`: HA device class string (e.g. `"temperature"`, `"voltage"`, `"door"`, `"running"`)
+- `state_class`: `"measurement"` or `"total_increasing"`
+- `icon`: MDI icon (e.g. `"mdi:thermometer"`)
+- `on_value`: For binary sensors — the value that means "on" (e.g. `"Open"`, `"On"`, `1`). Default: `true`
+- `enabled`: `false` to disable the entity by default (user can enable in entity registry). Default: `true`
+
+> **Backward compat:** The old array format `["name", "unit", "transform"]` is still accepted for decode-only entries but does not support entity metadata.
 
 **Available brand files:** `base.json`, `hymer.json`, `eriba.json`, `buerstner.json`, `dethleffs.json`, `lmc.json`, `niesmann-bischoff.json`, `sunlight.json`, `carado.json`, `laika.json`, `freeontour.json`
 
-**How it works:** At startup, the integration loads `base.json` first (shared sensors), then `{brand}.json` based on the brand you selected during setup. Overlay entries **override** the hardcoded `SENSOR_MAP` for matching `(bus, slot)` keys.
+**How it works:** At startup, the integration loads `base.json` first (universal buses shared by all EHG brands — 63 entries for buses 1, 3, 30, 45), then `{brand}.json` based on the brand you selected during setup (e.g. `hymer.json` adds 88 entries for S600/S700-specific hardware: lights, solar, fridge, heater, BMS). Overlay entries **override** `base.json` entries for matching `(bus, slot)` keys. The Python code reads entity metadata from the JSON and dynamically creates HA entity descriptions — no Python changes needed to add new sensors.
 
-To contribute: fork the repo, edit `sensor_maps/{your_brand}.json`, and open a PR.
+To contribute: fork the repo, edit `sensor_maps/{your_brand}.json`, add translation keys to `translations/en.json`, and open a PR.
 
 ### Sensor Bus Map Reference
 

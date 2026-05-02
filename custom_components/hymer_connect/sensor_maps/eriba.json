@@ -1,41 +1,132 @@
 {
   "_comment": "Eriba brand overlay (Car 602, VW Crafter, Dometic fridge, Truma Aventa AC).",
   "_contributed_by": "@mvondemhagen (GitHub issue #54)",
-  "_vehicles": ["Car 602"],
-  "_doc": "Entries here override or extend the hardcoded SENSOR_MAP for Eriba vehicles.",
+  "_vehicles": [
+    "Car 602"
+  ],
+  "_doc": "Entries here override or extend base.json for Eriba vehicles.",
   "sensors": {
-    "18,1": ["light_shower_ambient", null, null],
-    "18,2": ["light_shower_ambient_brightness", "%", null],
-    "59,1": ["ac_aventa_slot_1", null, null],
-    "59,2": ["ac_aventa_slot_2", null, null],
-    "59,3": ["ac_aventa_slot_3", null, null],
-    "59,4": ["ac_aventa_slot_4", null, null],
-    "59,5": ["ac_aventa_slot_5", null, null],
-    "59,6": ["ac_aventa_slot_6", null, null],
-    "59,7": ["ac_aventa_slot_7", null, null],
-    "59,8": ["ac_aventa_slot_8", null, null],
-    "60,1": ["dometic_fridge_mode", null, null],
-    "60,2": ["dometic_fridge_level", null, null],
-    "60,3": ["dometic_new_protocol", null, null],
-    "60,4": ["dometic_page", null, null],
-    "60,5": ["dometic_lock", null, null],
-    "60,6": ["dometic_sync", null, null],
-    "60,7": ["dometic_cmode", null, null],
-    "60,8": ["dometic_fridge_power", null, null],
-    "60,9": ["dometic_fridge_power_source", null, null],
-    "60,10": ["dometic_cibus_on", null, null],
-    "60,11": ["dometic_compressor_on", null, null],
-    "60,12": ["dometic_condenser_fan", null, null],
-    "60,13": ["dometic_fridge_type", null, null],
-    "60,14": ["dometic_fan_1_available", null, null],
-    "60,15": ["dometic_fan_2_available", null, null],
-    "60,16": ["dometic_fridge_warning", null, null],
-    "60,17": ["dometic_fridge_ai_type", null, null],
-    "60,18": ["dometic_lstat", null, null],
-    "60,19": ["dometic_rchange", null, null],
-    "60,20": ["dometic_lchange", null, null],
-    "60,21": ["dometic_heartbeat", null, null],
-    "93,1": ["light_bedroom_furniture", null, null],
-    "93,2": ["light_bedroom_furniture_brightness", "%", null]
+    "18,1": {
+      "name": "light_shower_ambient"
+    },
+    "18,2": {
+      "name": "light_shower_ambient_brightness",
+      "unit": "%"
+    },
+    "59,1": {
+      "name": "ac_aventa_slot_1"
+    },
+    "59,2": {
+      "name": "ac_aventa_slot_2"
+    },
+    "59,3": {
+      "name": "ac_aventa_slot_3"
+    },
+    "59,4": {
+      "name": "ac_aventa_slot_4"
+    },
+    "59,5": {
+      "name": "ac_aventa_slot_5"
+    },
+    "59,6": {
+      "name": "ac_aventa_slot_6"
+    },
+    "59,7": {
+      "name": "ac_aventa_slot_7"
+    },
+    "59,8": {
+      "name": "ac_aventa_slot_8"
+    },
+    "60,1": {
+      "name": "dometic_fridge_mode",
+      "platform": "sensor",
+      "icon": "mdi:fridge"
+    },
+    "60,2": {
+      "name": "dometic_fridge_level",
+      "platform": "sensor",
+      "icon": "mdi:fridge"
+    },
+    "60,3": {
+      "name": "dometic_new_protocol"
+    },
+    "60,4": {
+      "name": "dometic_page"
+    },
+    "60,5": {
+      "name": "dometic_lock"
+    },
+    "60,6": {
+      "name": "dometic_sync"
+    },
+    "60,7": {
+      "name": "dometic_cmode"
+    },
+    "60,8": {
+      "name": "dometic_fridge_power",
+      "platform": "binary_sensor",
+      "device_class": "power",
+      "icon": "mdi:fridge"
+    },
+    "60,9": {
+      "name": "dometic_fridge_power_source",
+      "platform": "sensor",
+      "icon": "mdi:power-plug"
+    },
+    "60,10": {
+      "name": "dometic_cibus_on"
+    },
+    "60,11": {
+      "name": "dometic_compressor_on",
+      "platform": "binary_sensor",
+      "device_class": "running",
+      "icon": "mdi:fridge-industrial"
+    },
+    "60,12": {
+      "name": "dometic_condenser_fan",
+      "platform": "binary_sensor",
+      "device_class": "running",
+      "icon": "mdi:fan"
+    },
+    "60,13": {
+      "name": "dometic_fridge_type",
+      "platform": "sensor",
+      "icon": "mdi:fridge-industrial-outline"
+    },
+    "60,14": {
+      "name": "dometic_fan_1_available"
+    },
+    "60,15": {
+      "name": "dometic_fan_2_available"
+    },
+    "60,16": {
+      "name": "dometic_fridge_warning",
+      "platform": "sensor",
+      "icon": "mdi:fridge-alert"
+    },
+    "60,17": {
+      "name": "dometic_fridge_ai_type",
+      "platform": "sensor",
+      "icon": "mdi:fridge-variant-outline"
+    },
+    "60,18": {
+      "name": "dometic_lstat"
+    },
+    "60,19": {
+      "name": "dometic_rchange"
+    },
+    "60,20": {
+      "name": "dometic_lchange"
+    },
+    "60,21": {
+      "name": "dometic_heartbeat"
+    },
+    "93,1": {
+      "name": "light_bedroom_furniture"
+    },
+    "93,2": {
+      "name": "light_bedroom_furniture_brightness",
+      "unit": "%"
+    }
   }
 }
