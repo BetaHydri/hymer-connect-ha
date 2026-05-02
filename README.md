@@ -691,6 +691,39 @@ If you've identified bus/slot mappings for your brand, you can contribute them d
 
 **JSON syntax (v2.43.0+ object format):**
 
+**Key format — `"bus_id,sensor_id"`:**
+
+Each key in the `"sensors"` object identifies a specific data slot on the vehicle's SCU. The SCU organizes all connected devices into **buses** (physical or logical groups), and each bus has numbered **slots** (individual sensor values). The key `"1,1"` means **bus 1, slot 1** — which is the odometer on Mercedes Sprinter vehicles.
+
+```
+"1,1"  →  bus 1 (Vehicle CAN), slot 1 (odometer)
+"58,8" →  bus 58 (Truma heater), slot 8 (target temperature)
+"60,1" →  bus 60 (Dometic fridge), slot 1 (operating mode)
+"99,3" →  bus 99 (BOS BMS), slot 3 (battery temperature)
+```
+
+The bus IDs correspond to physical hardware on the vehicle — see the [Bus Summary](#bus-summary) table or [`docs/sensor-map.md`](docs/sensor-map.md) for the complete reference. The SCU only reports buses for hardware that is actually installed, so there's no conflict between brands.
+
+**Example entry:**
+
+```json
+{
+  "sensors": {
+    "1,1": {
+      "name": "odometer",
+      "unit": "km",
+      "transform": "div1000",
+      "platform": "sensor",
+      "device_class": "distance",
+      "state_class": "total_increasing",
+      "icon": "mdi:counter"
+    }
+  }
+}
+```
+
+**Full example with multiple entry types:**
+
 ```json
 {
   "_comment": "Eriba brand overlay — add your sensor overrides here",
@@ -698,11 +731,12 @@ If you've identified bus/slot mappings for your brand, you can contribute them d
     "60,1":  {"name": "dometic_fridge_mode", "platform": "sensor", "icon": "mdi:fridge"},
     "60,8":  {"name": "dometic_fridge_power", "platform": "binary_sensor", "device_class": "power", "icon": "mdi:fridge"},
     "60,11": {"name": "dometic_compressor_on", "platform": "binary_sensor", "device_class": "running", "icon": "mdi:fridge-industrial"},
-    "99,1":  {"name": "bms_voltage", "unit": "V", "platform": "sensor", "device_class": "voltage", "state_class": "measurement", "icon": "mdi:battery-charging"},
-    "1,1":   {"name": "odometer", "unit": "km", "transform": "div1000", "platform": "sensor", "device_class": "distance", "state_class": "total_increasing", "icon": "mdi:counter"}
+    "60,3":  {"name": "dometic_new_protocol"}
   }
 }
 ```
+
+Note: `"60,3"` has no `"platform"` field — it is **decode-only** (the value is stored internally but no HA entity is created). This is useful for slots you want to name but haven't yet decided how to expose.
 
 **Decode fields** (how the raw protobuf value is processed):
 - `name` (required): Sensor name — becomes the HA entity key and translation key
