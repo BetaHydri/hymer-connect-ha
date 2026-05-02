@@ -1,4 +1,9 @@
-"""Select platform for HYMER Connect — fridge mode and boiler mode."""
+"""Select platform for HYMER Connect — fridge mode, boiler mode, heater energy.
+
+Bus/slot IDs are loaded from the JSON ``"climate"`` section in the brand
+overlay file.  If a ``"fridge"`` or ``"truma_heater"`` definition is missing,
+the corresponding select entity is not created.
+"""
 
 from __future__ import annotations
 
@@ -25,13 +30,7 @@ FRIDGE_OPTIONS = ["Off", "1", "2", "3", "4", "5"]
 # Boiler modes: Off, ECO, Turbo (HOT)
 BOILER_OPTIONS = ["Off", "ECO", "Turbo"]
 
-# Heater energy source modes matching Truma panel display:
-#   FUEL  = Diesel only
-#   MIX 1 = Diesel + Electric 900W
-#   MIX 2 = Diesel + Electric 1800W
-#   EL 1  = Electric only 900W
-#   EL 2  = Electric only 1800W
-# Electric modes require shore power — SCU rejects them otherwise
+# Heater energy source modes matching Truma panel display
 HEATER_ENERGY_OPTIONS = ["Diesel", "Mix 900W", "Mix 1800W", "Electric 900W", "Electric 1800W"]
 
 
@@ -41,12 +40,26 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up HYMER Connect select entities from a config entry."""
+    from .pia_decoder import CLIMATE_DEFS
+
     coordinator: HymerConnectCoordinator = hass.data[DOMAIN][entry.entry_id]
-    async_add_entities([
-        HymerFridgeSelect(coordinator, entry),
-        HymerBoilerSelect(coordinator, entry),
-        HymerHeaterEnergySelect(coordinator, entry),
-    ])
+    entities: list[SelectEntity] = []
+
+    fridge_def = CLIMATE_DEFS.get("fridge")
+    heater_def = CLIMATE_DEFS.get("truma_heater")
+
+    if fridge_def:
+        entities.append(HymerFridgeSelect(coordinator, entry, fridge_def))
+        _LOGGER.debug("Select platform: fridge on bus %d", fridge_def.get("control_bus", 34))
+    if heater_def:
+        entities.append(HymerBoilerSelect(coordinator, entry, heater_def))
+        entities.append(HymerHeaterEnergySelect(coordinator, entry, heater_def))
+        _LOGGER.debug("Select platform: boiler+energy on bus %d", heater_def.get("heater_bus", 58))
+
+    if entities:
+        async_add_entities(entities)
+    else:
+        _LOGGER.debug("Select platform: no fridge or heater definitions — skipping")
 
 
 class HymerFridgeSelect(
@@ -63,6 +76,7 @@ class HymerFridgeSelect(
         self,
         coordinator: HymerConnectCoordinator,
         entry: ConfigEntry,
+        fridge_def: dict[str, Any],
     ) -> None:
         """Initialize the fridge select entity."""
         super().__init__(coordinator)
@@ -74,6 +88,13 @@ class HymerFridgeSelect(
             "model": "Smart Interface Unit",
         }
         self._optimistic: str | None = None
+        # Bus/slot IDs from JSON
+        self._bus = fridge_def.get("control_bus", 34)
+        self._power_sid = fridge_def.get("power_sid", 1)
+        self._step_sid = fridge_def.get("cooling_step_sid", 3)
+        self._power_sensor = fridge_def.get("power_sensor", "fridge_power")
+        self._step_sensor = fridge_def.get("cooling_step_sensor", "fridge_cooling_step")
+        self._mode_sensor = fridge_def.get("mode_sensor", "fridge_mode")
 
     @property
     def current_option(self) -> str | None:
@@ -83,13 +104,13 @@ class HymerFridgeSelect(
         if self.coordinator.data is None:
             return None
 
-        # Check fridge power (bus 34, sid 1) — if False → Off
-        power = _resolve_path(self.coordinator.data, "signalr_sensors.fridge_power")
+        # Check fridge power — if False → Off
+        power = _resolve_path(self.coordinator.data, f"signalr_sensors.{self._power_sensor}")
         if power is False:
             return "Off"
 
-        # Check cooling step (bus 34, sid 3)
-        step = _resolve_path(self.coordinator.data, "signalr_sensors.fridge_cooling_step")
+        # Check cooling step
+        step = _resolve_path(self.coordinator.data, f"signalr_sensors.{self._step_sensor}")
         if step is not None:
             try:
                 s = int(step)
@@ -98,8 +119,8 @@ class HymerFridgeSelect(
             except (ValueError, TypeError):
                 pass
 
-        # Fallback: check old fridge_mode sensor from bus 37
-        mode = _resolve_path(self.coordinator.data, "signalr_sensors.fridge_mode")
+        # Fallback: check old fridge_mode sensor
+        mode = _resolve_path(self.coordinator.data, f"signalr_sensors.{self._mode_sensor}")
         if mode is not None:
             mode_str = str(mode)
             if mode_str in ("Off", "0"):
@@ -112,12 +133,12 @@ class HymerFridgeSelect(
         import asyncio
 
         if option == "Off":
-            await self.coordinator.async_send_light_command(34, 1, bool_value=False)
+            await self.coordinator.async_send_light_command(self._bus, self._power_sid, bool_value=False)
         elif option in ("1", "2", "3", "4", "5"):
             # Power on first, wait, then set cooling step
-            await self.coordinator.async_send_light_command(34, 1, bool_value=True)
+            await self.coordinator.async_send_light_command(self._bus, self._power_sid, bool_value=True)
             await asyncio.sleep(0.5)
-            await self.coordinator.async_send_light_command(34, 3, uint_value=int(option))
+            await self.coordinator.async_send_light_command(self._bus, self._step_sid, uint_value=int(option))
         else:
             _LOGGER.warning("Unknown fridge option: %s", option)
             return
@@ -148,6 +169,7 @@ class HymerBoilerSelect(
         self,
         coordinator: HymerConnectCoordinator,
         entry: ConfigEntry,
+        heater_def: dict[str, Any],
     ) -> None:
         """Initialize the boiler select entity."""
         super().__init__(coordinator)
@@ -159,11 +181,16 @@ class HymerBoilerSelect(
             "model": "Smart Interface Unit",
         }
         self._optimistic: str | None = None
+        self._bus = heater_def.get("heater_bus", 58)
+        self._boiler_sid = heater_def.get("boiler_sid", 5)
+        self._fuel_type_sid = heater_def.get("fuel_type_sid", 4)
+        self._boiler_sensor = heater_def.get("boiler_sensor", "heater_fan_speed")
+        self._fuel_type_sensor = heater_def.get("fuel_type_sensor", "heater_fuel_type")
 
     def _get_fuel_type(self) -> str:
         """Get current fuel type from coordinator data."""
         if self.coordinator.data:
-            val = _resolve_path(self.coordinator.data, "signalr_sensors.heater_fuel_type")
+            val = _resolve_path(self.coordinator.data, f"signalr_sensors.{self._fuel_type_sensor}")
             if val and isinstance(val, str) and val not in ("unknown", "unavailable"):
                 return val
         return "Diesel"
@@ -176,8 +203,8 @@ class HymerBoilerSelect(
         if self.coordinator.data is None:
             return None
 
-        # Boiler mode is heater_fan_speed (bus 58, sid 5)
-        fan = _resolve_path(self.coordinator.data, "signalr_sensors.heater_fan_speed")
+        # Boiler mode is heater_fan_speed (bus N, sid M)
+        fan = _resolve_path(self.coordinator.data, f"signalr_sensors.{self._boiler_sensor}")
         if fan is None:
             return None
 
@@ -200,8 +227,8 @@ class HymerBoilerSelect(
 
         fuel = self._get_fuel_type()
         await self.coordinator.async_send_multi_sensor_command([
-            {"bus_id": 58, "sensor_id": 5, "str_value": mode_str},
-            {"bus_id": 58, "sensor_id": 4, "str_value": fuel},
+            {"bus_id": self._bus, "sensor_id": self._boiler_sid, "str_value": mode_str},
+            {"bus_id": self._bus, "sensor_id": self._fuel_type_sid, "str_value": fuel},
         ])
 
         self._optimistic = option
@@ -248,6 +275,7 @@ class HymerHeaterEnergySelect(
         self,
         coordinator: HymerConnectCoordinator,
         entry: ConfigEntry,
+        heater_def: dict[str, Any],
     ) -> None:
         """Initialize the heater energy source select entity."""
         super().__init__(coordinator)
@@ -259,6 +287,12 @@ class HymerHeaterEnergySelect(
             "model": "Smart Interface Unit",
         }
         self._optimistic: str | None = None
+        self._bus = heater_def.get("heater_bus", 58)
+        self._fuel_type_sid = heater_def.get("fuel_type_sid", 4)
+        self._fuel_type_2_sid = heater_def.get("fuel_type_2_sid", 6)
+        self._electric_power_sid = heater_def.get("electric_power_sid", 9)
+        self._fuel_type_sensor = heater_def.get("fuel_type_sensor", "heater_fuel_type")
+        self._electric_power_sensor = heater_def.get("electric_power_sensor", "heater_electric_power")
 
     @property
     def current_option(self) -> str | None:
@@ -269,7 +303,7 @@ class HymerHeaterEnergySelect(
             return None
 
         fuel = _resolve_path(
-            self.coordinator.data, "signalr_sensors.heater_fuel_type"
+            self.coordinator.data, f"signalr_sensors.{self._fuel_type_sensor}"
         )
         if fuel is None:
             return None
@@ -279,7 +313,7 @@ class HymerHeaterEnergySelect(
             return "Diesel"
         if fuel_str == "Electric":
             watt = _resolve_path(
-                self.coordinator.data, "signalr_sensors.heater_electric_power"
+                self.coordinator.data, f"signalr_sensors.{self._electric_power_sensor}"
             )
             try:
                 w = int(watt) if watt is not None else 900
@@ -288,7 +322,7 @@ class HymerHeaterEnergySelect(
             return f"Electric {w}W"
         if fuel_str == "Both":
             watt = _resolve_path(
-                self.coordinator.data, "signalr_sensors.heater_electric_power"
+                self.coordinator.data, f"signalr_sensors.{self._electric_power_sensor}"
             )
             try:
                 w = int(watt) if watt is not None else 900
@@ -299,34 +333,39 @@ class HymerHeaterEnergySelect(
 
     async def async_select_option(self, option: str) -> None:
         """Set the heater energy source."""
+        b = self._bus
+        ft = self._fuel_type_sid
+        ft2 = self._fuel_type_2_sid
+        ep = self._electric_power_sid
+
         if option == "Diesel":
             await self.coordinator.async_send_multi_sensor_command([
-                {"bus_id": 58, "sensor_id": 4, "str_value": "Diesel"},
-                {"bus_id": 58, "sensor_id": 6, "str_value": "Diesel"},
+                {"bus_id": b, "sensor_id": ft, "str_value": "Diesel"},
+                {"bus_id": b, "sensor_id": ft2, "str_value": "Diesel"},
             ])
         elif option == "Electric 900W":
             await self.coordinator.async_send_multi_sensor_command([
-                {"bus_id": 58, "sensor_id": 4, "str_value": "Electric"},
-                {"bus_id": 58, "sensor_id": 6, "str_value": "Electric"},
-                {"bus_id": 58, "sensor_id": 9, "uint_value": 900},
+                {"bus_id": b, "sensor_id": ft, "str_value": "Electric"},
+                {"bus_id": b, "sensor_id": ft2, "str_value": "Electric"},
+                {"bus_id": b, "sensor_id": ep, "uint_value": 900},
             ])
         elif option == "Electric 1800W":
             await self.coordinator.async_send_multi_sensor_command([
-                {"bus_id": 58, "sensor_id": 4, "str_value": "Electric"},
-                {"bus_id": 58, "sensor_id": 6, "str_value": "Electric"},
-                {"bus_id": 58, "sensor_id": 9, "uint_value": 1800},
+                {"bus_id": b, "sensor_id": ft, "str_value": "Electric"},
+                {"bus_id": b, "sensor_id": ft2, "str_value": "Electric"},
+                {"bus_id": b, "sensor_id": ep, "uint_value": 1800},
             ])
         elif option == "Mix 900W":
             await self.coordinator.async_send_multi_sensor_command([
-                {"bus_id": 58, "sensor_id": 4, "str_value": "Both"},
-                {"bus_id": 58, "sensor_id": 6, "str_value": "Both"},
-                {"bus_id": 58, "sensor_id": 9, "uint_value": 900},
+                {"bus_id": b, "sensor_id": ft, "str_value": "Both"},
+                {"bus_id": b, "sensor_id": ft2, "str_value": "Both"},
+                {"bus_id": b, "sensor_id": ep, "uint_value": 900},
             ])
         elif option == "Mix 1800W":
             await self.coordinator.async_send_multi_sensor_command([
-                {"bus_id": 58, "sensor_id": 4, "str_value": "Both"},
-                {"bus_id": 58, "sensor_id": 6, "str_value": "Both"},
-                {"bus_id": 58, "sensor_id": 9, "uint_value": 1800},
+                {"bus_id": b, "sensor_id": ft, "str_value": "Both"},
+                {"bus_id": b, "sensor_id": ft2, "str_value": "Both"},
+                {"bus_id": b, "sensor_id": ep, "uint_value": 1800},
             ])
         else:
             _LOGGER.warning("Unknown heater energy option: %s", option)

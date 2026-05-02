@@ -1,4 +1,9 @@
-"""Climate platform for HYMER Connect — Truma heater control."""
+"""Climate platform for HYMER Connect — Truma heater control.
+
+Bus/slot IDs are loaded from the JSON ``"climate"."truma_heater"`` section
+in the brand overlay file (e.g. ``hymer.json``).  If no climate definition
+is found, the climate entity is not created.
+"""
 
 from __future__ import annotations
 
@@ -39,8 +44,15 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up HYMER Connect climate from a config entry."""
+    from .pia_decoder import CLIMATE_DEFS
+
     coordinator: HymerConnectCoordinator = hass.data[DOMAIN][entry.entry_id]
-    async_add_entities([HymerHeaterClimate(coordinator, entry)])
+    heater_def = CLIMATE_DEFS.get("truma_heater")
+    if not heater_def:
+        _LOGGER.debug("Climate platform: no truma_heater definition in JSON — skipping")
+        return
+    _LOGGER.debug("Climate platform: truma_heater on bus %d", heater_def.get("heater_bus", 58))
+    async_add_entities([HymerHeaterClimate(coordinator, entry, heater_def)])
 
 
 class HymerHeaterClimate(
@@ -67,6 +79,7 @@ class HymerHeaterClimate(
         self,
         coordinator: HymerConnectCoordinator,
         entry: ConfigEntry,
+        heater_def: dict[str, Any],
     ) -> None:
         """Initialize the heater climate entity."""
         super().__init__(coordinator)
@@ -79,6 +92,13 @@ class HymerHeaterClimate(
         }
         self._optimistic_mode: HVACMode | None = None
         self._optimistic_temp: float | None = None
+        # Bus/slot IDs from JSON
+        self._bus = heater_def.get("heater_bus", 58)
+        self._setpoint_sid = heater_def.get("setpoint_sid", 8)
+        self._fuel_type_2_sid = heater_def.get("fuel_type_2_sid", 6)
+        self._temp_sensor = heater_def.get("temp_sensor", "ambient_temp")
+        self._setpoint_sensor = heater_def.get("setpoint_sensor", "heater_setpoint")
+        self._fuel_type_sensor = heater_def.get("fuel_type_sensor", "heater_fuel_type")
 
     @property
     def hvac_mode(self) -> HVACMode:
@@ -103,7 +123,7 @@ class HymerHeaterClimate(
         if self.coordinator.data is None:
             return None
         # Use ambient temp from CAN bus as current temp
-        val = _resolve_path(self.coordinator.data, "signalr_sensors.ambient_temp")
+        val = _resolve_path(self.coordinator.data, f"signalr_sensors.{self._temp_sensor}")
         if val is not None:
             try:
                 return float(val)
@@ -125,7 +145,7 @@ class HymerHeaterClimate(
         """Get heater setpoint from coordinator data."""
         if self.coordinator.data is None:
             return None
-        val = _resolve_path(self.coordinator.data, "signalr_sensors.heater_setpoint")
+        val = _resolve_path(self.coordinator.data, f"signalr_sensors.{self._setpoint_sensor}")
         if val is None:
             return None
         try:
@@ -136,7 +156,7 @@ class HymerHeaterClimate(
     def _get_fuel_type(self) -> str:
         """Get current fuel type from coordinator data."""
         if self.coordinator.data:
-            val = _resolve_path(self.coordinator.data, "signalr_sensors.heater_fuel_type")
+            val = _resolve_path(self.coordinator.data, f"signalr_sensors.{self._fuel_type_sensor}")
             if val and isinstance(val, str) and val not in ("unknown", "unavailable"):
                 return val
         return "Diesel"
@@ -150,16 +170,16 @@ class HymerHeaterClimate(
                 temp = 20.0
             fuel = self._get_fuel_type()
             await self.coordinator.async_send_multi_sensor_command([
-                {"bus_id": 58, "sensor_id": 8, "float_value": temp},
-                {"bus_id": 58, "sensor_id": 6, "str_value": fuel},
+                {"bus_id": self._bus, "sensor_id": self._setpoint_sid, "float_value": temp},
+                {"bus_id": self._bus, "sensor_id": self._fuel_type_2_sid, "str_value": fuel},
             ])
             self._optimistic_mode = HVACMode.HEAT
             self._optimistic_temp = temp
         else:
             fuel = self._get_fuel_type()
             await self.coordinator.async_send_multi_sensor_command([
-                {"bus_id": 58, "sensor_id": 8, "float_value": HEATER_OFF_SETPOINT},
-                {"bus_id": 58, "sensor_id": 6, "str_value": fuel},
+                {"bus_id": self._bus, "sensor_id": self._setpoint_sid, "float_value": HEATER_OFF_SETPOINT},
+                {"bus_id": self._bus, "sensor_id": self._fuel_type_2_sid, "str_value": fuel},
             ])
             self._optimistic_mode = HVACMode.OFF
             self._optimistic_temp = None
@@ -174,8 +194,8 @@ class HymerHeaterClimate(
 
         fuel = self._get_fuel_type()
         await self.coordinator.async_send_multi_sensor_command([
-            {"bus_id": 58, "sensor_id": 8, "float_value": float(temp)},
-            {"bus_id": 58, "sensor_id": 6, "str_value": fuel},
+            {"bus_id": self._bus, "sensor_id": self._setpoint_sid, "float_value": float(temp)},
+            {"bus_id": self._bus, "sensor_id": self._fuel_type_2_sid, "str_value": fuel},
         ])
         self._optimistic_mode = HVACMode.HEAT
         self._optimistic_temp = float(temp)

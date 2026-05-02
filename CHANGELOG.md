@@ -5,6 +5,23 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.45.0] - 2026-05-02
+
+### Changed
+
+- **Climate and select bus IDs now parameterized via JSON** — The `"climate"` section in brand JSON files defines bus/slot IDs for the Truma heater, boiler, and fridge controls. Python write logic unchanged — only bus/slot IDs come from JSON.
+- **HYMER `hymer.json`**: Added `"climate"` section with `truma_heater` (bus 58, slots 4/5/6/8/9) and `fridge` (bus 34, slots 1/3) definitions.
+- **No climate/select entities for brands without definitions** — If a brand's JSON has no `"climate"` section (e.g. Eriba without Truma), the climate entity and select entities are simply not created instead of showing "unavailable".
+- **Sensor read paths parameterized** — Climate reads `temp_sensor`, `setpoint_sensor`, `fuel_type_sensor` from JSON instead of hardcoding `ambient_temp`, `heater_setpoint`, `heater_fuel_type`.
+
+### For Other Brands
+
+To add climate/fridge/boiler controls for your brand, add a `"climate"` section to your brand JSON (e.g. `eriba.json`) with the appropriate bus/slot IDs for your vehicle's heater and fridge. See `hymer.json` for the reference format.
+
+### Migration Notes
+
+- **Non-breaking** — All entity unique IDs unchanged. HACS update + restart.
+
 ## [2.44.0] - 2026-05-02
 
 ### Changed

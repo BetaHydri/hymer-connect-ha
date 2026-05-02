@@ -50,6 +50,11 @@ LIGHT_DEFS: dict[int, dict[str, Any]] = {}
 # Key: ``"bus_id,sensor_id"`` string.  Value: dict with name, icon, write_type, etc.
 SWITCH_DEFS: dict[str, dict[str, Any]] = {}
 
+# Climate/control definitions loaded from JSON ``"climate"`` section.
+# Contains bus/slot IDs for heater, fridge, and boiler — used by
+# climate.py and select.py to parameterize write commands per brand.
+CLIMATE_DEFS: dict[str, dict[str, Any]] = {}
+
 # Track whether overlays have already been loaded (prevents re-loading on
 # integration reload, since SENSOR_MAP is module-level and persists).
 _overlays_loaded: set[str] = set()
@@ -142,6 +147,19 @@ def _load_json_overlay(filename: str) -> int:
     if switches:
         _LOGGER.debug("Loaded %d switch definitions from %s", len(switches), filename)
 
+    # --- Climate section (v2.45.0+) ---
+    # Defines bus/slot IDs for heater, fridge, and boiler per brand.
+    # Later entries override earlier ones (brand overrides base).
+    climate = data.get("climate", {})
+    for key, climate_def in climate.items():
+        if key.startswith("_"):
+            continue
+        if isinstance(climate_def, dict):
+            CLIMATE_DEFS[key] = climate_def
+    if climate:
+        _LOGGER.debug("Loaded %d climate definitions from %s",
+                       sum(1 for k in climate if not k.startswith("_")), filename)
+
     return count
 
 
@@ -193,10 +211,10 @@ def load_sensor_map(brand: str) -> None:
     _overlays_loaded.add(cache_key)
     _LOGGER.info(
         "Sensor map ready: %d total entries (base=%d, %s=%d, hardcoded=%d), "
-        "%d lights, %d switches",
+        "%d lights, %d switches, %d climate defs",
         len(SENSOR_MAP), base_count, brand, brand_count,
         len(SENSOR_MAP) - base_count - brand_count,
-        len(LIGHT_DEFS), len(SWITCH_DEFS),
+        len(LIGHT_DEFS), len(SWITCH_DEFS), len(CLIMATE_DEFS),
     )
 
 

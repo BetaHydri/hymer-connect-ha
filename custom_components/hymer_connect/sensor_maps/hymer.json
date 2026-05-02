@@ -573,5 +573,30 @@
       "on_value": true,
       "read_path": "signalr_sensors.fridge_eco"
     }
+  },
+  "climate": {
+    "_doc": "Bus/slot IDs for heater, fridge, and boiler controls. Python write logic stays in climate.py and select.py — only bus IDs are parameterized here.",
+    "truma_heater": {
+      "heater_bus": 58,
+      "setpoint_sid": 8,
+      "fuel_type_sid": 4,
+      "fuel_type_2_sid": 6,
+      "boiler_sid": 5,
+      "electric_power_sid": 9,
+      "temp_sensor": "ambient_temp",
+      "setpoint_sensor": "heater_setpoint",
+      "fuel_type_sensor": "heater_fuel_type",
+      "boiler_sensor": "heater_fan_speed",
+      "electric_power_sensor": "heater_electric_power"
+    },
+    "fridge": {
+      "type": "thetford_t2000",
+      "control_bus": 34,
+      "power_sid": 1,
+      "cooling_step_sid": 3,
+      "power_sensor": "fridge_power",
+      "cooling_step_sensor": "fridge_cooling_step",
+      "mode_sensor": "fridge_mode"
+    }
   }
 }
