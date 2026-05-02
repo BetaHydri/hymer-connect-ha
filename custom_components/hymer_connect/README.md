@@ -12,7 +12,7 @@ Custom integration to connect your HYMER / Erwin Hymer Group motorhome or carava
 
 > **⚠️ Important:** Real-time sensor data (70+ entities: GPS, battery, doors, heater, fridge, etc.) requires an **EHG Remote Access Refresh Token**. This token must be captured **once** from your phone using mitmproxy during the initial setup. Without it, only basic vehicle metadata (model, VIN, year) is available. See [Obtaining the EHG Refresh Token](#obtaining-the-ehg-refresh-token) for the step-by-step guide.
 
-> **v2.44.0** — **Lights and switches now JSON-driven!** All lights, switches, sensors, and binary sensors loaded from `sensor_maps/base.json` + `{brand}.json`. Non-HYMER users can add lights and switches by editing their brand's JSON file. See [CHANGELOG](CHANGELOG.md) for full history.
+> **v2.45.0** — **All entity platforms now JSON-driven!** Sensors, binary sensors, lights, switches, climate, and selects all loaded from `sensor_maps/base.json` + `{brand}.json`. Non-HYMER users can contribute sensor mappings by editing their brand's JSON file. See [What entities are created for my brand?](#what-entities-are-created-for-my-brand) for details and [CHANGELOG](CHANGELOG.md) for full history.
 
 > **v2.30.2** — **Vehicle-verified sensor mappings!** Doors confirmed (driver + passenger on PIA). Fuel consumption sensors + configurable tank capacity.
 
@@ -430,6 +430,30 @@ The integration should work on **any EHG vehicle with an SCU**, but with some li
 The integration creates entities for **all** known sensors and lights. If your vehicle doesn't have a particular component (e.g., no solar charger, no Truma heater), those entities will simply show as **"Unavailable"** in Home Assistant. This is normal and does not cause errors or crashes.
 
 Similarly, if your vehicle has components that send data on bus/sensor IDs not yet in the integration's sensor map, that data will be silently ignored. It won't break anything, but those sensors won't appear in HA.
+
+### What entities are created for my brand?
+
+During setup you select your EHG brand. The integration loads **two JSON files** from the `sensor_maps/` folder:
+
+1. **`base.json`** — always loaded for every brand. Contains sensors shared across all EHG vehicles (chassis CAN bus 1, habitation EBL bus 3, SCU telemetry bus 30/45).
+2. **`{brand}.json`** — brand-specific overlay (e.g. `hymer.json`, `eriba.json`, `buerstner.json`). Adds lights, switches, climate controls, and additional sensors for that brand's typical equipment.
+
+If your brand's JSON file **does not exist or is empty** (e.g. you select Carado but `carado.json` has no entries yet), the integration still works — you simply get fewer entities:
+
+| Platform | With brand JSON | Without brand JSON (base only) |
+|----------|----------------|-------------------------------|
+| **Sensors** | Base + brand-specific (solar, BMS, heater, fridge, lights) | Base only (~63 entries: odometer, fuel, doors, battery, water, GPS, SCU) |
+| **Binary sensors** | Base + brand-specific | Base only + 4 static (cruise control, solar active, water pump, fridge door) |
+| **Lights** | Brand-defined lights (e.g. 12 for HYMER, 2 for Eriba) | **None** — all light definitions are brand-specific |
+| **Switches** | Base (12V main, water pump) + brand extras (e.g. fridge ECO) | Base only (12V main switch, water pump) |
+| **Climate** | Heater entity if brand JSON defines `"climate"` → `"truma_heater"` | **None** — skipped cleanly, no "unavailable" entities |
+| **Select** | Fridge/boiler/energy selects if brand JSON defines them | **None** — skipped cleanly |
+| **Button** | SCU restart (always) | SCU restart (always) |
+| **Device tracker** | GPS (always) | GPS (always) |
+
+> **No ghost entities:** When a brand JSON lacks a section (e.g. no `"lights"` or `"climate"`), those platforms are simply skipped. You will **not** see "unavailable" placeholder entities — only entities that your brand's configuration actually defines are created.
+
+> **Expanding your brand:** If your brand's JSON file is empty, you can contribute sensor mappings for your vehicle! See the [Self-Service Sensor Mapping](#how-you-can-help) section below. The `hymer.json` and `eriba.json` files serve as working examples of the JSON format.
 
 ### How you can help
 
