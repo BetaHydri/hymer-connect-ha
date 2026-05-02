@@ -527,8 +527,9 @@
       "color_temp": true
     },
     "22": {
-      "name": "light_bus22_unknown",
-      "icon": "mdi:help-circle-outline",
+      "_comment": "Duplicate of bus 25 (same physical outside LED bar, separate SCU component). Confirmed 2026-04-23.",
+      "name": "light_led_bar_duplicate",
+      "icon": "mdi:led-strip-variant",
       "brightness": true,
       "color_temp": false,
       "enabled": false
