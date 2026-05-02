@@ -13,6 +13,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **HYMER `hymer.json`**: Added `"climate"` section with `truma_heater` (bus 58, slots 4/5/6/8/9) and `fridge` (bus 34, slots 1/3) definitions.
 - **No climate/select entities for brands without definitions** — If a brand's JSON has no `"climate"` section (e.g. Eriba without Truma), the climate entity and select entities are simply not created instead of showing "unavailable".
 - **Sensor read paths parameterized** — Climate reads `temp_sensor`, `setpoint_sensor`, `fuel_type_sensor` from JSON instead of hardcoding `ambient_temp`, `heater_setpoint`, `heater_fuel_type`.
+- **Bus 22 identified as LED bar duplicate** — Renamed from `light_bus22_unknown` to `light_led_bar_duplicate`. Confirmed at vehicle 2026-04-23 and independently by @dan-simms1 on S700: bus 22 is a duplicate SCU component registration for the same physical outside LED bar controlled by bus 25. Remains disabled by default.
+
+### Documentation
+
+- **New README section: "What entities are created for my brand?"** — Explains the `base.json` + `{brand}.json` loading mechanism with a per-platform table showing what users get with and without a brand JSON overlay.
+- **Updated "What happens with missing sensors?"** — Rewritten to reflect JSON-driven entity creation (no ghost "unavailable" entities for missing platforms).
+- **Updated Lights compatibility row** — Now mentions JSON-driven per-brand definitions instead of hardcoded bus IDs.
+- **Corrected "Speed, RPM, and Engine Torque" section** — Rewritten based on @dan-simms1's S700 verification (#37) and APK metadata extraction. The SCU never exposes these via PIA on any Mercedes-based model — the original bus 1 labels were incorrect, not model-specific. Added mbapi2020 reference for driving data.
 
 ### For Other Brands
 
