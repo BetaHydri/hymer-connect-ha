@@ -30,7 +30,7 @@ Unlike the official EHG app, this integration gives you **full Home Assistant po
 
 > **⚠️ Important:** Real-time sensor data (130+ entities: GPS, battery, doors, heater, fridge, etc.) requires an **EHG Remote Access Refresh Token**. This token must be captured **once** from your phone using mitmproxy during the initial setup. Without it, only basic vehicle metadata (model, VIN, year) is available. See [Obtaining the EHG Refresh Token](#obtaining-the-ehg-refresh-token) for the step-by-step guide.
 
-> **v2.44.0** — **Lights and switches now JSON-driven too!** All sensor mappings, entity metadata, light definitions, and switch definitions are loaded from JSON at startup. `base.json` (63 sensors + 2 switches), `hymer.json` (88 sensors + 12 lights + 1 switch), `eriba.json` (33 sensors + 2 lights). New sensors, lights, and switches can be added by editing JSON — no Python changes needed. EHG token configurable via **Settings → Configure**. Non-breaking upgrade: update via HACS and restart HA. See [CHANGELOG](CHANGELOG.md) for full history.
+> **v2.45.0** — **Fully JSON-driven!** All platform types — sensors, binary sensors, lights, switches, climate, and select controls — are now configured via JSON overlay files. Bus/slot IDs for heater, boiler, and fridge are parameterized per brand. Only SCU restart button and computed sensors (solar power, fuel) remain hardcoded. EHG token configurable via **Settings → Configure**. Non-breaking upgrade: update via HACS and restart HA. See [CHANGELOG](CHANGELOG.md) for full history.
 
 ### Energy Dashboard
 
@@ -314,12 +314,93 @@ With the JSON-driven architecture, you can **add new sensors, rename slots, set 
 | `holdoff_off` | No | Seconds to hold optimistic OFF state after commanding OFF (default: 15). Use 30 for 12V main switch to ride through SCU bounce-back. |
 | `requires_12v` | No | `true` = entity unavailable when 12V main is off (e.g. water pump) |
 
-#### What you cannot do via JSON (yet)
+#### Step-by-step: Adding climate/heater/fridge controls for your vehicle (v2.45.0+)
 
-- **Select entities** (fridge mode, boiler mode, heater energy source) — complex multi-step write logic with delays and paired slot writes. Bus IDs will be parameterized via JSON in a future release.
-- **Climate entities** (Truma heater) — complex setpoint + energy source + multi-sensor writes. Bus IDs will be parameterized via JSON in a future release.
-- **Button entities** (SCU restart) — single universal entity, stays hardcoded.
-- **Computed sensors** (solar power = V×A, fuel liters, charge phase idle override) — need Python logic.
+The `"climate"` section in your brand JSON defines which bus and slot IDs the heater, boiler, and fridge use. The Python write logic (multi-step sequences, paired writes, delays) stays the same — only the bus/slot addresses come from JSON.
+
+**How the Truma heater controls work on the wire:**
+
+The Truma Combi heater uses multiple slots on the same bus that must be written together:
+
+```
+Bus 58 (Truma Combi D6E on S600/S700):
+├── sid 4: heater_fuel_type      "Diesel" / "Both" / "Electric"  (rw, str)
+├── sid 5: water_heater_mode     "OFF" / "ECO" / "HOT"           (rw, str) ← boiler
+├── sid 6: heater_fuel_type_2    mirrors sid 4, always paired     (rw, str)
+├── sid 8: heater_setpoint       float °C, -273.0 = OFF          (rw, float) ← climate
+└── sid 9: electric_power        900 / 1800                      (rw, uint) ← wattage
+```
+
+When you turn the heater on, the integration sends setpoint (sid 8) + fuel_type_2 (sid 6) as a paired multi-sensor command. When you change the boiler mode, it sends boiler_mode (sid 5) + fuel_type (sid 4) together. This pairing is required by the SCU.
+
+**JSON `"climate"` section (from `hymer.json`):**
+
+```json
+"climate": {
+  "truma_heater": {
+    "heater_bus": 58,
+    "setpoint_sid": 8,
+    "fuel_type_sid": 4,
+    "fuel_type_2_sid": 6,
+    "boiler_sid": 5,
+    "electric_power_sid": 9,
+    "temp_sensor": "ambient_temp",
+    "setpoint_sensor": "heater_setpoint",
+    "fuel_type_sensor": "heater_fuel_type",
+    "boiler_sensor": "heater_fan_speed",
+    "electric_power_sensor": "heater_electric_power"
+  },
+  "fridge": {
+    "type": "thetford_t2000",
+    "control_bus": 34,
+    "power_sid": 1,
+    "cooling_step_sid": 3,
+    "power_sensor": "fridge_power",
+    "cooling_step_sensor": "fridge_cooling_step",
+    "mode_sensor": "fridge_mode"
+  }
+}
+```
+
+**What this creates in HA:**
+- `climate.hymer_truma_heater` — HEAT/OFF + target temperature slider
+- `select.hymer_fridge_mode_ctrl` — Off / 1 / 2 / 3 / 4 / 5
+- `select.hymer_boiler_mode_ctrl` — Off / ECO / Turbo
+- `select.hymer_heater_energy_ctrl` — Diesel / Mix 900W / Mix 1800W / Electric 900W / Electric 1800W
+
+**Climate fields reference:**
+
+| Field | Used by | Description |
+|-------|---------|-------------|
+| `heater_bus` | climate + boiler + energy | Bus ID for the heater (e.g. 58 for Truma D6E, 6 for Truma Combi E) |
+| `setpoint_sid` | climate | Slot for target temperature (float write) |
+| `fuel_type_sid` | boiler + energy | Slot for fuel type string ("Diesel"/"Both"/"Electric") |
+| `fuel_type_2_sid` | climate + energy | Mirror slot — always paired with fuel_type_sid |
+| `boiler_sid` | boiler | Slot for boiler mode string ("OFF"/"ECO"/"HOT") |
+| `electric_power_sid` | energy | Slot for electric power wattage (uint 900/1800) |
+| `temp_sensor` | climate | Sensor name to read current temperature from |
+| `setpoint_sensor` | climate | Sensor name to read current setpoint from |
+| `fuel_type_sensor` | climate + boiler + energy | Sensor name to read current fuel type from |
+| `boiler_sensor` | boiler | Sensor name to read current boiler mode from |
+| `electric_power_sensor` | energy | Sensor name to read current wattage from |
+
+**Fridge fields reference:**
+
+| Field | Description |
+|-------|-------------|
+| `control_bus` | Bus ID for fridge control (34 for Thetford, 60 for Dometic) |
+| `power_sid` | Slot for power on/off (bool write) |
+| `cooling_step_sid` | Slot for cooling step 1–5 (uint write) |
+| `power_sensor` | Sensor name to read power state from |
+| `cooling_step_sensor` | Sensor name to read cooling step from |
+| `mode_sensor` | Sensor name to read operating mode from |
+
+**For other brands:** If your vehicle has a different heater (e.g. Truma Combi E on bus 6, or Alde on another bus), add the `"climate"` section to your brand JSON with the correct bus/slot IDs. The write commands use the same PIA protocol — only the addresses differ. If no `"climate"` section exists, the climate and select entities are simply not created.
+
+#### What stays hardcoded (by design)
+
+- **Button entities** (SCU restart) — single universal entity, specific coordinator method.
+- **Computed sensors** (solar power = V×A, fuel liters, charge phase idle override) — need Python arithmetic logic.
 
 #### Tips for slot discovery
 
