@@ -487,5 +487,91 @@
       "icon": "mdi:chip",
       "enabled": false
     }
+  },
+  "lights": {
+    "_doc": "Keyed by bus_id. Convention: sid 1=on/off (bool), sid 2=brightness (uint 0-100%), sid 3=color_temp (uint 0-100%). Set brightness/color_temp to true if the light supports it.",
+    "11": {
+      "name": "light_living_ceiling",
+      "icon": "mdi:ceiling-light",
+      "brightness": true,
+      "color_temp": false
+    },
+    "12": {
+      "name": "light_living_ambient",
+      "icon": "mdi:wall-sconce-flat",
+      "brightness": true,
+      "color_temp": true
+    },
+    "15": {
+      "name": "light_bedroom_ambient",
+      "icon": "mdi:wall-sconce-flat",
+      "brightness": true,
+      "color_temp": true
+    },
+    "16": {
+      "name": "light_nightlight",
+      "icon": "mdi:lightbulb-night",
+      "brightness": true,
+      "color_temp": false
+    },
+    "19": {
+      "name": "light_bathroom_ceiling",
+      "icon": "mdi:ceiling-light",
+      "brightness": true,
+      "color_temp": false
+    },
+    "21": {
+      "name": "light_kitchen",
+      "icon": "mdi:ceiling-light",
+      "brightness": true,
+      "color_temp": true
+    },
+    "22": {
+      "name": "light_bus22_unknown",
+      "icon": "mdi:help-circle-outline",
+      "brightness": true,
+      "color_temp": false,
+      "enabled": false
+    },
+    "24": {
+      "name": "light_wohnen_group",
+      "icon": "mdi:lightbulb-group-outline",
+      "brightness": true,
+      "color_temp": false
+    },
+    "25": {
+      "name": "light_led_bar",
+      "icon": "mdi:led-strip-variant",
+      "brightness": true,
+      "color_temp": false
+    },
+    "27": {
+      "name": "light_privat_group",
+      "icon": "mdi:lightbulb-group",
+      "brightness": true,
+      "color_temp": false
+    },
+    "43": {
+      "name": "light_seating_overhead",
+      "icon": "mdi:ceiling-light",
+      "brightness": true,
+      "color_temp": false
+    },
+    "44": {
+      "name": "light_bedroom_overhead",
+      "icon": "mdi:ceiling-light",
+      "brightness": true,
+      "color_temp": false
+    }
+  },
+  "switches": {
+    "_doc": "Keyed by bus_id,sensor_id. write_type: str|bool|uint. on_value: readback value that means ON. holdoff_off: seconds to hold optimistic OFF state (for SCU bounce-back).",
+    "34,2": {
+      "name": "fridge_eco_ctrl",
+      "icon": "mdi:leaf",
+      "write_type": "bool",
+      "on_value": true,
+      "read_path": "signalr_sensors.fridge_eco"
+    }
   }
 }

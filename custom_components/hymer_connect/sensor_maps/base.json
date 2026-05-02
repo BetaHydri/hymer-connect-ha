@@ -371,5 +371,27 @@
       "platform": "sensor",
       "icon": "mdi:chip"
     }
+  },
+  "switches": {
+    "_doc": "Universal switches on bus 3 (habitation electrics). write_type: how the PIA command is sent. on_value: readback value meaning ON. holdoff_off: seconds to hold optimistic OFF (for SCU bounce-back).",
+    "3,1": {
+      "name": "main_switch_ctrl",
+      "icon": "mdi:power",
+      "write_type": "str",
+      "write_on": "On",
+      "write_off": "Off",
+      "on_value": "On",
+      "read_path": "signalr_sensors.main_switch",
+      "holdoff_off": 30,
+      "requires_12v": false
+    },
+    "3,3": {
+      "name": "water_pump_ctrl",
+      "icon": "mdi:water-pump",
+      "write_type": "bool",
+      "on_value": true,
+      "read_path": "signalr_sensors.charger_active",
+      "requires_12v": true
+    }
   }
 }

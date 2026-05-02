@@ -5,6 +5,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.44.0] - 2026-05-02
+
+### Changed
+
+- **Lights now JSON-driven** — All 12 HYMER light entities (8 interior + LED bar + 2 groups + bus 22 unknown) moved from hardcoded `light.py` to `hymer.json` `"lights"` section. Eriba lights (bus 18 shower, bus 93 furniture) in `eriba.json`. New brands can define their own lights by adding a `"lights"` section to their brand JSON file.
+- **Switches now JSON-driven** — All 3 switch entities (12V main, water pump, fridge ECO) moved from hardcoded `switch.py` to JSON. Universal switches (12V main, water pump) in `base.json`, brand-specific (fridge ECO) in `hymer.json`. JSON supports `write_type` (str/bool/uint), `holdoff_off` (bounce-back protection), and `requires_12v` (availability guard).
+- **Light convention** — Lights keyed by bus_id. SCU convention: sid 1=on/off, sid 2=brightness, sid 3=color_temp. JSON declares capabilities (`brightness: true/false`, `color_temp: true/false`).
+
+### Migration Notes
+
+- **Non-breaking** — All entity unique IDs, keys, and names are identical to v2.43.0.
+- HACS update + HA restart is sufficient. No need to remove/re-add the integration.
+- Eriba users now get 2 light entities (shower + furniture) automatically.
+
 ## [2.43.0] - 2026-05-02
 
 ### Changed

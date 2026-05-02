@@ -128,5 +128,20 @@
       "name": "light_bedroom_furniture_brightness",
       "unit": "%"
     }
+  },
+  "lights": {
+    "_doc": "Eriba-specific lights. Bus 18 = shower ambient, bus 93 = bedroom furniture. Convention: sid 1=on/off, sid 2=brightness, sid 3=color_temp.",
+    "18": {
+      "name": "light_shower_ambient",
+      "icon": "mdi:shower-head",
+      "brightness": true,
+      "color_temp": false
+    },
+    "93": {
+      "name": "light_bedroom_furniture",
+      "icon": "mdi:wardrobe-outline",
+      "brightness": true,
+      "color_temp": false
+    }
   }
 }

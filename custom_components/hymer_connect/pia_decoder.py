@@ -42,6 +42,14 @@ SENSOR_MAP: dict[tuple[int, int], tuple[str, str | None, str | None]] = {}
 # Only entries with a ``"platform"`` field in the JSON appear here.
 ENTITY_DEFS: dict[str, dict[str, Any]] = {}
 
+# Light definitions loaded from JSON ``"lights"`` section.
+# Key: bus_id (int).  Value: dict with name, icon, brightness, color_temp.
+LIGHT_DEFS: dict[int, dict[str, Any]] = {}
+
+# Switch definitions loaded from JSON ``"switches"`` section.
+# Key: ``"bus_id,sensor_id"`` string.  Value: dict with name, icon, write_type, etc.
+SWITCH_DEFS: dict[str, dict[str, Any]] = {}
+
 # Track whether overlays have already been loaded (prevents re-loading on
 # integration reload, since SENSOR_MAP is module-level and persists).
 _overlays_loaded: set[str] = set()
@@ -59,10 +67,13 @@ def _load_json_overlay(filename: str) -> int:
     :data:`ENTITY_DEFS` so that ``sensor.py`` / ``binary_sensor.py`` can
     build HA entity descriptions at runtime.
 
-    Overlay entries **override** existing entries for the same (bus, slot).
+    Additionally loads ``"lights"`` and ``"switches"`` sections (v2.44.0+)
+    into :data:`LIGHT_DEFS` and :data:`SWITCH_DEFS`.
+
+    Overlay entries **override** existing entries for the same key.
 
     Returns:
-        Number of entries merged.
+        Number of sensor entries merged (lights/switches not counted).
     """
     path = _SENSOR_MAPS_DIR / filename
     if not path.is_file():
@@ -108,6 +119,29 @@ def _load_json_overlay(filename: str) -> int:
 
         SENSOR_MAP[(bus_id, sensor_id)] = (name, unit, transform)
         count += 1
+
+    # --- Lights section (v2.44.0+) ---
+    # Keyed by bus_id string. Convention: sid 1=on/off, sid 2=brightness,
+    # sid 3=color_temp. The JSON declares which capabilities the light has.
+    lights = data.get("lights", {})
+    for bus_str, light_def in lights.items():
+        if not isinstance(light_def, dict):
+            continue
+        bus_id = int(bus_str.strip())
+        LIGHT_DEFS[bus_id] = light_def
+    if lights:
+        _LOGGER.debug("Loaded %d light definitions from %s", len(lights), filename)
+
+    # --- Switches section (v2.44.0+) ---
+    # Keyed by "bus_id,sensor_id" string. Defines write-command metadata.
+    switches = data.get("switches", {})
+    for key_str, switch_def in switches.items():
+        if not isinstance(switch_def, dict):
+            continue
+        SWITCH_DEFS[key_str] = switch_def
+    if switches:
+        _LOGGER.debug("Loaded %d switch definitions from %s", len(switches), filename)
+
     return count
 
 
@@ -158,9 +192,11 @@ def load_sensor_map(brand: str) -> None:
 
     _overlays_loaded.add(cache_key)
     _LOGGER.info(
-        "Sensor map ready: %d total entries (base=%d, %s=%d, hardcoded=%d)",
+        "Sensor map ready: %d total entries (base=%d, %s=%d, hardcoded=%d), "
+        "%d lights, %d switches",
         len(SENSOR_MAP), base_count, brand, brand_count,
         len(SENSOR_MAP) - base_count - brand_count,
+        len(LIGHT_DEFS), len(SWITCH_DEFS),
     )
 
 

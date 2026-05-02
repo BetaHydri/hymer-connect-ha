@@ -1,4 +1,11 @@
-"""Light platform for HYMER Connect — controllable interior lights."""
+"""Light platform for HYMER Connect — controllable interior lights.
+
+Light definitions are loaded from JSON ``"lights"`` sections in
+``sensor_maps/base.json`` + ``{brand}.json``.  Each entry is keyed by
+bus_id and declares capabilities (brightness, color_temp).  The SCU
+convention is: sid 1 = on/off (bool), sid 2 = brightness (uint 0-100%),
+sid 3 = color_temp (uint 0-100%).
+"""
 
 from __future__ import annotations
 
@@ -25,7 +32,7 @@ from .sensor import _resolve_path
 
 _LOGGER = logging.getLogger(__name__)
 
-# Color temperature range (Kelvin) for lights with color_temp_path
+# Color temperature range (Kelvin) for lights with color_temp support
 MIN_COLOR_TEMP_KELVIN = 2700  # warm white
 MAX_COLOR_TEMP_KELVIN = 6500  # daylight
 
@@ -38,110 +45,40 @@ class HymerLightEntityDescription(LightEntityDescription):
     color_temp_path: str | None = None
 
 
-LIGHT_DESCRIPTIONS: tuple[HymerLightEntityDescription, ...] = (
-    HymerLightEntityDescription(
-        key="light_living_ceiling",
-        translation_key="light_living_ceiling",
-        bus_id=11,
-        on_off_path="signalr_sensors.light_living_ceiling",
-        brightness_path="signalr_sensors.light_living_ceiling_brightness",
-        icon="mdi:ceiling-light",
-    ),
-    HymerLightEntityDescription(
-        key="light_living_ambient",
-        translation_key="light_living_ambient",
-        bus_id=12,
-        on_off_path="signalr_sensors.light_living_ambient",
-        brightness_path="signalr_sensors.light_living_ambient_brightness",
-        color_temp_path="signalr_sensors.light_living_ambient_color_temp",
-        icon="mdi:wall-sconce-flat",
-    ),
-    HymerLightEntityDescription(
-        key="light_kitchen",
-        translation_key="light_kitchen",
-        bus_id=21,
-        on_off_path="signalr_sensors.light_kitchen",
-        brightness_path="signalr_sensors.light_kitchen_brightness",
-        color_temp_path="signalr_sensors.light_kitchen_color_temp",
-        icon="mdi:ceiling-light",
-    ),
-    HymerLightEntityDescription(
-        key="light_seating_overhead",
-        translation_key="light_seating_overhead",
-        bus_id=43,
-        on_off_path="signalr_sensors.light_seating_overhead",
-        brightness_path="signalr_sensors.light_seating_overhead_brightness",
-        icon="mdi:ceiling-light",
-    ),
-    HymerLightEntityDescription(
-        key="light_bedroom_ambient",
-        translation_key="light_bedroom_ambient",
-        bus_id=15,
-        on_off_path="signalr_sensors.light_bedroom_ambient",
-        brightness_path="signalr_sensors.light_bedroom_ambient_brightness",
-        color_temp_path="signalr_sensors.light_bedroom_ambient_color_temp",
-        icon="mdi:wall-sconce-flat",
-    ),
-    HymerLightEntityDescription(
-        key="light_nightlight",
-        translation_key="light_nightlight",
-        bus_id=16,
-        on_off_path="signalr_sensors.light_nightlight",
-        brightness_path="signalr_sensors.light_nightlight_brightness",
-        icon="mdi:lightbulb-night",
-    ),
-    HymerLightEntityDescription(
-        key="light_bathroom_ceiling",
-        translation_key="light_bathroom_ceiling",
-        bus_id=19,
-        on_off_path="signalr_sensors.light_bathroom_ceiling",
-        brightness_path="signalr_sensors.light_bathroom_ceiling_brightness",
-        icon="mdi:ceiling-light",
-    ),
-    HymerLightEntityDescription(
-        key="light_bedroom_overhead",
-        translation_key="light_bedroom_overhead",
-        bus_id=44,
-        on_off_path="signalr_sensors.light_bedroom_overhead",
-        brightness_path="signalr_sensors.light_bedroom_overhead_brightness",
-        icon="mdi:ceiling-light",
-    ),
-    HymerLightEntityDescription(
-        key="light_privat_group",
-        translation_key="light_privat_group",
-        bus_id=27,
-        on_off_path="signalr_sensors.light_privat_group",
-        brightness_path="signalr_sensors.light_privat_group_brightness",
-        icon="mdi:lightbulb-group",
-    ),
-    HymerLightEntityDescription(
-        key="light_wohnen_group",
-        translation_key="light_wohnen_group",
-        bus_id=24,
-        on_off_path="signalr_sensors.light_wohnen_group",
-        brightness_path="signalr_sensors.light_wohnen_group_brightness",
-        icon="mdi:lightbulb-group-outline",
-    ),
-    HymerLightEntityDescription(
-        key="light_led_bar",
-        translation_key="light_led_bar",
-        bus_id=25,
-        on_off_path="signalr_sensors.light_led_bar",
-        brightness_path="signalr_sensors.light_led_bar_brightness",
-        icon="mdi:led-strip-variant",
-    ),
-    # Bus 22 — Unknown device (likely a light, needs physical verification)
-    # Default-disabled so it only shows in entity registry, not in dashboard
-    HymerLightEntityDescription(
-        key="light_bus22_unknown",
-        translation_key="light_bus22_unknown",
-        bus_id=22,
-        on_off_path="signalr_sensors.fresh_water_sensor",
-        brightness_path="signalr_sensors.fresh_water_level",
-        entity_registry_enabled_default=False,
-        icon="mdi:help-circle-outline",
-    ),
-)
+def _build_light_descriptions() -> list[HymerLightEntityDescription]:
+    """Build light entity descriptions from JSON-loaded LIGHT_DEFS."""
+    from .pia_decoder import LIGHT_DEFS, SENSOR_MAP
+
+    descriptions: list[HymerLightEntityDescription] = []
+    for bus_id, meta in LIGHT_DEFS.items():
+        if not isinstance(meta, dict) or "name" not in meta:
+            continue
+        name = meta["name"]
+        # Resolve the on/off sensor name from SENSOR_MAP (bus, sid=1)
+        sm_entry = SENSOR_MAP.get((bus_id, 1))
+        on_off_name = sm_entry[0] if sm_entry else name
+        kwargs: dict[str, Any] = {
+            "key": name,
+            "translation_key": name,
+            "bus_id": bus_id,
+            "on_off_path": f"signalr_sensors.{on_off_name}",
+        }
+        if meta.get("icon"):
+            kwargs["icon"] = meta["icon"]
+        if meta.get("enabled") is False:
+            kwargs["entity_registry_enabled_default"] = False
+        # Brightness: look for (bus, 2) in SENSOR_MAP
+        if meta.get("brightness"):
+            br_entry = SENSOR_MAP.get((bus_id, 2))
+            if br_entry:
+                kwargs["brightness_path"] = f"signalr_sensors.{br_entry[0]}"
+        # Color temp: look for (bus, 3) in SENSOR_MAP
+        if meta.get("color_temp"):
+            ct_entry = SENSOR_MAP.get((bus_id, 3))
+            if ct_entry:
+                kwargs["color_temp_path"] = f"signalr_sensors.{ct_entry[0]}"
+        descriptions.append(HymerLightEntityDescription(**kwargs))
+    return descriptions
 
 
 async def async_setup_entry(
@@ -150,9 +87,11 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     coordinator: HymerConnectCoordinator = hass.data[DOMAIN][entry.entry_id]
+    descriptions = _build_light_descriptions()
+    _LOGGER.debug("Light platform: %d light entities from JSON", len(descriptions))
     async_add_entities(
         HymerConnectLight(coordinator, desc, entry)
-        for desc in LIGHT_DESCRIPTIONS
+        for desc in descriptions
     )
 
 
