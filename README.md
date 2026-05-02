@@ -744,8 +744,8 @@ The integration should work on **any EHG vehicle with an SCU**, but with some li
 | **Lights** | ⚠️ Partial | Light bus IDs (11, 12, 15, 16, 19, 21, 24, 43, 44) and their capabilities (brightness, color temp) are specific to the Grand Canyon S layout. Your vehicle may have different lights on different buses |
 | **Truma heater** (bus 58) | ⚠️ Depends | Only if your vehicle has a Truma heater connected via the SCU. Vehicles with Alde or other heating systems may use different bus IDs |
 | **Fridge** (bus 34) | ⚠️ Depends | Only if your vehicle has a Dometic/Thetford fridge connected via the SCU |
-| **Solar** (bus 8) | ⚠️ Depends | Mapped for the Voltronic MPP260CI (S600) / MPP250Duo (S700) MPPT charger. Other solar setups may report on different bus IDs |
-| **Extended CAN** (bus 99) | ⚠️ Depends | On the S600: AdBlue, ambient temp, fuel range, gear. On the S700: lithium BMS (voltage, current, SoC, SoH). Slot meanings vary by vehicle configuration |
+| **Solar** (bus 8) | ⚠️ Depends | Mapped for the Voltronic MPP260CI / MPP250Duo MPPT charger (same bus/slot layout on both S600 and S700, confirmed by @dan-simms1). Other solar charger models may use different bus IDs |
+| **BMS** (bus 99) | ⚠️ Depends | BOS LUX LiFePO4 BMS on both S600 and S700 (pack voltage, current, temperature, SOC, SoH, capacity). The old labels (AdBlue, fuel range, gear) were incorrect — corrected by @dan-simms1 in [#37](https://github.com/BetaHydri/hymer-connect-ha/issues/37). Vehicles without a LiFePO4 BMS may not report on this bus |
 
 ### What happens with missing sensors?
 
