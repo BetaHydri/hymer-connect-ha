@@ -418,7 +418,7 @@ The integration should work on **any EHG vehicle with an SCU**, but with some li
 | **GPS** (bus 30) | ✅ Likely | Slots (30,1) and (30,2) carry GPS coordinates on both S600 and S700. Other slots on bus 30 are LTE/SCU/BT telemetry, not GPS |
 | **Habitation sensors** (bus 3 — water, power source, charge phase) | ✅ Likely | LIN bus sensors on bus 3 (lin1) are part of the standard SCU wiring |
 | **CAN bus sensors** (bus 1 — speed, RPM, doors, locks) | ⚠️ Partial | Bus 1 sensor **slots differ between models**. The S600 maps (1,2) as speed; the S700 maps it as fuel level. A mitmproxy capture on your vehicle is needed to verify |
-| **Lights** | ⚠️ Partial | Light bus IDs (11, 12, 15, 16, 19, 21, 24, 43, 44) and their capabilities (brightness, color temp) are specific to the Grand Canyon S layout. Your vehicle may have different lights on different buses |
+| **Lights** | ⚠️ Partial | Light definitions are now **JSON-driven** (brand-specific). HYMER has 12 lights, Eriba has 2. Your vehicle may have different lights on different buses — edit your brand's JSON to add them |
 | **Truma heater** (bus 58) | ⚠️ Depends | Only if your vehicle has a Truma heater connected via the SCU. Vehicles with Alde or other heating systems may use different bus IDs |
 | **Fridge** (bus 34) | ⚠️ Depends | Only if your vehicle has a Dometic/Thetford fridge connected via the SCU |
 | **Victron MultiPlus** (bus 121) | ❌ Not working | Victron uses VE.Bus (RS-485), which is incompatible with the vehicle CAN bus. A Cerbo GX cannot bridge this either (VE.Can ≠ vehicle CAN). EHG may have a proprietary SCU-to-Victron interface on some configurations. Entities are disabled by default and produce no data |
@@ -427,9 +427,11 @@ The integration should work on **any EHG vehicle with an SCU**, but with some li
 
 ### What happens with missing sensors?
 
-The integration creates entities for **all** known sensors and lights. If your vehicle doesn't have a particular component (e.g., no solar charger, no Truma heater), those entities will simply show as **"Unavailable"** in Home Assistant. This is normal and does not cause errors or crashes.
+Since v2.41.0, the integration uses **JSON-driven sensor maps**. It only creates entities that are defined in the loaded JSON files (`base.json` + your brand's overlay). If your brand's JSON file has no entries for a particular platform (e.g. no `"lights"` section), those entities are simply not created — no "unavailable" placeholders clutter your dashboard.
 
-Similarly, if your vehicle has components that send data on bus/sensor IDs not yet in the integration's sensor map, that data will be silently ignored. It won't break anything, but those sensors won't appear in HA.
+For sensors that *are* defined but whose vehicle component is absent or offline (e.g. solar charger mapped in JSON but physically not installed), those entities will show as **"Unknown"** until the SCU reports data for them. This is normal and does not cause errors.
+
+If your vehicle has components that send data on bus/sensor IDs not yet in the sensor map, that data will be silently ignored. It won't break anything, but those sensors won't appear in HA. See [How you can help](#how-you-can-help) to contribute new mappings.
 
 ### What entities are created for my brand?
 
