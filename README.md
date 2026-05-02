@@ -30,7 +30,7 @@ Unlike the official EHG app, this integration gives you **full Home Assistant po
 
 > **⚠️ Important:** Real-time sensor data (130+ entities: GPS, battery, doors, heater, fridge, etc.) requires an **EHG Remote Access Refresh Token**. This token must be captured **once** from your phone using mitmproxy during the initial setup. Without it, only basic vehicle metadata (model, VIN, year) is available. See [Obtaining the EHG Refresh Token](#obtaining-the-ehg-refresh-token) for the step-by-step guide.
 
-> **v2.43.0** — **JSON-driven sensor & entity definitions!** All sensor mappings and entity metadata are now loaded from JSON files at startup. Universal sensors in `base.json` (63 entries), brand-specific in `hymer.json` (88) or `eriba.json` (33). New sensors and brands can be added by editing JSON — no Python changes needed. EHG token configurable via **Settings → Configure** (since v2.38.0). Non-breaking upgrade: update via HACS and restart HA. See [CHANGELOG](CHANGELOG.md) for full history.
+> **v2.44.0** — **Lights and switches now JSON-driven too!** All sensor mappings, entity metadata, light definitions, and switch definitions are loaded from JSON at startup. `base.json` (63 sensors + 2 switches), `hymer.json` (88 sensors + 12 lights + 1 switch), `eriba.json` (33 sensors + 2 lights). New sensors, lights, and switches can be added by editing JSON — no Python changes needed. EHG token configurable via **Settings → Configure**. Non-breaking upgrade: update via HACS and restart HA. See [CHANGELOG](CHANGELOG.md) for full history.
 
 ### Energy Dashboard
 
@@ -164,7 +164,7 @@ The sensor map was built on a **HYMER Grand Canyon S 600 CrossOver** (Mercedes S
 - **Victron**: MultiPlus (bus 121) is in `hymer.json` but all entities disabled by default — VE.Bus hardware is non-functional via SCU.
 - **Vehicle CAN bus (bus 1)**: Mercedes Sprinter vs VW Crafter may have different slot semantics for doors, ignition, and chassis flags. Brand overlays can override individual slots.
 
-> **Eriba users** (v2.43.0+): Your `eriba.json` already defines Dometic fridge sensors (bus 60), shower light (bus 18), Truma Aventa AC placeholder slots (bus 59), and bedroom furniture light (bus 93). With the new JSON-driven architecture, you can **add sensors and entities yourself** without waiting for a release or writing Python code. See the [Self-Service Guide for Non-HYMER Brands](#-self-service-guide-for-non-hymer-brands-v2430) below.
+> **Eriba users** (v2.44.0+): Your `eriba.json` already defines Dometic fridge sensors (bus 60), **2 controllable light entities** (bus 18 shower ambient + bus 93 bedroom furniture), Truma Aventa AC placeholder slots (bus 59). With the JSON-driven architecture, you can **add sensors, lights, switches, and binary sensors yourself** without waiting for a release or writing Python code. See the [Self-Service Guide for Non-HYMER Brands](#-self-service-guide-for-non-hymer-brands-v2430) below.
 
 ### � Dynamic Slot Discovery (v2.34.0+)
 
@@ -198,10 +198,12 @@ With the JSON-driven architecture, you can **add new sensors, rename slots, set 
 
 | Task | How | Example |
 |------|-----|---------|
-| **Name a discovered slot** | Add a decode-only entry to your brand's JSON | `"18,1": {"name": "light_shower_ambient"}` |
+| **Name a discovered slot** | Add a decode-only entry to your brand's `"sensors"` | `"18,1": {"name": "light_shower_ambient"}` |
 | **Create a sensor entity** | Add `"platform": "sensor"` + metadata | `"59,3": {"name": "ac_temperature", "unit": "°C", "platform": "sensor", "device_class": "temperature", "icon": "mdi:thermometer"}` |
 | **Create a binary sensor** | Add `"platform": "binary_sensor"` + metadata | `"60,8": {"name": "dometic_fridge_power", "platform": "binary_sensor", "device_class": "power", "icon": "mdi:fridge"}` |
-| **Override a base entry** | Use the same `"bus,slot"` key in your brand file | Your brand file wins over `base.json` for that slot |
+| **Add a light** | Add entry to `"lights"` keyed by bus_id | `"18": {"name": "light_shower_ambient", "icon": "mdi:shower-head", "brightness": true, "color_temp": false}` |
+| **Add a switch** | Add entry to `"switches"` keyed by `"bus,slot"` | `"34,2": {"name": "fridge_eco_ctrl", "icon": "mdi:leaf", "write_type": "bool", "on_value": true, "read_path": "signalr_sensors.fridge_eco"}` |
+| **Override a base entry** | Use the same key in your brand file | Your brand file wins over `base.json` for that slot |
 | **Disable an entity by default** | Add `"enabled": false` | `"121,1": {"name": "victron_inverter_on", ..., "enabled": false}` |
 
 #### Step-by-step: Adding a new sensor for your vehicle
@@ -236,15 +238,88 @@ With the JSON-driven architecture, you can **add new sensors, rename slots, set 
 
 5. **Contribute** — open a PR with your changes so other Eriba users benefit too!
 
+#### Step-by-step: Adding a light for your vehicle (v2.44.0+)
+
+**Example:** Your Eriba has a shower ambient light on bus 18.
+
+1. **Ensure the sensor decode entries exist** in `"sensors"` (bus 18, sid 1 = on/off, sid 2 = brightness):
+   ```json
+   "18,1": {"name": "light_shower_ambient"},
+   "18,2": {"name": "light_shower_ambient_brightness", "unit": "%"}
+   ```
+
+2. **Add a light entry** in the `"lights"` section:
+   ```json
+   "lights": {
+     "18": {
+       "name": "light_shower_ambient",
+       "icon": "mdi:shower-head",
+       "brightness": true,
+       "color_temp": false
+     }
+   }
+   ```
+
+3. **Add a translation** in `translations/en.json`:
+   ```json
+   "light": {
+     "light_shower_ambient": { "name": "Shower ambient" }
+   }
+   ```
+
+4. **Restart HA** — the light entity appears with on/off and brightness slider.
+
+**Light convention:** All EHG lights use the same SCU protocol: sid 1 = on/off (bool), sid 2 = brightness (uint 0–100%), sid 3 = color_temp (uint 0–100%). Set `"color_temp": true` only if the light supports it.
+
+#### Step-by-step: Adding a switch for your vehicle (v2.44.0+)
+
+**Example:** You want to add a fridge ECO switch on bus 34, slot 2.
+
+1. **Ensure the sensor decode entry exists** in `"sensors"`:
+   ```json
+   "34,2": {"name": "fridge_eco"}
+   ```
+
+2. **Add a switch entry** in the `"switches"` section:
+   ```json
+   "switches": {
+     "34,2": {
+       "name": "fridge_eco_ctrl",
+       "icon": "mdi:leaf",
+       "write_type": "bool",
+       "on_value": true,
+       "read_path": "signalr_sensors.fridge_eco"
+     }
+   }
+   ```
+
+3. **Add a translation** in `translations/en.json`:
+   ```json
+   "switch": {
+     "fridge_eco_ctrl": { "name": "Fridge ECO" }
+   }
+   ```
+
+4. **Restart HA** — the switch entity appears.
+
+**Switch fields:**
+| Field | Required | Description |
+|-------|----------|-------------|
+| `name` | Yes | Entity key and translation key |
+| `write_type` | Yes | `"bool"`, `"str"`, or `"uint"` — how the PIA command is sent |
+| `on_value` | Yes | Readback value that means ON (e.g. `true`, `"On"`, `1`) |
+| `read_path` | Yes | Coordinator data path to read current state |
+| `icon` | No | MDI icon |
+| `write_on` / `write_off` | No | For `"str"` switches — the string values sent for ON/OFF (defaults: `"On"`/`"Off"`) |
+| `holdoff_off` | No | Seconds to hold optimistic OFF state after commanding OFF (default: 15). Use 30 for 12V main switch to ride through SCU bounce-back. |
+| `requires_12v` | No | `true` = entity unavailable when 12V main is off (e.g. water pump) |
+
 #### What you cannot do via JSON (yet)
 
-- **Light entities** (on/off + brightness control) — still hardcoded in `light.py` because they need write-command logic
-- **Switch entities** (12V main, water pump) — still hardcoded in `switch.py`
-- **Select entities** (fridge mode, boiler mode) — still hardcoded in `select.py`
-- **Climate entities** (Truma heater) — still hardcoded in `climate.py`
-- **Computed sensors** (solar power = V×A, fuel liters, charge phase idle override) — need Python logic
-
-These will be addressed in future phases. For now, writable controls require a code change + PR.
+- **Select entities** (fridge mode, boiler mode, heater energy source) — complex multi-step write logic with delays and paired slot writes. Bus IDs will be parameterized via JSON in a future release.
+- **Climate entities** (Truma heater) — complex setpoint + energy source + multi-sensor writes. Bus IDs will be parameterized via JSON in a future release.
+- **Button entities** (SCU restart) — single universal entity, stays hardcoded.
+- **Computed sensors** (solar power = V×A, fuel liters, charge phase idle override) — need Python logic.
 
 #### Tips for slot discovery
 
@@ -259,7 +334,7 @@ These will be addressed in future phases. For now, writable controls require a c
 4. Toggle things in the EHG app (lights, AC, fridge settings) and watch which discovered slots change value.
 5. Once identified, add the mapping to your brand JSON and restart HA.
 
-> **Current Eriba overlay (`eriba.json`):** 33 entries across buses 18 (shower light), 59 (Truma Aventa AC — 8 placeholder slots awaiting identification), 60 (Dometic fridge — 21 slots, 9 with entities), and 93 (bedroom furniture light). The bus 59 AC slots are particularly ripe for mapping — if you have a Truma Aventa and can correlate EHG app actions with slot values, please share your findings!
+> **Current Eriba overlay (`eriba.json`):** 33 sensor entries + 2 lights + 0 switches. Lights: bus 18 (shower ambient, with brightness), bus 93 (bedroom furniture, with brightness). Sensors: bus 59 (Truma Aventa AC — 8 placeholder slots awaiting identification), bus 60 (Dometic fridge — 21 slots, 9 with entities). The bus 59 AC slots are particularly ripe for mapping — if you have a Truma Aventa and can correlate EHG app actions with slot values, please share your findings!
 
 ### 🗺️ Device Tracker
 
@@ -755,7 +830,7 @@ Note: `"60,3"` has no `"platform"` field — it is **decode-only** (the value is
 
 **Available brand files:** `base.json`, `hymer.json`, `eriba.json`, `buerstner.json`, `dethleffs.json`, `lmc.json`, `niesmann-bischoff.json`, `sunlight.json`, `carado.json`, `laika.json`, `freeontour.json`
 
-**How it works:** At startup, the integration loads `base.json` first (universal buses shared by all EHG brands — 63 entries for buses 1, 3, 30, 45), then `{brand}.json` based on the brand you selected during setup (e.g. `hymer.json` adds 88 entries for S600/S700-specific hardware: lights, solar, fridge, heater, BMS). Overlay entries **override** `base.json` entries for matching `(bus, slot)` keys. The Python code reads entity metadata from the JSON and dynamically creates HA entity descriptions — no Python changes needed to add new sensors.
+**How it works:** At startup, the integration loads `base.json` first (universal buses shared by all EHG brands — 63 sensors + 2 switches for buses 1, 3, 30, 45), then `{brand}.json` based on the brand you selected during setup (e.g. `hymer.json` adds 88 sensors + 12 lights + 1 switch for S600/S700-specific hardware). Overlay entries **override** `base.json` entries for matching keys. The Python code reads entity metadata from the JSON and dynamically creates HA entity descriptions — no Python changes needed to add new sensors, lights, or switches.
 
 To contribute: fork the repo, edit `sensor_maps/{your_brand}.json`, add translation keys to `translations/en.json`, and open a PR.
 

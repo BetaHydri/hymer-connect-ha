@@ -4,6 +4,7 @@
 > **SCU Firmware:** 1.12.0.0
 > **Validated:** April 2026 via mitmproxy captures + live HA correlation
 > **Discovery scan:** 2026-04-23 — 129 sensors, 129 mapped, 0 unmapped. Vehicle-verified at Unterföhring.
+> **JSON architecture:** v2.44.0+ — all sensor mappings, entity definitions, lights, and switches loaded from `base.json` + `{brand}.json`.
 
 This document maps every known `(bus_id, sensor_id)` slot to its sensor name,
 unit, and value transform. The base map was built on the S600 but includes

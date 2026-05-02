@@ -12,7 +12,7 @@ Custom integration to connect your HYMER / Erwin Hymer Group motorhome or carava
 
 > **⚠️ Important:** Real-time sensor data (70+ entities: GPS, battery, doors, heater, fridge, etc.) requires an **EHG Remote Access Refresh Token**. This token must be captured **once** from your phone using mitmproxy during the initial setup. Without it, only basic vehicle metadata (model, VIN, year) is available. See [Obtaining the EHG Refresh Token](#obtaining-the-ehg-refresh-token) for the step-by-step guide.
 
-> **v2.43.0** — **JSON-driven sensor & entity definitions!** All sensor mappings and entity metadata now loaded from `sensor_maps/base.json` + `{brand}.json`. Non-HYMER users can add sensors and entities by editing their brand's JSON file — no Python code required. See [CHANGELOG](CHANGELOG.md) for full history.
+> **v2.44.0** — **Lights and switches now JSON-driven!** All lights, switches, sensors, and binary sensors loaded from `sensor_maps/base.json` + `{brand}.json`. Non-HYMER users can add lights and switches by editing their brand's JSON file. See [CHANGELOG](CHANGELOG.md) for full history.
 
 > **v2.30.2** — **Vehicle-verified sensor mappings!** Doors confirmed (driver + passenger on PIA). Fuel consumption sensors + configurable tank capacity.
 
