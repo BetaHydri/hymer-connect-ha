@@ -25,7 +25,7 @@ Unlike the official EHG app, this integration gives you **full Home Assistant po
 | **Combine with other HA devices** (home, weather, calendar) | ❌ | ✅ |
 | **Template sensors** (corrected engine status, computed solar power) | ❌ | ✅ |
 | **Always-on monitoring** (24/7, not just while app is open) | ❌ | ✅ |
-| **~100 entities** (vs ~20 in the EHG app) | ❌ | ✅ |
+| **~130 entities** (vs ~20 in the EHG app) | ❌ | ✅ |
 | **SCU restart** (reboot the control unit remotely) | ✅ | ✅ |
 
 > **⚠️ Important:** Real-time sensor data (130+ entities: GPS, battery, doors, heater, fridge, etc.) requires an **EHG Remote Access Refresh Token**. This token must be captured **once** from your phone using mitmproxy during the initial setup. Without it, only basic vehicle metadata (model, VIN, year) is available. See [Obtaining the EHG Refresh Token](#obtaining-the-ehg-refresh-token) for the step-by-step guide.
@@ -263,6 +263,8 @@ These will be addressed in future phases. For now, writable controls require a c
 
 ### 🗺️ Device Tracker
 
+GPS-based device tracker for vehicle location on the HA map. Uses coordinates from bus 30 (SCU GPS). Shows the vehicle as a pin on the Home Assistant map card. Updates in real time when the SCU has cellular connectivity.
+
 ### 📱 Modern Dashboard (included)
 
 A ready-to-use tile-based Lovelace dashboard optimized for mobile and desktop:
@@ -304,7 +306,7 @@ A ready-to-use tile-based Lovelace dashboard optimized for mobile and desktop:
 4. *(Optional)* Paste your **EHG Remote Access Refresh Token** (see below) — you can also add it later via **Configure**
 5. The integration creates sensor entities for your vehicle
 
-> **Without the refresh token**, the integration provides only REST API data (vehicle model, VIN, year). **With the refresh token**, you get ~100 real-time entities via SignalR.
+> **Without the refresh token**, the integration provides only REST API data (vehicle model, VIN, year). **With the refresh token**, you get ~130 real-time entities via SignalR.
 
 > **Adding or updating the EHG token later:** Go to **Settings → Devices & Services → HYMER Connect → Configure**. The options dialog lets you paste or update the token at any time without removing the integration. The integration reloads automatically and starts streaming real-time data within seconds.
 
@@ -582,7 +584,7 @@ The integration should work on **any EHG vehicle with an SCU**, but with some li
 | **REST API** (model, VIN, year) | ✅ Yes | These endpoints are brand-agnostic |
 | **GPS** (bus 30) | ✅ Likely | Slots (30,1) and (30,2) carry GPS coordinates on both S600 and S700. Other slots on bus 30 are LTE/SCU/BT telemetry, not GPS |
 | **Habitation sensors** (bus 3 — water, power source, charge phase) | ✅ Likely | LIN bus sensors on bus 3 (lin1) are part of the standard SCU wiring |
-| **CAN bus sensors** (bus 1 — speed, RPM, doors, locks) | ⚠️ Partial | Bus 1 sensor **slots differ between models**. The S600 maps (1,2) as speed; the S700 maps it as fuel level. A mitmproxy capture on your vehicle is needed to verify |
+| **CAN bus sensors** (bus 1 — fuel, doors, locks, ignition) | ⚠️ Partial | Bus 1 sensor **slots differ between models**. The S600 maps (1,2) as fuel level. Slot semantics for VW Crafter or Fiat Ducato may differ — brand overlays can override individual slots |
 | **Lights** | ⚠️ Partial | Light bus IDs (11, 12, 15, 16, 19, 21, 24, 43, 44) and their capabilities (brightness, color temp) are specific to the Grand Canyon S layout. Your vehicle may have different lights on different buses |
 | **Truma heater** (bus 58) | ⚠️ Depends | Only if your vehicle has a Truma heater connected via the SCU. Vehicles with Alde or other heating systems may use different bus IDs |
 | **Fridge** (bus 34) | ⚠️ Depends | Only if your vehicle has a Dometic/Thetford fridge connected via the SCU |
