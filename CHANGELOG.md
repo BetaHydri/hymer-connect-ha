@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.42.0] - 2026-05-02
+
+### Changed
+
+- **Dometic fridge mappings moved from hardcoded to JSON** — All bus 60 entries (21 slots) now live in `sensor_maps/eriba.json` instead of the hardcoded SENSOR_MAP. First real use of the JSON overlay system for brand-specific mappings.
+- **Eriba overlay expanded to 33 entries** — Added bus 18 (shower ambient light), bus 59 (Truma Aventa Compact AC, 8 slots), bus 93 (bedroom furniture light), and all 21 Dometic fridge slots including previously unmapped slots 3-7, 14-15, 18-21.
+
 ## [2.41.1] - 2026-05-02
 
 ### Fixed
