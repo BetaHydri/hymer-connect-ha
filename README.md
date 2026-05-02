@@ -1020,7 +1020,7 @@ The EHG app automatically selects the control path based on proximity — it sho
 
 > **Evidence from logcat capture (2026-04-19):** When sitting in the vehicle, the app uses the Nordic UART Service (NUS) over BLE GATT to communicate directly with the SCU. PIA commands are written to characteristic `6e400002-b5a3-f393-e0a9-e50e24dcca9e` (NUS RX), and the SCU responds with TLS-encrypted PIA data as notifications on `6e400003-b5a3-f393-e0a9-e50e24dcca9e` (NUS TX). The data prefix `0x17-03-02` confirms TLS 1.1 Application Data records — the same PIA protobuf payload is encrypted over TLS even on the local BLE link.
 
-> **Home Assistant always uses the LTE cloud path** via SignalR. The BLE direct path is only available to the EHG smartphone app when physically near the vehicle.
+> **This integration uses the LTE cloud path** via SignalR. The BLE direct path is available to the EHG smartphone app when physically near the vehicle, and also via an **alpha version** of this integration: [hymer-connect-ha-ble](https://github.com/BetaHydri/hymer-connect-ha-ble) — a separate HA integration that connects directly to the SCU over Bluetooth for local, low-latency control without cloud dependency.
 
 ```mermaid
 graph TB
