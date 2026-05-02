@@ -20,7 +20,94 @@ Starting with v2.41.0, the integration supports per-brand JSON overlay files
 in `custom_components/hymer_connect/sensor_maps/`. At startup, it loads
 `base.json` (shared) + `{brand}.json` (brand-specific), merging entries into
 the hardcoded `SENSOR_MAP`. This allows brand-specific bus overrides without
-modifying Python code. See the [README](../README.md#-multi-brand-notes-eriba-bürstner-dethleffs-etc) for details.
+modifying Python code.
+
+#### JSON file format
+
+```json
+{
+  "_comment": "Description (ignored by loader)",
+  "sensors": {
+    "bus_id,sensor_id": ["sensor_name", "unit_or_null", "transform_or_null"]
+  }
+}
+```
+
+| Field | Description | Examples |
+|-------|-------------|----------|
+| **Key** | `"bus_id,sensor_id"` string | `"60,1"`, `"1,9"`, `"99,1"` |
+| **sensor_name** | Internal sensor name (lowercase, underscores) | `"dometic_fridge_mode"`, `"bms_voltage"` |
+| **unit** | HA unit string or `null` | `"V"`, `"A"`, `"°C"`, `"%"`, `"W"`, `"km"`, `"bar"`, `null` |
+| **transform** | Value transform or `null` | `null` (raw), `"div10"`, `"div100"`, `"div1000"`, `"div3600"` |
+
+Fields starting with `_` (e.g. `_comment`, `_doc`, `_example`) are ignored by the loader.
+
+#### Available overlay files
+
+| File | Loaded when | Purpose |
+|------|-------------|---------|
+| `base.json` | Always (first) | Shared sensors for all EHG vehicles |
+| `hymer.json` | Brand = HYMER | HYMER-specific overrides (Mercedes CAN, Thetford fridge, S600 lights) |
+| `eriba.json` | Brand = Eriba | Eriba-specific overrides (VW Crafter CAN, Dometic fridge, Eriba lights) |
+| `buerstner.json` | Brand = Bürstner | Community-contributed |
+| `dethleffs.json` | Brand = Dethleffs | Community-contributed |
+| `lmc.json` | Brand = LMC | Community-contributed |
+| `niesmann-bischoff.json` | Brand = Niesmann+Bischoff | Community-contributed |
+| `sunlight.json` | Brand = Sunlight | Community-contributed |
+| `carado.json` | Brand = Carado | Community-contributed |
+| `laika.json` | Brand = Laika | Community-contributed |
+| `freeontour.json` | Brand = FreeOnTour | Community-contributed |
+
+#### Loading order and precedence
+
+```
+1. SENSOR_MAP (hardcoded Python dict)    ← base mappings, 161 entries
+2. + base.json (shared overrides)        ← overrides hardcoded entries
+3. + {brand}.json (brand overrides)      ← overrides base + hardcoded entries
+```
+
+Later entries win — a brand file can override anything in base or the hardcoded map.
+
+#### Current scope and roadmap
+
+| Phase | Status | What JSON controls |
+|-------|--------|--------------------|
+| **Phase 1** (v2.41.0) | ✅ Done | Sensor name, unit, and transform for `(bus, slot)` pairs |
+| **Phase 2** (planned) | 🔜 | Migrate all hardcoded SENSOR_MAP entries to JSON — Python dict becomes empty |
+| **Phase 3** (future) | 📋 | Full entity definitions in JSON: type (sensor/binary_sensor/light/switch), device_class, icon, state_class, writeable controls |
+
+**Phase 3 target format:**
+
+```json
+{
+  "sensors": {
+    "60,1": {
+      "name": "dometic_fridge_mode",
+      "type": "sensor",
+      "device_class": null,
+      "state_class": null,
+      "icon": "mdi:fridge",
+      "unit": null
+    },
+    "60,8": {
+      "name": "dometic_fridge_power",
+      "type": "binary_sensor",
+      "device_class": "power",
+      "icon": "mdi:fridge"
+    },
+    "43,1": {
+      "name": "light_dining",
+      "type": "light",
+      "bus_id": 43,
+      "has_brightness": true,
+      "has_color_temp": false,
+      "icon": "mdi:ceiling-light"
+    }
+  }
+}
+```
+
+This would allow community contributors to define **complete HA entities** — sensors, binary sensors, lights, switches — purely from JSON, without any Python code changes.
 
 ## Bus 1 — VehicleSignal (Mercedes Sprinter chassis CAN)
 
