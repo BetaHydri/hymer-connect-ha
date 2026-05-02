@@ -991,11 +991,11 @@ The HA Energy dashboard requires a cumulative energy sensor (kWh). Create a Riem
 
 > See [`dashboards/README.md`](dashboards/README.md#energy-dashboard-integration) for detailed setup instructions.
 
-### Speed, RPM, and Engine Torque — not available on S600
+### Speed, RPM, and Engine Torque — not exposed by the SCU
 
-On the Grand Canyon S600, the CAN bus slots that carry speed, RPM, and engine torque on other models (e.g. S700) are mapped to different sensors (`fuel_level`, `distance_to_service`). These driving sensors are **not currently available** in the integration for the S600.
+The SCU does **not** expose vehicle speed, RPM, or engine torque via the PIA protocol on any Mercedes-based EHG model. The original sensor map had incorrect labels for several bus 1 slots — what was thought to be speed/RPM/torque turned out to be `fuel_level`, `distance_to_service`, and other chassis sensors after verification by [@dan-simms1](https://github.com/dan-simms1) on a Grand Canyon S700 ([#37](https://github.com/BetaHydri/hymer-connect-ha/issues/37)). The corrected bus 1 mapping is universal across all Mercedes-based EHG vehicles and is now in `sensor_maps/base.json`.
 
-> See [`dashboards/README.md`](dashboards/README.md#stale-can-sensor-workarounds) for additional details on stale CAN sensor workarounds.
+For driving data (speed, RPM), consider the **Mercedes ME** integration ([mbapi2020](https://github.com/ReneNulschDE/mbapi2020)) which reads directly from the Sprinter's own CAN bus via the Mercedes cloud.
 
 ## Key Terminology
 
