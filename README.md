@@ -28,15 +28,9 @@ Unlike the official EHG app, this integration gives you **full Home Assistant po
 | **~100 entities** (vs ~20 in the EHG app) | ❌ | ✅ |
 | **SCU restart** (reboot the control unit remotely) | ✅ | ✅ |
 
-> **⚠️ Important:** Real-time sensor data (70+ entities: GPS, battery, doors, heater, fridge, etc.) requires an **EHG Remote Access Refresh Token**. This token must be captured **once** from your phone using mitmproxy during the initial setup. Without it, only basic vehicle metadata (model, VIN, year) is available. See [Obtaining the EHG Refresh Token](#obtaining-the-ehg-refresh-token) for the step-by-step guide.
+> **⚠️ Important:** Real-time sensor data (130+ entities: GPS, battery, doors, heater, fridge, etc.) requires an **EHG Remote Access Refresh Token**. This token must be captured **once** from your phone using mitmproxy during the initial setup. Without it, only basic vehicle metadata (model, VIN, year) is available. See [Obtaining the EHG Refresh Token](#obtaining-the-ehg-refresh-token) for the step-by-step guide.
 
-> **v2.33.0** — **SCU Restart button + fridge door fix!** New `button.hymer_restart_scu` with confirmation prompt. Fridge door binary sensor (`binary_sensor.hymer_fridge_door`). Case-insensitive string matching for all binary sensors. Shutdown-safe SignalR (no more `Session is closed` log noise). See [CHANGELOG](CHANGELOG.md) for full history.
-
-> **v2.36.6** — **Fridge door + window contact now update in real time!** Fixed depth-filter bug in PIA protobuf decoder that silently dropped real-time SCU push updates. `binary_sensor.hymer_fridge_door` and `binary_sensor.hymer_heater_window_contact` now track open/close events live.
-
-> **v2.43.0** — **JSON-driven sensor & entity definitions!** All sensor mappings AND entity metadata (device class, icon, state class, enabled state) are now loaded from JSON files at startup instead of being hardcoded in Python. Universal sensors live in `base.json` (63 entries), brand-specific hardware in `hymer.json` (88 entries for S600/S700) or `eriba.json` (33 entries for Car 602). This means new sensors and brands can be added by editing JSON files — no Python changes required. **Upgrade note:** This is a non-breaking change. All entity unique IDs, keys, and names remain identical. You do **not** need to remove and re-add the integration. Simply update via HACS and restart HA.
-
-> **v2.38.0** — **EHG token configurable via Options!** You can now add or update your EHG Remote Access Refresh Token at any time via **Settings → Integrations → HYMER Connect → Configure** — no need to remove and re-add the integration. The token field is also available during re-authentication.
+> **v2.43.0** — **JSON-driven sensor & entity definitions!** All sensor mappings and entity metadata are now loaded from JSON files at startup. Universal sensors in `base.json` (63 entries), brand-specific in `hymer.json` (88) or `eriba.json` (33). New sensors and brands can be added by editing JSON — no Python changes needed. EHG token configurable via **Settings → Configure** (since v2.38.0). Non-breaking upgrade: update via HACS and restart HA. See [CHANGELOG](CHANGELOG.md) for full history.
 
 ### Energy Dashboard
 
