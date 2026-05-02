@@ -252,7 +252,7 @@ These will be addressed in future phases. For now, writable controls require a c
    ```yaml
    logger:
      logs:
-       custom_components.hymer_connect.pia_decoder: info
+       custom_components.hymer_connect.pia_decoder: debug
    ```
 2. Look for `Discovered unmapped slot` log entries — these are bus/slot pairs the SCU reports but aren't in any JSON file yet.
 3. Enable the discovered diagnostic entities in **Settings → Devices → HYMER Connect → "+N entities not shown"**.
