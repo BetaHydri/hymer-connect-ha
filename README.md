@@ -186,7 +186,7 @@ To make every reported value visible regardless of brand or model, the integrati
 
 **Contributing your findings:**
 
-If you identify what an unmapped slot does on your brand/model, please open an issue or PR adding the mapping to `custom_components/hymer_connect/sensor_maps/base.json` (shared across all brands) or `sensor_maps/{brand}.json` (brand-specific). Once added, the next release will replace the generic discovered entity with a properly named one with appropriate units and device class.
+If you identify what an unmapped slot does on your brand/model, please open an issue or PR adding the mapping to your brand's JSON sensor map overlay in `custom_components/hymer_connect/sensor_maps/` (e.g. `eriba.json`, `buerstner.json`). The base mappings shared across all brands live in `base.json`. Once added, the next release will replace the generic discovered entity with a properly named one with appropriate units and device class.
 
 > **Existing entities are unaffected.** Discovered entities only ever cover slots that are *not* in `SENSOR_MAP` — there is no collision possible with the named sensors.
 
