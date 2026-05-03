@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.46.0] - 2026-05-03
+
+### Fixed
+
+- **Switch verify no longer kills SignalR when SCU is offline** — When the SCU is disconnected from the cloud (standby), `_verify_send` now clears optimistic state and logs a warning instead of falsely marking SignalR as dead and forcing a reconnect. SignalR reconnect is only triggered when the SCU is online but readback still mismatches.
+- **Extended main switch ON verify delay to 60s** — The 12V main switch ON command now waits 60s (up from 15s) before checking SCU acknowledgment, giving the SCU time to wake from standby.
+- **Main switch holdoff bumped to 60s** — `holdoff_off` for `main_switch_ctrl` increased from 30s to 60s to match the extended verify window and prevent premature optimistic state expiry.
+
 ## [2.45.0] - 2026-05-02
 
 ### Changed

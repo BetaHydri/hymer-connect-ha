@@ -382,7 +382,7 @@
       "write_off": "Off",
       "on_value": "On",
       "read_path": "signalr_sensors.main_switch",
-      "holdoff_off": 30,
+      "holdoff_off": 60,
       "requires_12v": false
     },
     "3,3": {

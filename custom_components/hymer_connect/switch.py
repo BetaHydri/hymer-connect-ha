@@ -136,8 +136,21 @@ class HymerConnectSwitch(
         self._verify_task: asyncio.Task | None = None
 
     async def _verify_send(self, expected_on: bool) -> None:
-        """Verify the SCU acknowledged the command after a delay."""
-        delay = self.entity_description.holdoff_off if not expected_on else 15
+        """Verify the SCU acknowledged the command after a delay.
+
+        When the SCU is offline (scu_connected=false), commands are queued
+        server-side but not delivered until the SCU wakes up.  In that case
+        we clear optimistic state so the UI shows the real readback, but
+        do NOT kill the SignalR connection (it's healthy — the SCU is just
+        asleep).
+        """
+        # Main switch ON needs extra time — SCU may be waking from standby
+        if expected_on and self.entity_description.is_main_switch:
+            delay = 60
+        elif not expected_on:
+            delay = self.entity_description.holdoff_off
+        else:
+            delay = 15
         await asyncio.sleep(delay)
         if self.coordinator.data is None:
             return
@@ -151,15 +164,30 @@ class HymerConnectSwitch(
         else:
             actual_on = value == self.entity_description.on_value
         if actual_on != expected_on:
-            _LOGGER.warning(
-                "Switch %s: SCU readback (%s) doesn't match commanded (%s) "
-                "after %ds — SignalR send channel likely dead, forcing reconnect",
-                self.entity_description.key, value, expected_on, delay,
-            )
+            # Check if SCU is offline — if so, the command wasn't delivered
+            # yet but SignalR itself is fine.
             client = self.coordinator.signalr_client
+            scu_online = False
             if client:
-                client._connected = False
-                _LOGGER.info("Marked SignalR as disconnected — will reconnect on next poll")
+                scu_online = client._sensor_data.get("scu_connected") is True
+            if not scu_online:
+                _LOGGER.warning(
+                    "Switch %s: command (%s) not confirmed after %ds "
+                    "— SCU is offline, command queued until SCU wakes up",
+                    self.entity_description.key, expected_on, delay,
+                )
+                # Clear optimistic state so UI shows real readback
+                self._optimistic_on = None
+                self.async_write_ha_state()
+            else:
+                _LOGGER.warning(
+                    "Switch %s: SCU readback (%s) doesn't match commanded (%s) "
+                    "after %ds — SignalR send channel likely dead, forcing reconnect",
+                    self.entity_description.key, value, expected_on, delay,
+                )
+                if client:
+                    client._connected = False
+                    _LOGGER.info("Marked SignalR as disconnected — will reconnect on next poll")
 
     @property
     def available(self) -> bool:
