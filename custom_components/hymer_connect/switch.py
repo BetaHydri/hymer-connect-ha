@@ -236,10 +236,11 @@ class HymerConnectSwitch(
             )
         self._optimistic_on = True
         self._optimistic_set_at = time.monotonic()
-        if desc.is_main_switch:
-            client = self.coordinator.signalr_client
-            if client:
-                client._sensor_data["main_switch"] = desc.write_on or "On"
+        # NOTE: Do NOT write back into client._sensor_data here.  Doing so
+        # poisons _verify_send (which reads the same path back) and the
+        # is_standby check in needs_reconnect (main_switch=='Off' bypasses
+        # the 3-min stale-data reconnect).  _optimistic_on already drives
+        # is_on for the UI; the SCU will push the real value within ~3s.
         self.async_write_ha_state()
         if self._verify_task and not self._verify_task.done():
             self._verify_task.cancel()
@@ -267,10 +268,9 @@ class HymerConnectSwitch(
             )
         self._optimistic_on = False
         self._optimistic_set_at = time.monotonic()
-        if desc.is_main_switch:
-            client = self.coordinator.signalr_client
-            if client:
-                client._sensor_data["main_switch"] = desc.write_off or "Off"
+        # NOTE: Do NOT write back into client._sensor_data here.  See the
+        # matching comment in async_turn_on — poisoning _sensor_data breaks
+        # _verify_send and the standby reconnect heuristic.
         self.async_write_ha_state()
         if self._verify_task and not self._verify_task.done():
             self._verify_task.cancel()

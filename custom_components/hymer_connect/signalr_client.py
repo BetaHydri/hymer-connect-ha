@@ -315,8 +315,10 @@ class HymerSignalRClient:
         if not self._ws or self._ws.closed or not self._connected:
             return
 
-        # Small delay — let SCU finish its boot sequence
-        await asyncio.sleep(2)
+        # Settle: let the SCU finish its boot sequence and register a
+        # fresh session at the Azure SignalR hub.  3s is conservative —
+        # observed SCU wake-up takes 2-3s before stable PiaResponses.
+        await asyncio.sleep(3)
 
         try:
             await self._send_update_tokens(wait_response=False)
@@ -328,6 +330,14 @@ class HymerSignalRClient:
                 exc_info=True,
             )
             return
+
+        # CRITICAL: wait for UpdateTokens routing to propagate server-side
+        # before subscribing.  Without this delay, PiaRequest subscriptions
+        # (and any subsequent set_value commands) can be processed under
+        # the stale standby routing → SCU never sees them, requires reload.
+        # Observed completion latency is 50-100ms; 750ms gives generous
+        # margin without noticeably delaying first sensor data.
+        await asyncio.sleep(0.75)
 
         # Re-subscribe to get fresh sensor data from the woken SCU
         try:

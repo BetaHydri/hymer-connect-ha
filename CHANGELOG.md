@@ -5,6 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.48.0] - 2026-05-03
+
+### Fixed
+
+- **Commands silently dropped after long SCU standby + 12V wake** — After the SCU spent extended time in standby (12V OFF), waking it up via the dashboard 12V switch sometimes left the integration in a state where commands were sent over a healthy WebSocket but never reached the SCU. Reload was the only workaround. Two distinct bugs caused this:
+  1. **Race in `_refresh_tokens_and_resubscribe`** — After detecting `scu_connected` false→true, `UpdateTokens` was sent fire-and-forget and the 7 PIA subscriptions were sent ~4 ms later, **before** the SignalR backplane confirmed the new routing. Subscriptions (and any subsequent `set_value` commands) could be processed under the stale standby routing, so the SCU never received them. Fix: 3 s settle delay before `UpdateTokens`, then a 750 ms wait for the completion to propagate before subscribing.
+  2. **Optimistic `_sensor_data["main_switch"]` write in `switch.py`** — The main-switch toggle wrote the commanded value (`"On"`/`"Off"`) directly into the SignalR client’s sensor cache. This poisoned (a) `_verify_send`, which then read back the optimistic value and always thought the command succeeded — never triggering a forced reconnect on a dead route; and (b) the `is_standby` check in `needs_reconnect`, which used `main_switch == "Off"` to bypass the 3-min stale-data reconnect in favour of the 30-min cap. Fix: removed the `_sensor_data` write. `_optimistic_on` already drives the UI; the SCU pushes the real value within ~3 s.
+
+### Migration Notes
+
+- **Non-breaking** — No entity or option changes. HACS update + restart.
+
 ## [2.47.0] - 2026-05-03
 
 ### Added
