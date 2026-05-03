@@ -716,7 +716,7 @@ def _extract_sensors_recursive(
                         )
                         # Log door/window state changes at INFO so they
                         # are visible without enabling DEBUG logging.
-                        if name in ("fridge_status", "heater_window_switch_closed"):
+                        if name in ("fridge_status", "heater_window_switch_closed", "main_switch", "scu_connected"):
                             _LOGGER.info(
                                 "State change (%d,%d) %s: %r → %r (depth=%d)",
                                 entry["bus_id"], entry["sensor_id"],

@@ -74,8 +74,10 @@ class HymerConnectConfigFlow(ConfigFlow, domain=DOMAIN):
                     user_input[CONF_PASSWORD],
                 )
             except HymerConnectAuthError:
+                _LOGGER.warning("Config flow: authentication failed for %s", user_input[CONF_USERNAME])
                 errors["base"] = "invalid_auth"
             except HymerConnectApiError:
+                _LOGGER.warning("Config flow: cannot connect to API")
                 errors["base"] = "cannot_connect"
             except Exception:
                 _LOGGER.exception("Unexpected error during authentication")
@@ -88,6 +90,7 @@ class HymerConnectConfigFlow(ConfigFlow, domain=DOMAIN):
                 brand_name = BRANDS.get(
                     user_input[CONF_BRAND], user_input[CONF_BRAND]
                 )
+                _LOGGER.info("Config flow: entry created for %s (%s)", unique_id, brand_name)
                 return self.async_create_entry(
                     title=f"HYMER Connect ({brand_name})",
                     data={
@@ -127,13 +130,16 @@ class HymerConnectConfigFlow(ConfigFlow, domain=DOMAIN):
                     user_input[CONF_PASSWORD],
                 )
             except HymerConnectAuthError:
+                _LOGGER.warning("Reauth flow: authentication failed for %s", user_input[CONF_USERNAME])
                 errors["base"] = "invalid_auth"
             except HymerConnectApiError:
+                _LOGGER.warning("Reauth flow: cannot connect to API")
                 errors["base"] = "cannot_connect"
             except Exception:
                 _LOGGER.exception("Unexpected error during reauthentication")
                 errors["base"] = "unknown"
             else:
+                _LOGGER.info("Reauth flow: credentials updated for %s", user_input[CONF_USERNAME])
                 unique_id = user_input[CONF_USERNAME].lower()
                 await self.async_set_unique_id(unique_id)
                 self._abort_if_unique_id_mismatch()

@@ -5,6 +5,27 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.47.0] - 2026-05-03
+
+### Added
+
+- **Comprehensive command logging across all control platforms** — Every user-triggered action (switches, lights, climate, selects, SCU restart) now logs an INFO-level message with the entity name, target state, bus/slot IDs, and wire values. Previously, command execution was completely silent in the logs.
+- **Integration lifecycle logging** — `__init__.py` now logs setup completion (vehicle_urn, scu_urn, EHG token status), authentication success/failure, options update, and integration unload.
+- **Config flow logging** — Authentication failures (`invalid_auth`, `cannot_connect`) and successful entry creation are now logged. Previously, only the generic "unknown" error was logged.
+- **Button platform logger** — `button.py` was missing `_LOGGER` entirely. Now includes `import logging` and logs SCU restart button press and completion.
+
+### Changed
+
+- **Log levels aligned for troubleshooting** — Command actions use INFO level (visible with `custom_components.hymer_connect: info`). Setup/teardown uses INFO. Auth failures use WARNING. Internal state details use DEBUG.
+
+### Documentation
+
+- **New README section: "Logging & Troubleshooting"** — Documents all available logger names, recommended configurations for production and debugging, and example `configuration.yaml` snippets.
+
+### Migration Notes
+
+- **Non-breaking** — Logging-only changes, no entity or behavior changes. HACS update + restart.
+
 ## [2.46.0] - 2026-05-03
 
 ### Fixed

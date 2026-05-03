@@ -169,6 +169,10 @@ class HymerHeaterClimate(
             if temp <= HEATER_OFF_SETPOINT:
                 temp = 20.0
             fuel = self._get_fuel_type()
+            _LOGGER.info(
+                "Climate → HEAT (bus=%d, setpoint=%.1f°C, fuel=%s)",
+                self._bus, temp, fuel,
+            )
             await self.coordinator.async_send_multi_sensor_command([
                 {"bus_id": self._bus, "sensor_id": self._setpoint_sid, "float_value": temp},
                 {"bus_id": self._bus, "sensor_id": self._fuel_type_2_sid, "str_value": fuel},
@@ -177,6 +181,10 @@ class HymerHeaterClimate(
             self._optimistic_temp = temp
         else:
             fuel = self._get_fuel_type()
+            _LOGGER.info(
+                "Climate → OFF (bus=%d, fuel=%s)",
+                self._bus, fuel,
+            )
             await self.coordinator.async_send_multi_sensor_command([
                 {"bus_id": self._bus, "sensor_id": self._setpoint_sid, "float_value": HEATER_OFF_SETPOINT},
                 {"bus_id": self._bus, "sensor_id": self._fuel_type_2_sid, "str_value": fuel},
@@ -193,6 +201,10 @@ class HymerHeaterClimate(
             return
 
         fuel = self._get_fuel_type()
+        _LOGGER.info(
+            "Climate setpoint → %.1f°C (bus=%d, fuel=%s)",
+            float(temp), self._bus, fuel,
+        )
         await self.coordinator.async_send_multi_sensor_command([
             {"bus_id": self._bus, "sensor_id": self._setpoint_sid, "float_value": float(temp)},
             {"bus_id": self._bus, "sensor_id": self._fuel_type_2_sid, "str_value": fuel},

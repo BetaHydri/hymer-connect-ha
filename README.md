@@ -30,7 +30,7 @@ Unlike the official EHG app, this integration gives you **full Home Assistant po
 
 > **⚠️ Important:** Real-time sensor data (130+ entities: GPS, battery, doors, heater, fridge, etc.) requires an **EHG Remote Access Refresh Token**. This token must be captured **once** from your phone using mitmproxy during the initial setup. Without it, only basic vehicle metadata (model, VIN, year) is available. See [Obtaining the EHG Refresh Token](#obtaining-the-ehg-refresh-token) for the step-by-step guide.
 
-> **v2.45.0** — **Fully JSON-driven!** All platform types — sensors, binary sensors, lights, switches, climate, and select controls — are now configured via JSON overlay files. Bus/slot IDs for heater, boiler, and fridge are parameterized per brand. Only SCU restart button and computed sensors (solar power, fuel) remain hardcoded. EHG token configurable via **Settings → Configure**. Non-breaking upgrade: update via HACS and restart HA. See [CHANGELOG](CHANGELOG.md) for full history.
+> **v2.47.0** — **Comprehensive command logging!** Every user-triggered action (switches, lights, climate, selects, SCU restart) now logs at INFO level with entity name, bus/slot IDs, and wire values. SCU sleep/wake transitions (12V main switch, scu_connected) are logged at INFO. See the new [Logging & Troubleshooting](#-logging--troubleshooting) section for recommended configurations. Non-breaking upgrade: update via HACS and restart HA. See [CHANGELOG](CHANGELOG.md) for full history.
 
 ### Energy Dashboard
 
@@ -817,19 +817,13 @@ For production use, the recommended logger configuration is:
 logger:
   default: warning
   logs:
-    custom_components.hymer_connect: warning
+    custom_components.hymer_connect: debug
     custom_components.hymer_connect.signalr_client: info
-    custom_components.hymer_connect.pia_decoder: warning
+    custom_components.hymer_connect.pia_decoder: info
     custom_components.hymer_connect.coordinator: info
 ```
 
-| Logger | Level | What it shows |
-|--------|-------|---------------|
-| `hymer_connect` | `warning` | General integration warnings and errors |
-| `signalr_client` | `info` | Connection lifecycle, reconnects, UpdateTokens status, SCU reconnect events |
-| `signalr_client` | `debug` | Every SignalR message (very verbose) |
-| `pia_decoder` | `debug` | Every decoded PIA sensor value (very verbose) |
-| `coordinator` | `info` | REST API polling, SignalR reconnect scheduling |
+See the [Logging & Troubleshooting](#-logging--troubleshooting) section below for detailed per-logger documentation and example configurations.
 
 #### Open a GitHub issue
 
@@ -996,6 +990,113 @@ The HA Energy dashboard requires a cumulative energy sensor (kWh). Create a Riem
 The SCU does **not** expose vehicle speed, RPM, or engine torque via the PIA protocol on any Mercedes-based EHG model. The original sensor map had incorrect labels for several bus 1 slots — what was thought to be speed/RPM/torque turned out to be `fuel_level`, `distance_to_service`, and other chassis sensors after verification by [@dan-simms1](https://github.com/dan-simms1) on a Grand Canyon S700 ([#37](https://github.com/BetaHydri/hymer-connect-ha/issues/37)). The corrected bus 1 mapping is universal across all Mercedes-based EHG vehicles and is now in `sensor_maps/base.json`.
 
 For driving data (speed, RPM), consider the **Mercedes ME** integration ([mbapi2020](https://github.com/ReneNulschDE/mbapi2020)) which reads directly from the Sprinter's own CAN bus via the Mercedes cloud.
+
+## 🔍 Logging & Troubleshooting
+
+The integration provides granular logging across multiple Python modules. Each module has its own logger name, so you can independently control verbosity for different subsystems.
+
+### Available Loggers
+
+| Logger | Module | What it logs |
+|--------|--------|-------------|
+| `custom_components.hymer_connect` | `__init__.py`, `api.py`, `config_flow.py` | Integration setup/teardown, authentication, API calls, config flow steps |
+| `custom_components.hymer_connect.switch` | `switch.py` | Switch ON/OFF commands with bus/slot/type details, verify results |
+| `custom_components.hymer_connect.light` | `light.py` | Light ON/OFF commands with brightness/color_temp, bus IDs |
+| `custom_components.hymer_connect.climate` | `climate.py` | Heater HEAT/OFF commands, setpoint changes, fuel type |
+| `custom_components.hymer_connect.select` | `select.py` | Fridge, boiler, heater energy mode changes with wire values |
+| `custom_components.hymer_connect.button` | `button.py` | SCU restart button press and completion |
+| `custom_components.hymer_connect.signalr_client` | `signalr_client.py` | SignalR connection lifecycle, negotiate, UpdateTokens, SCU reconnect, keepalive |
+| `custom_components.hymer_connect.pia_decoder` | `pia_decoder.py` | PIA protobuf decoding, sensor map loading, sensor state changes, slot discovery |
+| `custom_components.hymer_connect.coordinator` | `coordinator.py` | Data updates, REST polling, SignalR reconnect scheduling, fuel tracking |
+| `custom_components.hymer_connect.sensor` | `sensor.py` | Sensor platform setup, dynamic entity creation |
+| `custom_components.hymer_connect.binary_sensor` | `binary_sensor.py` | Binary sensor platform setup |
+
+### Recommended Logger Configurations
+
+#### Production (daily use)
+
+Balanced visibility — see commands, connection events, and SCU state transitions without flooding the log:
+
+```yaml
+logger:
+  default: warning
+  logs:
+    custom_components.hymer_connect: debug
+    custom_components.hymer_connect.signalr_client: info
+    custom_components.hymer_connect.pia_decoder: info
+    custom_components.hymer_connect.coordinator: info
+```
+
+With this configuration you will see:
+- Every command sent (switches, lights, heater, fridge, boiler, SCU restart) at INFO
+- 12V main switch ON/OFF transitions at INFO
+- SCU connected/disconnected transitions at INFO
+- SignalR connection lifecycle (connect, reconnect, UpdateTokens) at INFO
+- Integration setup/teardown at INFO
+- Unmapped slot discovery at INFO
+- Authentication and API errors at WARNING
+
+#### Troubleshooting commands ("I pressed a button but nothing happened")
+
+```yaml
+logger:
+  default: warning
+  logs:
+    custom_components.hymer_connect: debug
+    custom_components.hymer_connect.signalr_client: debug
+    custom_components.hymer_connect.pia_decoder: info
+    custom_components.hymer_connect.coordinator: info
+```
+
+Adds: every SignalR message sent/received, WebSocket frame details, PIA request payloads.
+
+#### Troubleshooting sensors ("A sensor value seems wrong")
+
+```yaml
+logger:
+  default: warning
+  logs:
+    custom_components.hymer_connect: debug
+    custom_components.hymer_connect.signalr_client: info
+    custom_components.hymer_connect.pia_decoder: debug
+    custom_components.hymer_connect.coordinator: debug
+```
+
+Adds: every decoded PIA sensor value with bus/slot/name/value, mapped and unmapped slot changes, fuel tracking calculations.
+
+#### Full debug (for GitHub issue reports)
+
+```yaml
+logger:
+  default: warning
+  logs:
+    custom_components.hymer_connect: debug
+```
+
+⚠️ **Very verbose** — logs every SignalR frame, every PIA decode, every coordinator update. Only use temporarily for capturing detailed logs to attach to a GitHub issue.
+
+### What Gets Logged at Each Level
+
+| Level | Examples |
+|-------|---------|
+| **ERROR** | Authentication failure, API unreachable, UpdateTokens rejected |
+| **WARNING** | Auth/API errors during config flow, SignalR connection dead, command not confirmed (SCU offline), unknown select options |
+| **INFO** | Switch/light/climate/select/button commands sent, 12V main switch state changes, SCU connected/disconnected, SignalR connect/reconnect, integration setup/teardown, config entry created, slot discovery |
+| **DEBUG** | Every decoded sensor value, SignalR message details, optimistic state lifecycle, entity setup counts, fuel tracking math |
+
+### SCU Sleep/Wake Cycle in Logs
+
+When the 12V main switch is turned off, the SCU enters standby. With the recommended production config, you'll see this complete cycle in the logs:
+
+```
+INFO  (pia_decoder)     State change (3,1) main_switch: 'On' → 'Off'
+INFO  (signalr_client)  SCU disconnected (scu_connected=false)
+  ... (minutes/hours of standby — no sensor data, connection kept alive) ...
+INFO  (pia_decoder)     State change (3,1) main_switch: 'Off' → 'On'
+INFO  (signalr_client)  SCU reconnected (scu_connected false→true) — re-sending UpdateTokens + resubscribe
+INFO  (signalr_client)  UpdateTokens refreshed after SCU reconnect
+INFO  (signalr_client)  Resubscribed after SCU reconnect
+```
 
 ## Key Terminology
 

@@ -217,6 +217,10 @@ class HymerConnectSwitch(
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
         desc = self.entity_description
+        _LOGGER.info(
+            "Switch %s → ON (bus=%d, sid=%d, type=%s)",
+            desc.key, desc.bus_id, desc.sensor_id, desc.write_type,
+        )
         if desc.write_type == "str":
             on_str = desc.write_on if desc.write_on else str(desc.on_value)
             await self.coordinator.async_send_light_command(
@@ -244,6 +248,10 @@ class HymerConnectSwitch(
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
         desc = self.entity_description
+        _LOGGER.info(
+            "Switch %s → OFF (bus=%d, sid=%d, type=%s)",
+            desc.key, desc.bus_id, desc.sensor_id, desc.write_type,
+        )
         if desc.write_type == "str":
             off_str = desc.write_off if desc.write_off else "Off"
             await self.coordinator.async_send_light_command(

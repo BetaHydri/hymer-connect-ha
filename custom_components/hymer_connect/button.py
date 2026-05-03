@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import logging
+
 from homeassistant.components.button import ButtonEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -11,6 +13,8 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN, MANUFACTURER
 from .coordinator import HymerConnectCoordinator
+
+_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
@@ -63,4 +67,6 @@ class HymerRestartButton(
 
     async def async_press(self) -> None:
         """Send SCU restart command."""
+        _LOGGER.info("SCU restart button pressed — sending cold reboot command")
         await self.coordinator.async_send_restart_system_command()
+        _LOGGER.info("SCU restart command sent successfully")

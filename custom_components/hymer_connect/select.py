@@ -132,6 +132,10 @@ class HymerFridgeSelect(
         """Set the fridge mode."""
         import asyncio
 
+        _LOGGER.info(
+            "Fridge → %s (bus=%d, power_sid=%d, step_sid=%d)",
+            option, self._bus, self._power_sid, self._step_sid,
+        )
         if option == "Off":
             await self.coordinator.async_send_light_command(self._bus, self._power_sid, bool_value=False)
         elif option in ("1", "2", "3", "4", "5"):
@@ -226,6 +230,10 @@ class HymerBoilerSelect(
             return
 
         fuel = self._get_fuel_type()
+        _LOGGER.info(
+            "Boiler → %s (bus=%d, sid=%d, wire=%s, fuel=%s)",
+            option, self._bus, self._boiler_sid, mode_str, fuel,
+        )
         await self.coordinator.async_send_multi_sensor_command([
             {"bus_id": self._bus, "sensor_id": self._boiler_sid, "str_value": mode_str},
             {"bus_id": self._bus, "sensor_id": self._fuel_type_sid, "str_value": fuel},
@@ -333,6 +341,10 @@ class HymerHeaterEnergySelect(
 
     async def async_select_option(self, option: str) -> None:
         """Set the heater energy source."""
+        _LOGGER.info(
+            "Heater energy → %s (bus=%d)",
+            option, self._bus,
+        )
         b = self._bus
         ft = self._fuel_type_sid
         ft2 = self._fuel_type_2_sid

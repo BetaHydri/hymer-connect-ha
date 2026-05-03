@@ -41,9 +41,11 @@ async def async_setup_entry(
     # Always re-authenticate with stored credentials to get fresh tokens
     if CONF_USERNAME in entry.data:
         try:
+            _LOGGER.debug("Authenticating with stored credentials for %s", entry.data[CONF_USERNAME])
             tokens = await api.authenticate(
                 entry.data[CONF_USERNAME], entry.data[CONF_PASSWORD]
             )
+            _LOGGER.debug("Authentication successful — tokens refreshed")
             # Update stored tokens
             hass.config_entries.async_update_entry(
                 entry,
@@ -54,10 +56,12 @@ async def async_setup_entry(
                 },
             )
         except HymerConnectAuthError as err:
+            _LOGGER.warning("Authentication failed for %s: %s", entry.data[CONF_USERNAME], err)
             raise ConfigEntryAuthFailed(
                 f"Authentication failed: {err}"
             ) from err
         except HymerConnectApiError as err:
+            _LOGGER.warning("API connection failed during setup: %s", err)
             raise ConfigEntryNotReady(
                 f"Cannot connect to HYMER API: {err}"
             ) from err
@@ -87,6 +91,12 @@ async def async_setup_entry(
     entry.async_on_unload(entry.add_update_listener(_async_options_updated))
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORM_LIST)
+    _LOGGER.info(
+        "HYMER Connect setup complete — vehicle_urn=%s, scu_urn=%s, ehg_token=%s",
+        vehicle_urn or "(none)",
+        scu_urn or "(none)",
+        "configured" if ehg_refresh_token else "not configured",
+    )
     return True
 
 
@@ -94,6 +104,7 @@ async def _async_options_updated(
     hass: HomeAssistant, entry: HymerConnectConfigEntry
 ) -> None:
     """Handle options update — reload integration to apply new settings."""
+    _LOGGER.info("Options updated — reloading integration")
     await hass.config_entries.async_reload(entry.entry_id)
 
 
@@ -101,6 +112,7 @@ async def async_unload_entry(
     hass: HomeAssistant, entry: HymerConnectConfigEntry
 ) -> bool:
     """Unload a config entry."""
+    _LOGGER.info("Unloading HYMER Connect integration")
     coordinator: HymerConnectCoordinator = hass.data[DOMAIN].get(entry.entry_id)
     if coordinator:
         await coordinator.stop_signalr()

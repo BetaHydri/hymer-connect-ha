@@ -188,6 +188,15 @@ class HymerConnectLight(
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         bus = self.entity_description.bus_id
+        parts = ["ON"]
+        if ATTR_BRIGHTNESS in kwargs:
+            parts.append(f"brightness={kwargs[ATTR_BRIGHTNESS]}")
+        if ATTR_COLOR_TEMP_KELVIN in kwargs:
+            parts.append(f"color_temp={kwargs[ATTR_COLOR_TEMP_KELVIN]}K")
+        _LOGGER.info(
+            "Light %s → %s (bus=%d)",
+            self.entity_description.key, ", ".join(parts), bus,
+        )
         await self.coordinator.async_send_light_command(bus, 1, bool_value=True)
         self._optimistic_on = True
         if ATTR_BRIGHTNESS in kwargs and self.entity_description.brightness_path:
@@ -203,6 +212,10 @@ class HymerConnectLight(
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         bus = self.entity_description.bus_id
+        _LOGGER.info(
+            "Light %s → OFF (bus=%d)",
+            self.entity_description.key, bus,
+        )
         await self.coordinator.async_send_light_command(bus, 1, bool_value=False)
         self._optimistic_on = False
         self.async_write_ha_state()
