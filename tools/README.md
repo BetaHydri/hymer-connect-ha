@@ -1,7 +1,23 @@
 # Tools
 
-Most files under `tools/` are local reverse-engineering scratchpads and are
-gitignored. Only the items below are shipped with the repository.
+Most files under `tools/` are local reverse-engineering scratchpads (mitmproxy
+output, logcat dumps, dex extracts, APK inspection scripts, captured packets,
+…) and are gitignored. Local trace artifacts produced by the scripts below
+live under [`tools/traces/`](traces/) which is also gitignored. Only the items
+listed in the table are shipped with the repository.
+
+## Shipped scripts at a glance
+
+| Script | Purpose | Run as |
+| --- | --- | --- |
+| [`Start-EhgTokenCapture.ps1`](Start-EhgTokenCapture.ps1) | One-click PowerShell wrapper around the mitmproxy capture: checks prerequisites (Python, mitmproxy, Node.js, apk-mitm), starts the proxy, prints connection instructions, and exits when the token + OAuth header are captured. **Use this on Windows.** | `pwsh tools\Start-EhgTokenCapture.ps1` |
+| [`capture_ehg_token.py`](capture_ehg_token.py) | mitmproxy addon that scans intercepted HTTP/WebSocket traffic for the EHG Remote Access Refresh Token (`ett=access-refresh`) **and** the OAuth `Authorization: Basic <…>` client header. Saves both to `traces/captured_ehg_token.txt` / `traces/captured_oauth_basic_auth.txt` and auto-exits. **Use this directly on Linux/macOS.** | `mitmdump -s tools/capture_ehg_token.py --listen-port 8080` |
+| [`discover_sensors.py`](discover_sensors.py) | Connects to the EHG cloud via SignalR using your captured token, subscribes to all PIA sensor data for a configurable window (default 120 s), and prints a complete `(bus_id, sensor_id) → value` table cross-referenced with the known sensor map. **Use this to identify unmapped slots on a non-S600 vehicle** before opening a brand-overlay PR. | `python tools/discover_sensors.py --duration 120` |
+| [`convert_dan_metadata.py`](convert_dan_metadata.py) | Converts a *local* EHG runtime-metadata extraction directory (produced by [@dan-simms1's upstream extractor](https://github.com/dan-simms1/hymer-connect-ha)) into a starting `sensor_maps/<brand>.json` overlay. Detailed below. | `python tools/convert_dan_metadata.py self-test` |
+
+The two capture scripts are alternatives — use the PowerShell wrapper on
+Windows, or invoke the Python addon directly on Linux/macOS. Both write to
+the same `traces/captured_*.txt` files.
 
 ## `convert_dan_metadata.py` — Brand overlay generator
 

@@ -39,7 +39,8 @@ SIGNALR_HOSTS = {"ehg-prod-signalr.service.signalr.net"}
 # Regex to find JWT-like strings (header.payload.signature, each base64url-encoded)
 JWT_RE = re.compile(r"eyJ[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+")
 
-OUTPUT_DIR = Path(__file__).parent
+OUTPUT_DIR = Path(__file__).parent / "traces"
+OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 TOKEN_FILE = OUTPUT_DIR / "captured_ehg_token.txt"
 BASIC_AUTH_FILE = OUTPUT_DIR / "captured_oauth_basic_auth.txt"
 
