@@ -5,6 +5,30 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.49.0] - 2026-05-04
+
+### Added
+
+- **Per-entry OAuth client header (`oauth_basic_auth`)** — A new optional field is now available in the **initial config flow**, **reauth dialog**, and **Options** screen titled *"OAuth client header"*. Paste the full `Authorization: Basic <base64>` header captured from your own EHG mobile-app traffic; the integration uses your value for OAuth `/token` requests instead of the bundled default. Field is validated client-side (must start with `Basic ` and decode to a non-empty `client_id:secret` pair); a paste mistake surfaces as `invalid_basic_auth`.
+- **Capture-tool extension** — `tools/capture_ehg_token.py` (and the `Start-EhgTokenCapture.ps1` wrapper) now opportunistically capture the `Authorization: Basic …` header from any `/oauth/token` request seen during the same mitmproxy session that grabs the EHG refresh token. The header is saved to `tools/captured_oauth_basic_auth.txt` and printed with its own banner — both values can be obtained in one capture run.
+- **`tools/convert_dan_metadata.py`** — New CLI converter that turns a *local* Dan-Simms EHG runtime-metadata extraction directory into a `sensor_maps/<brand>.json` overlay. Aimed at users whose vehicle is **not** a HYMER Grand Canyon S 600/S 700 (Bürstner, Carado, Dethleffs, Eriba variants, LMC, Laika, Niesmann+Bischoff, Sunlight, FreeOnTour, …) where `hymer.json` doesn't match. Conservative emission policy: read-only slots auto-emitted; switches require explicit `known_writable` + `control_catalog` entry; climate/fridge/boiler/heater are intentionally **not** auto-emitted (a `_climate_templates_required` marker block is written instead). Includes a built-in `self-test` subcommand. Documented in `tools/README.md`.
+- **`.gitignore` hardening** — Switched `tools/` to `tools/*` and explicitly whitelisted the shipped converter + README. Added belt-and-suspenders blocks for any local Dan-Simms metadata file (`sensor_labels.json`, `component_kinds.json`, `control_catalog.json`, `coverage_audit.json`, `support_matrix.json`, `vehicle_catalog.json`) and `oauth_client.json` anywhere under `tools/**`.
+
+### Changed
+
+- **OAuth Basic-auth handling** — The bundled `OAUTH2_BASIC_AUTH` constant has been renamed to `OAUTH2_BASIC_AUTH_LEGACY_DEFAULT` and is now a *fallback* used only when an entry has no per-entry `oauth_basic_auth` value. When the fallback is hit the integration logs a one-time deprecation warning per setup.
+- **Translations** (`en.json`) updated with labels and descriptions for the new field across user/reauth/options steps and the `invalid_basic_auth` error string.
+
+### Deprecated
+
+- **Bundled OAuth client header** — The hard-coded fallback used by installs without a configured per-entry value will be **removed** in a future release. Existing installs continue to work unchanged after upgrading; users should paste their own `Basic …` header into the **Options** dialog at their convenience to silence the deprecation warning. Use `tools/Start-EhgTokenCapture.ps1` to harvest the header from your own EHG-app traffic in the same session that captures the EHG refresh token.
+
+### Migration Notes
+
+- **Non-breaking for existing users.** No entity changes, no forced re-auth. After upgrading you will see one warning per startup (`OAuth client header not configured for this entry; falling back to bundled legacy default…`). To silence it: open *Settings → Devices & Services → HYMER Connect → Configure*, paste your own header into the *OAuth client header* field, and save.
+- **For new installs**, the field is presented in the initial config flow (still optional during the deprecation window).
+- **For collaborators / non-HYMER brands**, the new `tools/convert_dan_metadata.py` is the recommended starting point for generating a brand overlay JSON.
+
 ## [2.48.0] - 2026-05-03
 
 ### Fixed

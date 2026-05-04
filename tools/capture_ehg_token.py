@@ -41,6 +41,10 @@ JWT_RE = re.compile(r"eyJ[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+")
 
 OUTPUT_DIR = Path(__file__).parent
 TOKEN_FILE = OUTPUT_DIR / "captured_ehg_token.txt"
+BASIC_AUTH_FILE = OUTPUT_DIR / "captured_oauth_basic_auth.txt"
+
+# OAuth /token endpoint path — matches both production and SCC endpoints.
+OAUTH_TOKEN_PATH = "/oauth/token"
 
 _BANNER = """
 ╔══════════════════════════════════════════════════════════════════╗
@@ -57,6 +61,21 @@ _BANNER = """
 ║   1. Close this proxy (Ctrl+C)                                   ║
 ║   2. Remove the proxy settings from your phone's Wi-Fi           ║
 ║   3. Uninstall the patched APK and reinstall the original app    ║
+║                                                                  ║
+╚══════════════════════════════════════════════════════════════════╝
+"""
+
+_BANNER_BASIC = """
+╔══════════════════════════════════════════════════════════════════╗
+║                                                                  ║
+║   ✅  OAUTH BASIC-AUTH HEADER CAPTURED SUCCESSFULLY!             ║
+║                                                                  ║
+║   The header has been saved to:                                  ║
+║   {path:<55s}  ║
+║                                                                  ║
+║   Copy the header into the HYMER Connect integration             ║
+║   reconfigure or options dialog under                            ║
+║   "OAuth client header".                                         ║
 ║                                                                  ║
 ╚══════════════════════════════════════════════════════════════════╝
 """
@@ -115,13 +134,39 @@ def _save_token(token: str) -> None:
 
 
 class EhgTokenCapture:
-    """mitmproxy addon that captures the EHG refresh token."""
+    """mitmproxy addon that captures the EHG refresh token and OAuth header."""
 
     def __init__(self):
         self._found = False
+        self._basic_found = False
+
+    def _maybe_save_basic_auth(self, flow: http.HTTPFlow) -> None:
+        """If this request looks like the OAuth /token call, save its Basic header.
+
+        Captured separately from the refresh token because the EHG mobile app
+        sends both in the same login flow but in different requests.
+        """
+        if self._basic_found:
+            return
+        if OAUTH_TOKEN_PATH not in flow.request.path:
+            return
+        auth = flow.request.headers.get("Authorization", "")
+        if not auth.lower().startswith("basic "):
+            return
+        BASIC_AUTH_FILE.write_text(auth, encoding="utf-8")
+        self._basic_found = True
+        ctx.log.info(f"\U0001f3af Captured OAuth Basic-auth header from {flow.request.pretty_url}")
+        print("\n" + "=" * 70)
+        print(_BANNER_BASIC.format(path=str(BASIC_AUTH_FILE)))
+        print(f"   HEADER:\n\n{auth}\n")
+        print("=" * 70)
 
     def request(self, flow: http.HTTPFlow) -> None:
         """Intercept HTTP requests to find the remoteAccessToken call."""
+        # Always opportunistically harvest the Basic-auth header even if the
+        # refresh token has already been captured.
+        self._maybe_save_basic_auth(flow)
+
         if self._found:
             return
 

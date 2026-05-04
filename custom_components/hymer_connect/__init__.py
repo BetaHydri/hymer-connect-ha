@@ -15,6 +15,7 @@ from .const import (
     CONF_ACCESS_TOKEN,
     CONF_BRAND,
     CONF_EHG_REFRESH_TOKEN,
+    CONF_OAUTH_BASIC_AUTH,
     CONF_REFRESH_TOKEN,
     CONF_SCU_URN,
     CONF_VEHICLE_URN,
@@ -36,7 +37,8 @@ async def async_setup_entry(
     """Set up HYMER Connect from a config entry."""
     session = async_get_clientsession(hass)
     brand = entry.data.get(CONF_BRAND, "hymer")
-    api = HymerConnectApi(session, brand=brand)
+    oauth_basic_auth = entry.data.get(CONF_OAUTH_BASIC_AUTH, "") or None
+    api = HymerConnectApi(session, brand=brand, oauth_basic_auth=oauth_basic_auth)
 
     # Always re-authenticate with stored credentials to get fresh tokens
     if CONF_USERNAME in entry.data:

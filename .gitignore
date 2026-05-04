@@ -1,8 +1,26 @@
 # Reverse engineering artifacts
 source/
-tools/
+tools/*
 analyze_*.js
 *.docx
+
+# Whitelist: shipped converter + its docs (everything else under tools/ stays ignored).
+!tools/convert_dan_metadata.py
+!tools/README.md
+!tools/capture_ehg_token.py
+!tools/discover_sensors.py
+!tools/Start-EhgTokenCapture.ps1
+
+# Belt-and-suspenders: never commit local Dan-Simms metadata extraction output,
+# even if a user runs the converter from inside the repo.
+tools/dan_metadata/
+tools/**/sensor_labels.json
+tools/**/component_kinds.json
+tools/**/control_catalog.json
+tools/**/coverage_audit.json
+tools/**/support_matrix.json
+tools/**/vehicle_catalog.json
+tools/**/oauth_client.json
 
 # Duplicate root-level component files (canonical copies live in custom_components/)
 /__init__.py

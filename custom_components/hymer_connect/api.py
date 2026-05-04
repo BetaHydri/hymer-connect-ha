@@ -25,7 +25,7 @@ from .const import (
     HEADER_BRAND,
     HEADER_EHG_BRAND,
     HEADER_LOCALE,
-    OAUTH2_BASIC_AUTH,
+    OAUTH2_BASIC_AUTH_LEGACY_DEFAULT,
     SIGNALR_NEGOTIATE_PATH,
     USER_AGENT,
 )
@@ -49,13 +49,33 @@ class HymerConnectApi:
         session: aiohttp.ClientSession,
         brand: str = "hymer",
         locale: str = "de-DE",
+        oauth_basic_auth: str | None = None,
     ) -> None:
-        """Initialize the API client."""
+        """Initialize the API client.
+
+        Args:
+            session: shared aiohttp session.
+            brand: EHG brand slug.
+            locale: locale string for SCC headers.
+            oauth_basic_auth: full ``Authorization: Basic <b64>`` header value
+                extracted from the user's own EHG mobile-app traffic. When
+                ``None`` or empty, falls back to the deprecated bundled
+                constant (logged as a one-time deprecation warning).
+        """
         self._session = session
         self._brand = brand
         self._locale = locale
         self._access_token: str | None = None
         self._refresh_token: str | None = None
+        self._oauth_basic_auth: str | None = (oauth_basic_auth or "").strip() or None
+        if self._oauth_basic_auth is None:
+            _LOGGER.warning(
+                "OAuth client header not configured for this entry; falling "
+                "back to bundled legacy default. This default will be removed "
+                "in a future release. Paste your own value (extracted from "
+                "the EHG app via mitmproxy) into the integration's "
+                "reconfigure dialog or options. See README for instructions."
+            )
 
     @property
     def access_token(self) -> str | None:
@@ -73,9 +93,36 @@ class HymerConnectApi:
         self._refresh_token = refresh_token
 
     @staticmethod
-    def _basic_auth_header() -> str:
-        """Return the pre-computed Basic auth header for OAuth2."""
-        return OAUTH2_BASIC_AUTH
+    def is_valid_basic_auth(value: str) -> bool:
+        """Lightly validate a pasted ``Basic <b64>`` header.
+
+        Returns True only if the value starts with ``Basic `` and the base64
+        body decodes to non-empty bytes containing a colon (``client_id:secret``).
+        Decoding errors return False; this is *not* a credential-correctness
+        check, only a paste-mistake guard.
+        """
+        import base64
+        if not value or not isinstance(value, str):
+            return False
+        v = value.strip()
+        if not v.lower().startswith("basic "):
+            return False
+        b64 = v.split(" ", 1)[1].strip()
+        try:
+            decoded = base64.b64decode(b64, validate=False)
+        except Exception:
+            return False
+        # The EHG client secret contains non-ASCII bytes (UTF-8 Ü), so we don't
+        # require ASCII-decodability — only that a ':' separator is present.
+        return b":" in decoded and len(decoded) > 10
+
+    def _basic_auth_header(self) -> str:
+        """Return the Basic auth header for OAuth2 calls.
+
+        Prefers the per-entry value passed to the constructor; falls back to
+        the deprecated bundled constant for backward compatibility.
+        """
+        return self._oauth_basic_auth or OAUTH2_BASIC_AUTH_LEGACY_DEFAULT
 
     def _main_api_headers(self) -> dict[str, str]:
         """Build headers for the main API (smartrv.erwinhymergroup.com)."""

@@ -12,9 +12,13 @@ API_BASE_URL_APPCOMM = "https://scc-appcomm.smartrv.erwinhymergroup.com"
 # --- OAuth2 Authentication ---
 ENDPOINT_AUTH = "/api/v2/oauth/token"
 OAUTH2_CLIENT_ID = "ehg-prod-mobile-app-technical-user"
-# Pre-computed Basic auth value from the official app (avoids encoding issues
-# with special characters in the client secret).
-OAUTH2_BASIC_AUTH = "Basic ZWhnLXByb2QtbW9iaWxlLWFwcC10ZWNobmljYWwtdXNlcjpaez96Ois3bVFhNXZAb2VlNV0lZEVeUSpxeDh9WXIoYWw1eFNUaC05LERdYm48OzhWbzh1PGclc8OcLShOMyV5"
+# DEPRECATED: legacy fallback Basic-auth header. New installs should paste
+# their own value (extracted from the EHG mobile app via mitmproxy) into the
+# config flow; that value is stored per-entry under CONF_OAUTH_BASIC_AUTH and
+# takes precedence over this constant. This constant will be removed in a
+# future release after a deprecation period; existing users without a
+# per-entry value continue to work in the meantime.
+OAUTH2_BASIC_AUTH_LEGACY_DEFAULT = "Basic ZWhnLXByb2QtbW9iaWxlLWFwcC10ZWNobmljYWwtdXNlcjpaez96Ois3bVFhNXZAb2VlNV0lZEVeUSpxeDh9WXIoYWw1eFNUaC05LERdYm48OzhWbzh1PGclc8OcLShOMyV5"
 AUTH_GRANT_TYPE_PASSWORD = "password"
 AUTH_GRANT_TYPE_REFRESH = "refresh_token"
 
@@ -72,6 +76,7 @@ CONF_SCU_URN = "scu_urn"
 CONF_VEHICLE_ID = "vehicle_id"
 CONF_EHG_TOKEN = "ehg_access_token"
 CONF_EHG_REFRESH_TOKEN = "ehg_refresh_token"
+CONF_OAUTH_BASIC_AUTH = "oauth_basic_auth"
 CONF_TANK_CAPACITY = "tank_capacity_liters"
 
 # Default diesel tank capacity (litres) — user can override in Options

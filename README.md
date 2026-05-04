@@ -611,6 +611,52 @@ The token is also saved to `tools/captured_ehg_token.txt`.
 
 ---
 
+## OAuth Client Header (v2.49.0+)
+
+Starting with **v2.49.0**, the integration supports a per-entry **OAuth client header** so the EHG mobile-app's `Basic` credentials no longer have to be redistributed in this repository. The bundled fallback still ships for backward compatibility but is **deprecated** and will be removed in a future release.
+
+### Why this exists
+
+The `POST /oauth/token` calls the integration makes carry an `Authorization: Basic <base64>` header that identifies the EHG **mobile app** (not your account). The same value is embedded in every install of the EHG app worldwide. Hard-coding it in this public repo redistributes the app's shared secret, which security scanners (GitGuardian) flag and EHG could plausibly object to. Moving it to a per-install local value cleans up the provenance posture without affecting your account or your refresh token.
+
+### What you need to do
+
+**Existing users (upgrading from ≤ v2.48.0):** *Nothing immediately.* The integration keeps working with the bundled fallback. You will see one warning per startup in the log:
+
+> `OAuth client header not configured for this entry; falling back to bundled legacy default…`
+
+To silence the warning and prepare for the future removal of the fallback, paste your own header into the new field at your convenience.
+
+**New users:** The field is shown in the initial config flow. Capture the value once (see below) or leave it empty to use the deprecated bundled fallback.
+
+### How to capture the header
+
+The updated [`Start-EhgTokenCapture.ps1`](tools/Start-EhgTokenCapture.ps1) now grabs the OAuth header in the **same mitmproxy session** as the EHG refresh token — no extra steps. After running the capture you'll see a second success banner:
+
+```text
+╔══════════════════════════════════════════════════════════════════╗
+║   ✅  OAUTH BASIC-AUTH HEADER CAPTURED SUCCESSFULLY!             ║
+║   Saved to: tools/captured_oauth_basic_auth.txt                 ║
+╚══════════════════════════════════════════════════════════════════╝
+
+   HEADER:
+   Basic ZWhnLXByb2QtbW9iaWxlLWFwcC10ZWNobmljYWwtdXNlcjpa…
+```
+
+### Where to paste it
+
+1. **Settings → Devices & Services → HYMER Connect → Configure**
+2. Paste the full `Basic …` line into the **OAuth client header** field (alongside the existing tank-capacity and EHG refresh-token fields).
+3. **Save.** The integration reloads and the deprecation warning disappears.
+
+The same field is also shown during the initial config flow and during a re-auth dialog. The value is validated client-side: a paste mistake (wrong scheme, non-base64, missing `:` separator) surfaces as `invalid_basic_auth`.
+
+### Removal timeline
+
+The bundled fallback (`OAUTH2_BASIC_AUTH_LEGACY_DEFAULT` in `const.py`) will be removed in a future minor release. After that, installs without a per-entry value will fail to authenticate. The deprecation warning gives you advance notice; configuring the field once future-proofs your install.
+
+---
+
 ## How It Works
 
 During manufacturing, each vehicle's SCU is registered in the EHG cloud with a unique URN. When you pair your phone with the SCU via Bluetooth, the cloud issues a long-lived **refresh token** bound to your phone's BLE MAC address, your account, and your vehicle. This proves you have physical access to the vehicle.

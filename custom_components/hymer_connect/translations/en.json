@@ -30,6 +30,7 @@
     "error": {
       "cannot_connect": "Failed to connect to HYMER Connect API",
       "invalid_auth": "Invalid email or password",
+      "invalid_basic_auth": "Invalid OAuth client header. Must start with 'Basic ' followed by a base64-encoded 'client_id:secret' string.",
       "unknown": "Unexpected error occurred"
     },
     "abort": {
@@ -213,11 +214,13 @@
         "title": "HYMER Connect Options",
         "data": {
           "tank_capacity_liters": "Diesel tank capacity (liters)",
-          "ehg_refresh_token": "EHG Remote Access Refresh Token"
+          "ehg_refresh_token": "EHG Remote Access Refresh Token",
+          "oauth_basic_auth": "OAuth client header"
         },
         "data_description": {
           "tank_capacity_liters": "Size of the diesel tank in liters. Common values: 71 L (Sprinter 314/316 CDI), 93 L (Sprinter 419/519 CDI standard). Used to compute fuel level in liters, consumption (L/100km), and estimated range.",
-          "ehg_refresh_token": "The long-lived token obtained during BLE pairing. Required for real-time sensor data via SignalR. Capture it via mitmproxy — see the README for instructions. Leave empty to disable SignalR."
+          "ehg_refresh_token": "The long-lived token obtained during BLE pairing. Required for real-time sensor data via SignalR. Capture it via mitmproxy \u2014 see the README for instructions. Leave empty to disable SignalR.",
+          "oauth_basic_auth": "The full 'Authorization: Basic <base64>' header used on OAuth /token requests. Captured from your own EHG app traffic via mitmproxy. Leave empty to use the bundled legacy default (deprecated)."
         }
       }
     }

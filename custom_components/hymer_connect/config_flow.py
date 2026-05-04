@@ -22,6 +22,7 @@ from .const import (
     CONF_ACCESS_TOKEN,
     CONF_BRAND,
     CONF_EHG_REFRESH_TOKEN,
+    CONF_OAUTH_BASIC_AUTH,
     CONF_REFRESH_TOKEN,
     CONF_TANK_CAPACITY,
     DEFAULT_TANK_CAPACITY_LITERS,
@@ -36,6 +37,7 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
         vol.Required(CONF_USERNAME): str,
         vol.Required(CONF_PASSWORD): str,
         vol.Optional(CONF_EHG_REFRESH_TOKEN, default=""): str,
+        vol.Optional(CONF_OAUTH_BASIC_AUTH, default=""): str,
     }
 )
 
@@ -53,11 +55,14 @@ class HymerConnectConfigFlow(ConfigFlow, domain=DOMAIN):
         return HymerConnectOptionsFlow(config_entry)
 
     async def _async_try_authenticate(
-        self, brand: str, username: str, password: str
+        self, brand: str, username: str, password: str,
+        oauth_basic_auth: str | None = None,
     ) -> dict[str, str]:
         """Try to authenticate and return tokens."""
         session = async_create_clientsession(self.hass)
-        api = HymerConnectApi(session, brand=brand)
+        api = HymerConnectApi(
+            session, brand=brand, oauth_basic_auth=oauth_basic_auth or None,
+        )
         return await api.authenticate(username, password)
 
     async def async_step_user(
@@ -67,41 +72,47 @@ class HymerConnectConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            try:
-                tokens = await self._async_try_authenticate(
-                    user_input[CONF_BRAND],
-                    user_input[CONF_USERNAME],
-                    user_input[CONF_PASSWORD],
-                )
-            except HymerConnectAuthError:
-                _LOGGER.warning("Config flow: authentication failed for %s", user_input[CONF_USERNAME])
-                errors["base"] = "invalid_auth"
-            except HymerConnectApiError:
-                _LOGGER.warning("Config flow: cannot connect to API")
-                errors["base"] = "cannot_connect"
-            except Exception:
-                _LOGGER.exception("Unexpected error during authentication")
-                errors["base"] = "unknown"
+            oauth_basic = (user_input.get(CONF_OAUTH_BASIC_AUTH) or "").strip()
+            if oauth_basic and not HymerConnectApi.is_valid_basic_auth(oauth_basic):
+                errors[CONF_OAUTH_BASIC_AUTH] = "invalid_basic_auth"
             else:
-                # Normalize email to lowercase for unique ID
-                unique_id = user_input[CONF_USERNAME].lower()
-                await self.async_set_unique_id(unique_id)
-                self._abort_if_unique_id_configured()
-                brand_name = BRANDS.get(
-                    user_input[CONF_BRAND], user_input[CONF_BRAND]
-                )
-                _LOGGER.info("Config flow: entry created for %s (%s)", unique_id, brand_name)
-                return self.async_create_entry(
-                    title=f"HYMER Connect ({brand_name})",
-                    data={
-                        CONF_BRAND: user_input[CONF_BRAND],
-                        CONF_USERNAME: user_input[CONF_USERNAME],
-                        CONF_PASSWORD: user_input[CONF_PASSWORD],
-                        CONF_ACCESS_TOKEN: tokens["access_token"],
-                        CONF_REFRESH_TOKEN: tokens["refresh_token"],
-                        CONF_EHG_REFRESH_TOKEN: user_input.get(CONF_EHG_REFRESH_TOKEN, ""),
-                    },
-                )
+                try:
+                    tokens = await self._async_try_authenticate(
+                        user_input[CONF_BRAND],
+                        user_input[CONF_USERNAME],
+                        user_input[CONF_PASSWORD],
+                        oauth_basic_auth=oauth_basic,
+                    )
+                except HymerConnectAuthError:
+                    _LOGGER.warning("Config flow: authentication failed for %s", user_input[CONF_USERNAME])
+                    errors["base"] = "invalid_auth"
+                except HymerConnectApiError:
+                    _LOGGER.warning("Config flow: cannot connect to API")
+                    errors["base"] = "cannot_connect"
+                except Exception:
+                    _LOGGER.exception("Unexpected error during authentication")
+                    errors["base"] = "unknown"
+                else:
+                    # Normalize email to lowercase for unique ID
+                    unique_id = user_input[CONF_USERNAME].lower()
+                    await self.async_set_unique_id(unique_id)
+                    self._abort_if_unique_id_configured()
+                    brand_name = BRANDS.get(
+                        user_input[CONF_BRAND], user_input[CONF_BRAND]
+                    )
+                    _LOGGER.info("Config flow: entry created for %s (%s)", unique_id, brand_name)
+                    return self.async_create_entry(
+                        title=f"HYMER Connect ({brand_name})",
+                        data={
+                            CONF_BRAND: user_input[CONF_BRAND],
+                            CONF_USERNAME: user_input[CONF_USERNAME],
+                            CONF_PASSWORD: user_input[CONF_PASSWORD],
+                            CONF_ACCESS_TOKEN: tokens["access_token"],
+                            CONF_REFRESH_TOKEN: tokens["refresh_token"],
+                            CONF_EHG_REFRESH_TOKEN: user_input.get(CONF_EHG_REFRESH_TOKEN, ""),
+                            CONF_OAUTH_BASIC_AUTH: oauth_basic,
+                        },
+                    )
 
         return self.async_show_form(
             step_id="user",
@@ -123,36 +134,46 @@ class HymerConnectConfigFlow(ConfigFlow, domain=DOMAIN):
         reauth_entry = self._get_reauth_entry()
 
         if user_input is not None:
-            try:
-                tokens = await self._async_try_authenticate(
-                    reauth_entry.data[CONF_BRAND],
-                    user_input[CONF_USERNAME],
-                    user_input[CONF_PASSWORD],
-                )
-            except HymerConnectAuthError:
-                _LOGGER.warning("Reauth flow: authentication failed for %s", user_input[CONF_USERNAME])
-                errors["base"] = "invalid_auth"
-            except HymerConnectApiError:
-                _LOGGER.warning("Reauth flow: cannot connect to API")
-                errors["base"] = "cannot_connect"
-            except Exception:
-                _LOGGER.exception("Unexpected error during reauthentication")
-                errors["base"] = "unknown"
+            oauth_basic = (
+                user_input.get(CONF_OAUTH_BASIC_AUTH)
+                or reauth_entry.data.get(CONF_OAUTH_BASIC_AUTH)
+                or ""
+            ).strip()
+            if oauth_basic and not HymerConnectApi.is_valid_basic_auth(oauth_basic):
+                errors[CONF_OAUTH_BASIC_AUTH] = "invalid_basic_auth"
             else:
-                _LOGGER.info("Reauth flow: credentials updated for %s", user_input[CONF_USERNAME])
-                unique_id = user_input[CONF_USERNAME].lower()
-                await self.async_set_unique_id(unique_id)
-                self._abort_if_unique_id_mismatch()
-                return self.async_update_reload_and_abort(
-                    reauth_entry,
-                    data_updates={
-                        CONF_USERNAME: user_input[CONF_USERNAME],
-                        CONF_PASSWORD: user_input[CONF_PASSWORD],
-                        CONF_ACCESS_TOKEN: tokens["access_token"],
-                        CONF_REFRESH_TOKEN: tokens["refresh_token"],
-                        CONF_EHG_REFRESH_TOKEN: user_input.get(CONF_EHG_REFRESH_TOKEN, reauth_entry.data.get(CONF_EHG_REFRESH_TOKEN, "")),
-                    },
-                )
+                try:
+                    tokens = await self._async_try_authenticate(
+                        reauth_entry.data[CONF_BRAND],
+                        user_input[CONF_USERNAME],
+                        user_input[CONF_PASSWORD],
+                        oauth_basic_auth=oauth_basic,
+                    )
+                except HymerConnectAuthError:
+                    _LOGGER.warning("Reauth flow: authentication failed for %s", user_input[CONF_USERNAME])
+                    errors["base"] = "invalid_auth"
+                except HymerConnectApiError:
+                    _LOGGER.warning("Reauth flow: cannot connect to API")
+                    errors["base"] = "cannot_connect"
+                except Exception:
+                    _LOGGER.exception("Unexpected error during reauthentication")
+                    errors["base"] = "unknown"
+                else:
+                    _LOGGER.info("Reauth flow: credentials updated for %s", user_input[CONF_USERNAME])
+                    unique_id = user_input[CONF_USERNAME].lower()
+                    await self.async_set_unique_id(unique_id)
+                    self._abort_if_unique_id_mismatch()
+                    return self.async_update_reload_and_abort(
+                        reauth_entry,
+                        data_updates={
+                            CONF_USERNAME: user_input[CONF_USERNAME],
+                            CONF_PASSWORD: user_input[CONF_PASSWORD],
+                            CONF_ACCESS_TOKEN: tokens["access_token"],
+                            CONF_REFRESH_TOKEN: tokens["refresh_token"],
+                            CONF_EHG_REFRESH_TOKEN: user_input.get(CONF_EHG_REFRESH_TOKEN, reauth_entry.data.get(CONF_EHG_REFRESH_TOKEN, "")),
+                            CONF_OAUTH_BASIC_AUTH: oauth_basic,
+                        },
+                    )
 
         return self.async_show_form(
             step_id="reauth_confirm",
@@ -166,6 +187,10 @@ class HymerConnectConfigFlow(ConfigFlow, domain=DOMAIN):
                     vol.Optional(
                         CONF_EHG_REFRESH_TOKEN,
                         default=reauth_entry.data.get(CONF_EHG_REFRESH_TOKEN, ""),
+                    ): str,
+                    vol.Optional(
+                        CONF_OAUTH_BASIC_AUTH,
+                        default=reauth_entry.data.get(CONF_OAUTH_BASIC_AUTH, ""),
                     ): str,
                 }
             ),
@@ -184,22 +209,33 @@ class HymerConnectOptionsFlow(OptionsFlow):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Manage the options."""
+        errors: dict[str, str] = {}
         if user_input is not None:
-            # EHG token is stored in config_entry.data (auth-related),
-            # not in options.  Update data if the token changed.
+            # EHG token and OAuth Basic auth are stored in config_entry.data
+            # (auth-related), not in options.  Update data if changed.
             new_token = user_input.pop(CONF_EHG_REFRESH_TOKEN, "")
-            current_token = self._config_entry.data.get(CONF_EHG_REFRESH_TOKEN, "")
-            if new_token != current_token:
-                new_data = {**self._config_entry.data, CONF_EHG_REFRESH_TOKEN: new_token}
-                self.hass.config_entries.async_update_entry(
-                    self._config_entry, data=new_data
-                )
-            return self.async_create_entry(title="", data=user_input)
+            new_basic = (user_input.pop(CONF_OAUTH_BASIC_AUTH, "") or "").strip()
+            if new_basic and not HymerConnectApi.is_valid_basic_auth(new_basic):
+                errors[CONF_OAUTH_BASIC_AUTH] = "invalid_basic_auth"
+            else:
+                current_token = self._config_entry.data.get(CONF_EHG_REFRESH_TOKEN, "")
+                current_basic = self._config_entry.data.get(CONF_OAUTH_BASIC_AUTH, "")
+                if new_token != current_token or new_basic != current_basic:
+                    new_data = {
+                        **self._config_entry.data,
+                        CONF_EHG_REFRESH_TOKEN: new_token,
+                        CONF_OAUTH_BASIC_AUTH: new_basic,
+                    }
+                    self.hass.config_entries.async_update_entry(
+                        self._config_entry, data=new_data
+                    )
+                return self.async_create_entry(title="", data=user_input)
 
         current_capacity = self._config_entry.options.get(
             CONF_TANK_CAPACITY, DEFAULT_TANK_CAPACITY_LITERS
         )
         current_ehg_token = self._config_entry.data.get(CONF_EHG_REFRESH_TOKEN, "")
+        current_basic_auth = self._config_entry.data.get(CONF_OAUTH_BASIC_AUTH, "")
 
         return self.async_show_form(
             step_id="init",
@@ -213,6 +249,11 @@ class HymerConnectOptionsFlow(OptionsFlow):
                         CONF_EHG_REFRESH_TOKEN,
                         default=current_ehg_token,
                     ): str,
+                    vol.Optional(
+                        CONF_OAUTH_BASIC_AUTH,
+                        default=current_basic_auth,
+                    ): str,
                 }
             ),
+            errors=errors,
         )
