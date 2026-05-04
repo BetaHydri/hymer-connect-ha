@@ -5,8 +5,9 @@ gitignored. Only the items below are shipped with the repository.
 
 ## `convert_dan_metadata.py` — Brand overlay generator
 
-Converts a **local** EHG runtime-metadata extraction directory (produced by
-a community APK-extractor project — see Credits) into a
+Converts a **local** EHG runtime-metadata extraction directory — produced by
+[HYMER Connect Metadata Edition](https://github.com/dan-simms1/hymer-connect-ha)
+by [@dan-simms1](https://github.com/dan-simms1) — into a
 [`sensor_maps/<brand>.json`](../custom_components/hymer_connect/sensor_maps/)
 overlay file. This is intended for users whose vehicle is **not** a HYMER
 Grand Canyon S 600 / S 700 (sub-brands such as Bürstner, Carado, Dethleffs,
@@ -17,6 +18,8 @@ Eriba variants, LMC, Laika, Niesmann+Bischoff, Sunlight, Freeontour, …) where
 
 1. **You** lawfully obtain the EHG APK / bundle.
 2. **You** run the upstream extractor's `prepare_runtime_metadata.py` locally
+   (see
+   [HYMER Connect Metadata Edition](https://github.com/dan-simms1/hymer-connect-ha))
    to produce a metadata directory containing `sensor_labels.json`,
    `component_kinds.json`, `control_catalog.json`, `coverage_audit.json`, and
    (optionally) `support_matrix.json` / `vehicle_catalog.json`.
@@ -29,10 +32,12 @@ Eriba variants, LMC, Laika, Niesmann+Bischoff, Sunlight, Freeontour, …) where
 ### Pin to a released tag of the upstream extractor
 
 The upstream metadata format is reasonably stable but is not a public API.
-Pin your extraction to a released tag (do not run against the upstream
-`main` branch) so the field names this converter expects remain valid. If
-the upstream project publishes a formal schema, adjust `SCHEMA_MAP` at the
-top of [`convert_dan_metadata.py`](convert_dan_metadata.py) in one place.
+Pin your extraction to a
+[released tag](https://github.com/dan-simms1/hymer-connect-ha/releases)
+rather than the upstream `main` branch so the field names this converter
+expects remain valid. If the upstream project publishes a formal schema,
+adjust `SCHEMA_MAP` at the top of
+[`convert_dan_metadata.py`](convert_dan_metadata.py) in one place.
 
 ### Conservative emission policy
 
@@ -83,7 +88,10 @@ The generated file is a **starting point**, not a final overlay:
 
 ### Credits
 
-The metadata extraction tooling this converter consumes is the work of an
-upstream community project. This repository ships only the converter; it does
-not redistribute any APK-derived data or vendor credentials. Users supply
-their own extraction output locally before running the converter.
+This converter consumes the metadata extraction tooling shipped with
+[**HYMER Connect Metadata Edition**](https://github.com/dan-simms1/hymer-connect-ha)
+by [@dan-simms1](https://github.com/dan-simms1) — a sibling Home Assistant
+integration that uses the same EHG cloud stack with a metadata-driven
+approach. This repository ships only the converter; it does not redistribute
+any APK-derived data or vendor credentials. Users supply their own
+extraction output locally before running the converter.
