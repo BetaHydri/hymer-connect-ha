@@ -1,10 +1,8 @@
 # Tools
 
-Most files under `tools/` are local reverse-engineering scratchpads (mitmproxy
-output, logcat dumps, dex extracts, APK inspection scripts, captured packets,
-…) and are gitignored. Local trace artifacts produced by the scripts below
-live under [`tools/traces/`](traces/) which is also gitignored. Only the items
-listed in the table are shipped with the repository.
+Only the items listed below are shipped with the repository. Everything else
+under `tools/` (including local trace artifacts under `tools/traces/`) is
+gitignored.
 
 ## Shipped scripts at a glance
 
