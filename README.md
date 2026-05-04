@@ -194,6 +194,36 @@ If you identify what an unmapped slot does on your brand/model, please open an i
 
 With the JSON-driven architecture, you can **add new sensors, rename slots, set icons, and create HA entities yourself** — no Python code, no waiting for a release. This is especially useful for Eriba, Bürstner, Dethleffs, and other EHG brands where the sensor bus layout differs from the S600.
 
+#### 🚀 Bootstrap a brand overlay with `tools/convert_dan_metadata.py` (v2.49.0+)
+
+If you don't want to start from a blank `sensor_maps/<brand>.json`, the repository ships [`tools/convert_dan_metadata.py`](tools/convert_dan_metadata.py) ([README](tools/README.md)) which can **generate a starting overlay** for your brand from a *local* EHG runtime-metadata extraction.
+
+**Two-step pipeline** (you must do step 1 first):
+
+1. **Generate the metadata extraction (upstream tool, run locally on your machine).** This converter only consumes the output — it does **not** extract anything from an APK itself. You must first run the upstream extractor that produces the required input files (`sensor_labels.json`, `component_kinds.json`, `control_catalog.json`, `coverage_audit.json`, optionally `support_matrix.json` / `vehicle_catalog.json`). The extractor is shipped as part of [**HYMER Connect Metadata Edition**](https://github.com/dan-simms1/hymer-connect-ha) by [@dan-simms1](https://github.com/dan-simms1) — see its `scripts/prepare_runtime_metadata.py` and `tools/README.md` for the exact procedure (you supply your own EHG APK; that data is never committed to either repo).
+
+2. **Convert it to a brand overlay.** Once you have a local metadata directory from step 1:
+
+   ```pwsh
+   # Verify the converter on synthetic fixtures (no APK data needed)
+   python tools\convert_dan_metadata.py self-test
+
+   # Convert your local extraction
+   python tools\convert_dan_metadata.py convert `
+       --input  C:\path\to\your\local\metadata `
+       --output custom_components\hymer_connect\sensor_maps\<brand>.json `
+       --brand  <brand> `
+       --vehicle-id <optional support_matrix key>
+   ```
+
+**Important caveats:**
+
+- **Conservative emission** — the converter only auto-emits things it can identify with high confidence: read-only sensors and clearly-defined switches/lights. Climate/fridge/boiler/heater controls are deliberately **not** auto-generated; a `_climate_templates_required` marker block is written instead so you hand-port them from `sensor_maps/hymer.json` using the manual recipe in the next subsection.
+- **Generated file is a starting point**, not a finished overlay — expect to rename auto-generated entity ids to match the conventions in [`base.json`](custom_components/hymer_connect/sensor_maps/base.json) / [`hymer.json`](custom_components/hymer_connect/sensor_maps/hymer.json), refine `device_class`/`icon` choices, and remove the `_generated_by` / `_source_vehicle_id` header keys before opening a PR. Test on a real vehicle first.
+- **Nothing APK-derived gets committed** — the input metadata directory and `oauth_client.json` are blocked by `.gitignore`; only the curated overlay JSON should land in a PR.
+
+If you prefer to start completely from scratch (no upstream extractor, no APK), the manual recipe below is fully self-contained and equally valid.
+
 #### What you can do yourself
 
 | Task | How | Example |
