@@ -165,6 +165,8 @@ The sensor map was built on a **HYMER Grand Canyon S 600 CrossOver** (Mercedes S
 - **Vehicle CAN bus (bus 1)**: Mercedes Sprinter vs VW Crafter may have different slot semantics for doors, ignition, and chassis flags. Brand overlays can override individual slots.
 
 > **Eriba users** (v2.44.0+): Your `eriba.json` already defines Dometic fridge sensors (bus 60), **2 controllable light entities** (bus 18 shower ambient + bus 93 bedroom furniture), Truma Aventa AC placeholder slots (bus 59). With the JSON-driven architecture, you can **add sensors, lights, switches, and binary sensors yourself** without waiting for a release or writing Python code. See the [Self-Service Guide for Non-HYMER Brands](#-self-service-guide-for-non-hymer-brands-v2430) below.
+>
+> **🚀 Speed-up tip (v2.49.0+):** if you can run [@dan-simms1's metadata extractor](https://github.com/dan-simms1/hymer-connect-ha) against your own EHG APK once, you can pipe its output through [`tools/convert_dan_metadata.py`](tools/convert_dan_metadata.py) to **bootstrap a much more complete `eriba.json` in seconds** instead of mapping placeholder slots one at a time. Treat the generated file as a starting point and curate before opening a PR — see the [Bootstrap subsection](#-bootstrap-a-brand-overlay-with-toolsconvert_dan_metadatapy-v2490) for the two-step pipeline.
 
 ### � Dynamic Slot Discovery (v2.34.0+)
 
@@ -446,6 +448,8 @@ When you turn the heater on, the integration sends setpoint (sid 8) + fuel_type_
 5. Once identified, add the mapping to your brand JSON and restart HA.
 
 > **Current Eriba overlay (`eriba.json`):** 33 sensor entries + 2 lights + 0 switches. Lights: bus 18 (shower ambient, with brightness), bus 93 (bedroom furniture, with brightness). Sensors: bus 59 (Truma Aventa AC — 8 placeholder slots awaiting identification), bus 60 (Dometic fridge — 21 slots, 9 with entities). The bus 59 AC slots are particularly ripe for mapping — if you have a Truma Aventa and can correlate EHG app actions with slot values, please share your findings!
+>
+> **🚀 Faster path:** instead of mapping bus 59 placeholder slots one at a time, run [@dan-simms1's metadata extractor](https://github.com/dan-simms1/hymer-connect-ha) against your EHG APK and feed the output to [`tools/convert_dan_metadata.py`](tools/convert_dan_metadata.py). The converter emits a starting `eriba.json` with names, units, and platform decisions auto-derived from the APK metadata — climate/heater/fridge entities still need manual templating (see the converter's caveats), but the bulk of the placeholder mapping work disappears. Details in the [Bootstrap subsection](#-bootstrap-a-brand-overlay-with-toolsconvert_dan_metadatapy-v2490).
 
 ### 🗺️ Device Tracker
 
