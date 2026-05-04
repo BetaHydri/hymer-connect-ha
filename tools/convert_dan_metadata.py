@@ -1,14 +1,20 @@
-"""Convert Dan Simms' EHG runtime-metadata extraction into a hymer-connect-ha
+"""Convert an EHG runtime-metadata extraction directory into a hymer-connect-ha
 brand overlay JSON (sensor_maps/<brand>.json).
 
-Pipeline (per agreement with Dan, 2026-05):
+The input is produced by an external EHG metadata extractor such as
+`HYMER Connect Metadata Edition` by @dan-simms1
+(https://github.com/dan-simms1/hymer-connect-ha) -- see tools/README.md.
+This converter is independent: it reads that local extraction output and
+emits a brand overlay; it does not redistribute any APK-derived data.
 
-    user APK  --(Dan's prepare_runtime_metadata.py)-->  local metadata dir
-                                                        (NOT committed to git)
+Pipeline:
+
+    user APK  --(upstream prepare_runtime_metadata.py)-->  local metadata dir
+                                                           (NOT committed to git)
     local metadata dir  --(this converter)-->  sensor_maps/<brand>.json
                                                 (reviewable patch)
 
-Conservative emission policy (Dan's recommendation):
+Conservative emission policy:
 
     * Read-only slots                       -> sensor / binary_sensor (auto)
     * component_kinds[bus] == "light"       -> lights section          (auto)
@@ -25,8 +31,8 @@ Conservative emission policy (Dan's recommendation):
                                                maintainer hand-ports them
                                                from hymer.json.
 
-Schema posture (Dan's email): his metadata format is "stable-ish" but NOT a
-public API yet. ALL field-name lookups are funneled through SCHEMA_MAP at the
+Schema posture: the upstream metadata format is reasonably stable but is NOT
+a public API. ALL field-name lookups are funneled through SCHEMA_MAP at the
 top of this file so we can re-tune to a future formal schema in one place.
 
 Use --self-test to run an in-memory round-trip with synthetic fixtures (no
@@ -46,10 +52,10 @@ from pathlib import Path
 from typing import Any, Iterable
 
 # ---------------------------------------------------------------------------
-# SCHEMA_MAP -- single source of truth for Dan-side field names.
+# SCHEMA_MAP -- single source of truth for upstream-side field names.
 #
-# Dan's email lists these files; field names below are the documented or
-# strongly-implied names. Adjust here when Dan publishes formal schemas.
+# Field names below are the documented or strongly-implied names from the
+# upstream extractor's output. Adjust here when a formal schema is published.
 # ---------------------------------------------------------------------------
 
 SCHEMA_MAP: dict[str, dict[str, str]] = {
@@ -93,7 +99,8 @@ SCHEMA_MAP: dict[str, dict[str, str]] = {
     # vehicle_catalog.json: brand/model directory.
     # Expected shape:
     #   { "<vehicle_id>": {"brand": ..., "model": ..., "buses": [..]} }
-    # Buses list is informational only -- per Dan, NOT authoritative.
+    # Buses list is informational only -- NOT authoritative; the SCU's runtime
+    # behaviour wins.
     "vehicle_catalog": {
         "brand": "brand",
         "model": "model",
@@ -154,8 +161,8 @@ LIGHT_SID_COLOR_TEMP = 3
 # ---------------------------------------------------------------------------
 
 @dataclass
-class DanMetadata:
-    """In-memory view of Dan's local extraction directory."""
+class ExtractionMetadata:
+    """In-memory view of an upstream extractor's local output directory."""
 
     sensor_labels:    dict[str, dict[str, Any]] = field(default_factory=dict)
     component_kinds:  dict[str, dict[str, Any]] = field(default_factory=dict)
@@ -194,8 +201,8 @@ OPTIONAL_FILES = (
 )
 
 
-def load_metadata(meta_dir: Path) -> DanMetadata:
-    """Load Dan's extraction output from a local directory.
+def load_metadata(meta_dir: Path) -> ExtractionMetadata:
+    """Load an upstream extractor's output from a local directory.
 
     Required files raise FileNotFoundError; optional files default to {}.
     """
@@ -211,7 +218,7 @@ def load_metadata(meta_dir: Path) -> DanMetadata:
         with path.open("r", encoding="utf-8") as fh:
             return json.load(fh)
 
-    md = DanMetadata(
+    md = ExtractionMetadata(
         sensor_labels   = _load("sensor_labels.json",   required=True),
         component_kinds = _load("component_kinds.json", required=True),
         control_catalog = _load("control_catalog.json", required=True),
@@ -223,7 +230,7 @@ def load_metadata(meta_dir: Path) -> DanMetadata:
     return md
 
 
-def _validate_required_fields(md: DanMetadata) -> None:
+def _validate_required_fields(md: ExtractionMetadata) -> None:
     """Validate the minimal field set we depend on; fail loudly on gaps."""
     name_key     = SCHEMA_MAP["sensor_labels"]["name"]
     datatype_key = SCHEMA_MAP["sensor_labels"]["datatype"]
@@ -259,7 +266,7 @@ def _validate_required_fields(md: DanMetadata) -> None:
 # ---------------------------------------------------------------------------
 
 def convert(
-    md: DanMetadata,
+    md: ExtractionMetadata,
     *,
     brand: str,
     vehicle_id: str | None = None,
@@ -278,8 +285,8 @@ def convert(
     overlay: dict[str, Any] = {
         "_comment": (
             f"{brand} brand overlay generated by tools/convert_dan_metadata.py "
-            "from a LOCAL Dan-Simms runtime-metadata extraction. Not committed "
-            "as APK-derived data; review and prune before merging."
+            "from a LOCAL EHG runtime-metadata extraction. Not committed as "
+            "APK-derived data; review and prune before merging."
         ),
         "_generated_by": "convert_dan_metadata.py",
         "_source_vehicle_id": vehicle_id or "unspecified",
@@ -438,7 +445,7 @@ def _build_sensor(
     unit: str | None,
     transform: str | None,
 ) -> dict[str, Any]:
-    """Build a sensor / binary_sensor entry from Dan-side field values."""
+    """Build a sensor / binary_sensor entry from upstream-side field values."""
     base = DATATYPE_PLATFORM.get(datatype or "string", {"platform": "sensor"}).copy()
     entry: dict[str, Any] = {"name": name}
     entry.update(base)
@@ -536,7 +543,7 @@ def _build_argparser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(
         prog="convert_dan_metadata",
         description=(
-            "Convert a LOCAL Dan-Simms runtime-metadata extraction directory "
+            "Convert a LOCAL EHG runtime-metadata extraction directory "
             "into a hymer-connect-ha brand overlay JSON. Never run this against "
             "files committed to git -- the input must be your own local APK "
             "extraction output."
@@ -546,7 +553,7 @@ def _build_argparser() -> argparse.ArgumentParser:
 
     c = sub.add_parser("convert", help="Convert a metadata directory.")
     c.add_argument("--input", "-i", required=True,
-                   help="Path to Dan's local metadata directory.")
+                   help="Path to your local upstream metadata directory.")
     c.add_argument("--output", "-o", required=True,
                    help="Path to write the overlay JSON (e.g. sensor_maps/buerstner.json).")
     c.add_argument("--brand", "-b", required=True,
@@ -622,7 +629,7 @@ SYNTHETIC_FIXTURES: dict[str, Any] = {
 
 def _self_test() -> int:
     """Run conversion against in-memory synthetic fixtures and assert invariants."""
-    md = DanMetadata(**SYNTHETIC_FIXTURES)  # type: ignore[arg-type]
+    md = ExtractionMetadata(**SYNTHETIC_FIXTURES)  # type: ignore[arg-type]
     _validate_required_fields(md)
 
     overlay, stats = convert(md, brand="synthetic", include_inferred=False)
