@@ -12,13 +12,10 @@ API_BASE_URL_APPCOMM = "https://scc-appcomm.smartrv.erwinhymergroup.com"
 # --- OAuth2 Authentication ---
 ENDPOINT_AUTH = "/api/v2/oauth/token"
 OAUTH2_CLIENT_ID = "ehg-prod-mobile-app-technical-user"
-# DEPRECATED: legacy fallback Basic-auth header. New installs should paste
-# their own value (extracted from the EHG mobile app via mitmproxy) into the
-# config flow; that value is stored per-entry under CONF_OAUTH_BASIC_AUTH and
-# takes precedence over this constant. This constant will be removed in a
-# future release after a deprecation period; existing users without a
-# per-entry value continue to work in the meantime.
-OAUTH2_BASIC_AUTH_LEGACY_DEFAULT = "Basic ZWhnLXByb2QtbW9iaWxlLWFwcC10ZWNobmljYWwtdXNlcjpaez96Ois3bVFhNXZAb2VlNV0lZEVeUSpxeDh9WXIoYWw1eFNUaC05LERdYm48OzhWbzh1PGclc8OcLShOMyV5"
+# The OAuth client Basic-auth header is NEVER bundled with this integration.
+# Each config entry MUST supply its own value (extracted from the user's own
+# EHG mobile-app traffic via mitmproxy). See README "Prerequisites" and
+# tools/Start-EhgTokenCapture.ps1.
 AUTH_GRANT_TYPE_PASSWORD = "password"
 AUTH_GRANT_TYPE_REFRESH = "refresh_token"
 

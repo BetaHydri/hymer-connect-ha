@@ -118,6 +118,19 @@ Real-time data from the **Voltronic MPP260CI** MPPT solar charger:
 | **Victron** | Inverter on/off, charger on/off, voltages, currents, frequencies, device failure, firmware (bus 121 — disabled by default, **non-functional on S600**: Victron uses VE.Bus/RS-485 which is incompatible with the vehicle CAN bus) |
 | **Total** | **~130 entities** (sensors, binary sensors, lights, switches, climate, selects) from CAN bus, LIN bus, GPS, and connected components |
 
+## Prerequisites
+
+**As of v2.50.0, the integration no longer ships a bundled OAuth client header.** Before installing, you must capture **two values** from your own EHG mobile-app traffic — once — using mitmproxy:
+
+1. **OAuth client header** (`Authorization: Basic <base64>`) — used by the integration to obtain short-lived access tokens from `/oauth/token`. **Required.**
+2. **EHG Remote Access Refresh Token** (long JWT starting with `eyJ…`) — used to stream real-time sensor data via SignalR. *Optional* for REST-only setups; **required** for the ~100 real-time entities.
+
+Both values are harvested in a **single capture session** by [`tools/Start-EhgTokenCapture.ps1`](https://github.com/BetaHydri/hymer-connect-ha/blob/master/tools/Start-EhgTokenCapture.ps1) (Windows) or [`tools/capture_ehg_token.py`](https://github.com/BetaHydri/hymer-connect-ha/blob/master/tools/capture_ehg_token.py) (Linux/macOS). Detailed step-by-step instructions are below in [Capturing the OAuth header and EHG refresh token](#capturing-the-oauth-header-and-ehg-refresh-token).
+
+> **🔒 Treat both values like passwords.** They are personal and bound to your account and vehicle. Never share them, never commit them to git, never paste them into a public issue or pastebin.
+
+> **Why this changed in v2.50.0:** earlier versions bundled a fallback OAuth client header extracted from the EHG app. That coupled the integration to a specific EHG app release and risked being out of date if EHG rotates the secret. Each install now uses a header captured from the user's own up-to-date app, with no shared secret in the repository.
+
 ## Installation
 
 ### HACS (recommended)
@@ -135,11 +148,14 @@ Real-time data from the **Voltronic MPP260CI** MPPT solar charger:
 
 ## Configuration
 
+> **Capture both auth values first.** See [Prerequisites](#prerequisites) — the OAuth client header is mandatory and the EHG refresh token is needed for real-time data.
+
 1. Go to **Settings > Devices & Services > + Add Integration**
 2. Search for **HYMER Connect**
 3. Select your brand and enter your HYMER Connect app credentials
-4. Paste your **EHG Remote Access Refresh Token** (see below)
-5. The integration creates sensor entities for your vehicle
+4. Paste your **OAuth client header** (the full `Basic <base64>` string from `traces/captured_oauth_basic_auth.txt`)
+5. Paste your **EHG Remote Access Refresh Token** (the JWT from `traces/captured_ehg_token.txt`)
+6. The integration creates sensor entities for your vehicle
 
 > **Without the refresh token**, the integration provides only REST API data (vehicle model, VIN, year). **With the refresh token**, you get ~100 real-time entities via SignalR.
 
@@ -151,13 +167,16 @@ Real-time data from the **Voltronic MPP260CI** MPPT solar charger:
 
 ---
 
-## Obtaining the EHG Refresh Token
+## Capturing the OAuth header and EHG refresh token
 
-The HYMER Connect cloud requires a special **EHG Remote Access Refresh Token** to stream real-time sensor data. This token is created during the initial Bluetooth (BLE) pairing between your phone and your vehicle's Smart Interface Unit (SIU). It is stored inside the Hymer Connect app and **never expires**.
+The HYMER Connect cloud requires two pieces of authentication material that this integration does **not** ship:
 
-Since there is no public API to generate this token, you must capture it **once** from your phone's network traffic using a proxy tool. After that, the integration refreshes it automatically.
+* an **OAuth client `Basic <base64>` header** — a per-app secret used by the EHG mobile app on every `/oauth/token` request, and
+* an **EHG Remote Access Refresh Token** — a long-lived JWT created during the initial Bluetooth (BLE) pairing between your phone and your vehicle's Smart Interface Unit (SIU). Stored inside the EHG app and **never expires**.
 
-> **🔒 Security:** This token is personal and bound to your account and vehicle. **Never share it** with others. While access to the HYMER Connect cloud is still protected by your email and password, the refresh token could allow someone to obtain short-lived access tokens for your vehicle's sensor data. Treat it like a password.
+Since there is no public API to issue either value, you must capture them **once** from your phone's network traffic using a proxy. After that the integration refreshes the short-lived OAuth access tokens automatically; the EHG refresh token is reused unchanged. The shipped capture tool grabs both values in **one** mitmproxy session.
+
+> **🔒 Security.** Both values are personal and bound to your account and vehicle. **Never share them.** Together they grant short-lived access tokens for your vehicle's sensor data and command surface. Treat them like passwords.
 
 ### Prerequisites
 
@@ -219,11 +238,19 @@ Get-NetIPAddress -AddressFamily IPv4 | Where-Object { $_.InterfaceAlias -match '
 ifconfig | grep "inet "
 ```
 
-Start mitmproxy:
+Start the capture. The shipped helper drives mitmproxy and watches for **both** values — the OAuth `Authorization: Basic …` header and the EHG refresh token — and writes each to its own file under `tools/traces/`:
+
+```powershell
+# Windows (recommended): one-click PowerShell wrapper
+pwsh tools\Start-EhgTokenCapture.ps1
+```
 
 ```bash
-mitmdump --mode regular --listen-port 8080 --set flow_detail=3 -w hymer_trace.flow
+# Linux / macOS: invoke the mitmproxy addon directly
+mitmdump -s tools/capture_ehg_token.py --listen-port 8080
 ```
+
+Leave the capture running while you do steps 5–7 below. The script auto-exits once both values have been seen.
 
 #### 5. Configure your phone to use the proxy
 
@@ -241,46 +268,31 @@ mitmdump --mode regular --listen-port 8080 --set flow_detail=3 -w hymer_trace.fl
 3. Open the downloaded file and install it (Settings > Security > Install certificates)
 4. Name it `mitmproxy`, select **VPN and apps**
 
-#### 7. Capture the token
+#### 7. Trigger the capture
 
 1. **Force-close** the HYMER Connect app (swipe away from recent apps)
 2. **Open** the patched HYMER Connect app
-3. Wait for it to load the vehicle dashboard with sensor data (~10 seconds)
+3. Wait for it to load the vehicle dashboard with sensor data (~10 seconds). The app's first `/oauth/token` request carries the OAuth Basic header; loading the vehicle dashboard triggers the EHG refresh-token request.
 4. Close the app
 
-#### 8. Extract the token
+The capture script prints two banners and exits as soon as it has seen both values.
 
-Stop mitmproxy (`Ctrl+C`). Then extract your refresh token:
+#### 8. Read the captured values
 
-```bash
-python3 -c "
-from mitmproxy.io import FlowReader
-import json
+The shipped capture script saves each value to its own file:
 
-with open('hymer_trace.flow', 'rb') as f:
-    reader = FlowReader(f)
-    for flow in reader.stream():
-        if hasattr(flow, 'request') and 'remoteAccessToken' in flow.request.url:
-            body = json.loads(flow.request.content.decode('utf-8'))
-            print('=== YOUR EHG REFRESH TOKEN ===')
-            print(body['token'])
-            print()
-            print('Copy the token above and paste it into the')
-            print('HYMER Connect integration configuration in Home Assistant.')
-            break
-    else:
-        print('Token not found in trace. Make sure the app loaded sensor data.')
-"
-```
+* `tools/traces/captured_oauth_basic_auth.txt` — a single line beginning with `Basic ` (this is the **OAuth client header**)
+* `tools/traces/captured_ehg_token.txt` — a long JWT string starting with `eyJ…` (this is the **EHG Remote Access Refresh Token**)
 
-The output is a long JWT string starting with `eyJ...`. This is your **EHG Remote Access Refresh Token**.
+If you ran `mitmdump` manually instead of the helper script, both files are produced as long as you used `-s tools/capture_ehg_token.py`.
 
-#### 9. Add the token to Home Assistant
+#### 9. Add both values to Home Assistant
 
 1. Go to **Settings > Devices & Services**
-2. Find **HYMER Connect** and click **Configure** (or re-add the integration)
-3. Paste the token into the **EHG Remote Access Refresh Token** field
-4. Save — real-time sensor data will start flowing within seconds
+2. Find **HYMER Connect** and click **Configure** (or **Add Integration** for a fresh install)
+3. Paste the contents of `traces/captured_oauth_basic_auth.txt` into the **OAuth client header** field (mandatory)
+4. Paste the contents of `traces/captured_ehg_token.txt` into the **EHG Remote Access Refresh Token** field (optional but recommended)
+5. Save — real-time sensor data starts flowing within seconds
 
 #### 10. Restore your phone
 

@@ -5,6 +5,27 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.50.0] - 2026-05-05
+
+### Removed
+
+- **Bundled OAuth client Basic-auth header** — the constant `OAUTH2_BASIC_AUTH_LEGACY_DEFAULT` and its fallback path are gone from `const.py` / `api.py`. The integration no longer ships a shared OAuth secret; every config entry must carry its own `oauth_basic_auth` value, captured from the user's own EHG-app traffic.
+
+### Changed
+
+- **`oauth_basic_auth` is now mandatory** in the user and reauth config-flow steps (`vol.Required`). The Options dialog still allows updating the value after install. Submitting an empty value surfaces the new `oauth_basic_auth_required` error string.
+- **`HymerConnectApi._basic_auth_header()`** raises `HymerConnectAuthError` when the per-entry value is missing instead of returning a bundled fallback.
+- **`async_setup_entry`** raises `ConfigEntryAuthFailed` (which triggers Home Assistant's reauth dialog) when an existing entry has no `oauth_basic_auth` value yet, so v2.49.0 users without a per-entry header are guided through the standard reauth flow.
+- **README — Prerequisites section added** above Installation, listing the two values users must capture before installing (OAuth client header *required*, EHG refresh token *recommended for real-time data*) and pointing at `tools/Start-EhgTokenCapture.ps1` / `tools/capture_ehg_token.py`.
+- **README — token-capture procedure** updated end-to-end to use the shipped capture script (which writes `traces/captured_oauth_basic_auth.txt` + `traces/captured_ehg_token.txt` and auto-exits) instead of the previous manual `mitmdump … -w hymer_trace.flow` + inline-Python extraction snippet.
+- **strings.json** — added `oauth_basic_auth` field labels, `data_description` text on user + reauth steps, and the new `oauth_basic_auth_required` + `invalid_basic_auth` error strings.
+
+### Migration Notes
+
+- **Breaking for v2.49.0 users who never pasted a per-entry header.** After upgrading, the integration setup raises `ConfigEntryAuthFailed` and Home Assistant displays a "Reconfigure" notification. Open *Settings → Devices & Services → HYMER Connect → Reconfigure*, paste your captured `Basic <base64>` header into the *OAuth client header* field, and save. Run `pwsh tools\Start-EhgTokenCapture.ps1` (Windows) or `mitmdump -s tools/capture_ehg_token.py` (Linux/macOS) to harvest the value if you do not have it yet.
+- **Non-breaking for v2.49.0 users who already pasted a per-entry header.** Their stored value is reused unchanged; no action required.
+- **For new installs**, the field is now required in the initial config flow. Capture the value first, then open *+ Add Integration*.
+
 ## [2.49.0] - 2026-05-04
 
 ### Added

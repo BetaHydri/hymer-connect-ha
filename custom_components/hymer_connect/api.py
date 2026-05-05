@@ -25,7 +25,6 @@ from .const import (
     HEADER_BRAND,
     HEADER_EHG_BRAND,
     HEADER_LOCALE,
-    OAUTH2_BASIC_AUTH_LEGACY_DEFAULT,
     SIGNALR_NEGOTIATE_PATH,
     USER_AGENT,
 )
@@ -58,9 +57,10 @@ class HymerConnectApi:
             brand: EHG brand slug.
             locale: locale string for SCC headers.
             oauth_basic_auth: full ``Authorization: Basic <b64>`` header value
-                extracted from the user's own EHG mobile-app traffic. When
-                ``None`` or empty, falls back to the deprecated bundled
-                constant (logged as a one-time deprecation warning).
+                extracted from the user's own EHG mobile-app traffic. **Required**
+                — the integration no longer bundles a fallback. ``None`` or
+                empty raises :class:`HymerConnectAuthError` on the first
+                ``/oauth/token`` request.
         """
         self._session = session
         self._brand = brand
@@ -68,14 +68,6 @@ class HymerConnectApi:
         self._access_token: str | None = None
         self._refresh_token: str | None = None
         self._oauth_basic_auth: str | None = (oauth_basic_auth or "").strip() or None
-        if self._oauth_basic_auth is None:
-            _LOGGER.warning(
-                "OAuth client header not configured for this entry; falling "
-                "back to bundled legacy default. This default will be removed "
-                "in a future release. Paste your own value (extracted from "
-                "the EHG app via mitmproxy) into the integration's "
-                "reconfigure dialog or options. See README for instructions."
-            )
 
     @property
     def access_token(self) -> str | None:
@@ -119,10 +111,18 @@ class HymerConnectApi:
     def _basic_auth_header(self) -> str:
         """Return the Basic auth header for OAuth2 calls.
 
-        Prefers the per-entry value passed to the constructor; falls back to
-        the deprecated bundled constant for backward compatibility.
+        Raises :class:`HymerConnectAuthError` when no per-entry value was
+        supplied to the constructor. The integration no longer ships a
+        fallback — every config entry must carry its own header.
         """
-        return self._oauth_basic_auth or OAUTH2_BASIC_AUTH_LEGACY_DEFAULT
+        if not self._oauth_basic_auth:
+            raise HymerConnectAuthError(
+                "OAuth client Basic-auth header is missing for this entry. "
+                "Capture it from your own EHG-app traffic (see README → "
+                "Prerequisites) and paste it into the integration's config "
+                "flow / Options dialog."
+            )
+        return self._oauth_basic_auth
 
     def _main_api_headers(self) -> dict[str, str]:
         """Build headers for the main API (smartrv.erwinhymergroup.com)."""

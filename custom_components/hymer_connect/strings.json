@@ -3,14 +3,16 @@
     "step": {
       "user": {
         "title": "HYMER Connect Login",
-        "description": "Enter your HYMER Connect account credentials. Use the same email and password as in the HYMER Connect app.",
+        "description": "Enter your HYMER Connect account credentials. Use the same email and password as in the HYMER Connect app. The OAuth client header is mandatory — capture it from your own EHG-app traffic before continuing (see README → Prerequisites).",
         "data": {
           "brand": "Brand",
           "username": "Email",
           "password": "Password",
+          "oauth_basic_auth": "OAuth client header",
           "ehg_refresh_token": "EHG Remote Access Refresh Token (optional)"
         },
         "data_description": {
+          "oauth_basic_auth": "Full 'Authorization: Basic <base64>' header captured from a /oauth/token request in your own EHG-app traffic. Use tools/Start-EhgTokenCapture.ps1 (Windows) or tools/capture_ehg_token.py (Linux/macOS) to harvest both this header and the refresh token in one mitmproxy session.",
           "ehg_refresh_token": "Required for real-time sensor data via SignalR. This is a long-lived token obtained during BLE pairing. Capture it via mitmproxy — see the README for instructions."
         }
       },
@@ -20,9 +22,11 @@
         "data": {
           "username": "Email",
           "password": "Password",
+          "oauth_basic_auth": "OAuth client header",
           "ehg_refresh_token": "EHG Remote Access Refresh Token (optional)"
         },
         "data_description": {
+          "oauth_basic_auth": "Paste the 'Authorization: Basic <base64>' header captured from your own EHG-app traffic. Required since v2.50.0; the integration no longer ships a fallback.",
           "ehg_refresh_token": "Update or add the EHG token here. Leave unchanged to keep the current token."
         }
       }
@@ -30,6 +34,8 @@
     "error": {
       "cannot_connect": "Failed to connect to HYMER Connect API",
       "invalid_auth": "Invalid email or password",
+      "invalid_basic_auth": "OAuth client header doesn't look like a valid 'Basic <base64>' string. Re-capture it with tools/Start-EhgTokenCapture.ps1.",
+      "oauth_basic_auth_required": "OAuth client header is required. Capture it from your own EHG-app traffic before configuring the integration (see README → Prerequisites).",
       "unknown": "Unexpected error occurred"
     },
     "abort": {

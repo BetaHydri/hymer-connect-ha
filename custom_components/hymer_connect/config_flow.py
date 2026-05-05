@@ -36,8 +36,8 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
         vol.Required(CONF_BRAND, default="hymer"): vol.In(BRANDS),
         vol.Required(CONF_USERNAME): str,
         vol.Required(CONF_PASSWORD): str,
+        vol.Required(CONF_OAUTH_BASIC_AUTH): str,
         vol.Optional(CONF_EHG_REFRESH_TOKEN, default=""): str,
-        vol.Optional(CONF_OAUTH_BASIC_AUTH, default=""): str,
     }
 )
 
@@ -73,7 +73,9 @@ class HymerConnectConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             oauth_basic = (user_input.get(CONF_OAUTH_BASIC_AUTH) or "").strip()
-            if oauth_basic and not HymerConnectApi.is_valid_basic_auth(oauth_basic):
+            if not oauth_basic:
+                errors[CONF_OAUTH_BASIC_AUTH] = "oauth_basic_auth_required"
+            elif not HymerConnectApi.is_valid_basic_auth(oauth_basic):
                 errors[CONF_OAUTH_BASIC_AUTH] = "invalid_basic_auth"
             else:
                 try:
@@ -139,7 +141,9 @@ class HymerConnectConfigFlow(ConfigFlow, domain=DOMAIN):
                 or reauth_entry.data.get(CONF_OAUTH_BASIC_AUTH)
                 or ""
             ).strip()
-            if oauth_basic and not HymerConnectApi.is_valid_basic_auth(oauth_basic):
+            if not oauth_basic:
+                errors[CONF_OAUTH_BASIC_AUTH] = "oauth_basic_auth_required"
+            elif not HymerConnectApi.is_valid_basic_auth(oauth_basic):
                 errors[CONF_OAUTH_BASIC_AUTH] = "invalid_basic_auth"
             else:
                 try:
@@ -184,13 +188,13 @@ class HymerConnectConfigFlow(ConfigFlow, domain=DOMAIN):
                         default=reauth_entry.data.get(CONF_USERNAME, ""),
                     ): str,
                     vol.Required(CONF_PASSWORD): str,
+                    vol.Required(
+                        CONF_OAUTH_BASIC_AUTH,
+                        default=reauth_entry.data.get(CONF_OAUTH_BASIC_AUTH, ""),
+                    ): str,
                     vol.Optional(
                         CONF_EHG_REFRESH_TOKEN,
                         default=reauth_entry.data.get(CONF_EHG_REFRESH_TOKEN, ""),
-                    ): str,
-                    vol.Optional(
-                        CONF_OAUTH_BASIC_AUTH,
-                        default=reauth_entry.data.get(CONF_OAUTH_BASIC_AUTH, ""),
                     ): str,
                 }
             ),

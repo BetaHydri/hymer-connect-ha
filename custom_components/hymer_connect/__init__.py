@@ -38,6 +38,14 @@ async def async_setup_entry(
     session = async_get_clientsession(hass)
     brand = entry.data.get(CONF_BRAND, "hymer")
     oauth_basic_auth = entry.data.get(CONF_OAUTH_BASIC_AUTH, "") or None
+    if not oauth_basic_auth:
+        # v2.50.0+ requires a per-entry OAuth client header. Trigger reauth
+        # so the user can paste it via the standard HA dialog.
+        raise ConfigEntryAuthFailed(
+            "OAuth client Basic-auth header is missing for this entry. "
+            "Capture it from your own EHG-app traffic (see README → "
+            "Prerequisites) and paste it into the reauth dialog."
+        )
     api = HymerConnectApi(session, brand=brand, oauth_basic_auth=oauth_basic_auth)
 
     # Always re-authenticate with stored credentials to get fresh tokens
