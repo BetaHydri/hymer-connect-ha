@@ -10,9 +10,14 @@
 
 Custom integration to connect your HYMER / Erwin Hymer Group motorhome or caravan to [Home Assistant](https://www.home-assistant.io/).
 
-> **⚠️ Important:** Real-time sensor data (70+ entities: GPS, battery, doors, heater, fridge, etc.) requires an **EHG Remote Access Refresh Token**. This token must be captured **once** from your phone using mitmproxy during the initial setup. Without it, only basic vehicle metadata (model, VIN, year) is available. See [Obtaining the EHG Refresh Token](#obtaining-the-ehg-refresh-token) for the step-by-step guide.
+> **⚠️ Important:** This integration **does not bundle any vendor secrets**. Before installing, capture two values from your own EHG-app traffic (see [Prerequisites](#prerequisites)):
+>
+> 1. **OAuth client header** — mandatory.
+> 2. **EHG Remote Access Refresh Token** — recommended; required for the ~130 real-time SignalR entities. Without it, only basic vehicle metadata (model, VIN, year) is available.
 
-> **v2.45.0** — **All entity platforms now JSON-driven!** Sensors, binary sensors, lights, switches, climate, and selects all loaded from `sensor_maps/base.json` + `{brand}.json`. Non-HYMER users can contribute sensor mappings by editing their brand's JSON file. See [What entities are created for my brand?](#what-entities-are-created-for-my-brand) for details and [CHANGELOG](CHANGELOG.md) for full history.
+> **v2.50.0** — **Per-entry OAuth client header is now mandatory.** The bundled fallback has been removed; v2.49.0 users without a per-entry header are guided through Home Assistant's standard reauth dialog after upgrading. See [CHANGELOG](../../CHANGELOG.md) for the breaking-change details and migration steps.
+
+> **v2.45.0** — **All entity platforms now JSON-driven!** Sensors, binary sensors, lights, switches, climate, and selects all loaded from `sensor_maps/base.json` + `{brand}.json`. Non-HYMER users can contribute sensor mappings by editing their brand's JSON file. See [What entities are created for my brand?](#what-entities-are-created-for-my-brand) for details.
 
 > **v2.30.2** — **Vehicle-verified sensor mappings!** Doors confirmed (driver + passenger on PIA). Fuel consumption sensors + configurable tank capacity.
 

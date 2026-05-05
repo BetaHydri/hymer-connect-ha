@@ -28,9 +28,14 @@ Unlike the official EHG app, this integration gives you **full Home Assistant po
 | **~130 entities** (vs ~20 in the EHG app) | ❌ | ✅ |
 | **SCU restart** (reboot the control unit remotely) | ✅ | ✅ |
 
-> **⚠️ Important:** Real-time sensor data (130+ entities: GPS, battery, doors, heater, fridge, etc.) requires an **EHG Remote Access Refresh Token**. This token must be captured **once** from your phone using mitmproxy during the initial setup. Without it, only basic vehicle metadata (model, VIN, year) is available. See [Obtaining the EHG Refresh Token](#obtaining-the-ehg-refresh-token) for the step-by-step guide.
+> **⚠️ Important:** This integration **does not bundle any vendor secrets**. Before installing, capture two values from your own EHG-app traffic with `tools/Start-EhgTokenCapture.ps1` (Windows) or `tools/capture_ehg_token.py` (Linux/macOS):
+>
+> 1. **OAuth client header** — mandatory; required for every `/oauth/token` request.
+> 2. **EHG Remote Access Refresh Token** — recommended; unlocks the ~130 real-time SignalR entities. Without it, only basic vehicle metadata (model, VIN, year) is available.
+>
+> See the [Prerequisites](custom_components/hymer_connect/README.md#prerequisites) and [Capturing the OAuth header and EHG refresh token](custom_components/hymer_connect/README.md#capturing-the-oauth-header-and-ehg-refresh-token) sections for the step-by-step guide.
 
-> **v2.47.0** — **Comprehensive command logging!** Every user-triggered action (switches, lights, climate, selects, SCU restart) now logs at INFO level with entity name, bus/slot IDs, and wire values. SCU sleep/wake transitions (12V main switch, scu_connected) are logged at INFO. See the new [Logging & Troubleshooting](#-logging--troubleshooting) section for recommended configurations. Non-breaking upgrade: update via HACS and restart HA. See [CHANGELOG](CHANGELOG.md) for full history.
+> **v2.50.0** — **Per-entry OAuth client header is now mandatory** (the bundled fallback was removed). v2.49.0 users without a per-entry header will be guided through Home Assistant's standard reauth dialog after upgrading. See [CHANGELOG](CHANGELOG.md) for the breaking-change details and migration steps.
 
 ### Energy Dashboard
 
@@ -490,15 +495,18 @@ A ready-to-use tile-based Lovelace dashboard optimized for mobile and desktop:
 
 ## Configuration
 
+> **Capture both auth values first.** As of v2.50.0 the integration **does not bundle any vendor secrets**. See [Obtaining the OAuth client header and EHG refresh token](#obtaining-the-oauth-client-header-and-ehg-refresh-token) below — the OAuth client header is **mandatory** and the EHG refresh token is needed for real-time data.
+
 1. Go to **Settings > Devices & Services > + Add Integration**
 2. Search for **HYMER Connect**
 3. Select your brand and enter your HYMER Connect app credentials
-4. *(Optional)* Paste your **EHG Remote Access Refresh Token** (see below) — you can also add it later via **Configure**
-5. The integration creates sensor entities for your vehicle
+4. Paste your **OAuth client header** (the `Basic <base64>` line from `tools/captured_oauth_basic_auth.txt`) — mandatory
+5. Paste your **EHG Remote Access Refresh Token** (the JWT from `tools/captured_ehg_token.txt`) — recommended; can also be added later via **Configure**
+6. The integration creates sensor entities for your vehicle
 
 > **Without the refresh token**, the integration provides only REST API data (vehicle model, VIN, year). **With the refresh token**, you get ~130 real-time entities via SignalR.
 
-> **Adding or updating the EHG token later:** Go to **Settings → Devices & Services → HYMER Connect → Configure**. The options dialog lets you paste or update the token at any time without removing the integration. The integration reloads automatically and starts streaming real-time data within seconds.
+> **Adding or updating either value later:** Go to **Settings → Devices & Services → HYMER Connect → Configure**. The Options dialog lets you paste or update the OAuth header and the EHG token at any time without removing the integration. The integration reloads automatically.
 
 > **⏳ Sensors show "unknown" until the vehicle connects.** The SCU (Smart Interface Unit) in your vehicle must establish a SignalR WebSocket connection to the cloud before sensor data flows. This happens automatically when:
 > - The vehicle's 12V main switch is ON, and
@@ -508,13 +516,16 @@ A ready-to-use tile-based Lovelace dashboard optimized for mobile and desktop:
 
 ---
 
-## Obtaining the EHG Refresh Token
+## Obtaining the OAuth client header and EHG refresh token
 
-The HYMER Connect cloud requires a special **EHG Remote Access Refresh Token** to stream real-time sensor data. This token is created during the initial Bluetooth (BLE) pairing between your phone and your vehicle's Smart Interface Unit (SIU). It is stored inside the Hymer Connect app and **never expires**.
+This integration ships **no shared secrets**. Two pieces of authentication material must be captured **once** from your own EHG mobile-app traffic:
 
-Since there is no public API to generate this token, you must capture it **once** from your phone's network traffic using a proxy tool. This repo includes a **one-click capture script** that automates the process. After that, the integration refreshes it automatically.
+* **OAuth client `Basic <base64>` header** — a per-app secret used by every `/oauth/token` request. **Mandatory** since v2.50.0.
+* **EHG Remote Access Refresh Token** — a long-lived JWT created during the initial Bluetooth (BLE) pairing between your phone and your vehicle's SCU. Stored inside the EHG app and **never expires**. *Recommended* — unlocks the ~130 real-time SignalR entities.
 
-> **🔒 Security:** This token is personal and bound to your account and vehicle. **Never share it** with others. While access to the HYMER Connect cloud is still protected by your email and password, the refresh token could allow someone to obtain short-lived access tokens for your vehicle's sensor data. Treat it like a password.
+Since there is no public API to issue either value, you must capture them **once** from your phone's network traffic using a proxy. After that the integration refreshes the short-lived OAuth access tokens automatically; the EHG refresh token is reused unchanged. The shipped capture script grabs **both** values in a single mitmproxy session.
+
+> **🔒 Security:** Both values are personal and bound to your account and vehicle. **Never share them.** Together they grant short-lived access tokens for your vehicle's sensor data and command surface. Treat them like passwords.
 
 ### Prerequisites
 
@@ -606,11 +617,22 @@ On **macOS/Linux**, find your IP with `ifconfig | grep "inet "` or `ip addr`.
 3. Install it: **Settings → Security → Install certificates**
 4. Name it `mitmproxy`, select **VPN and apps**
 
-#### 7. Capture the token
+#### 7. Capture both values
 
 1. **Force-close** the patched HYMER Connect app (swipe away from recent apps)
 2. **Open** the patched HYMER Connect app
-3. Wait ~10 seconds — the token will appear automatically in the terminal:
+3. Wait ~10 seconds — the script prints two banners and auto-exits as soon as it has seen **both** the OAuth client header and the EHG refresh token:
+
+```
+╔══════════════════════════════════════════════════════════════════╗
+║   ✅  OAUTH BASIC-AUTH HEADER CAPTURED SUCCESSFULLY!             ║
+║   Saved to: tools/captured_oauth_basic_auth.txt                  ║
+╚══════════════════════════════════════════════════════════════════╝
+
+   HEADER:
+   Basic ZWhnLXByb2QtbW9iaWxlLWFwcC10ZWNobmljYWwtdXNlcjpa…
+
+```
 
 ```
 ╔══════════════════════════════════════════════════════════════════╗
@@ -626,16 +648,17 @@ On **macOS/Linux**, find your IP with `ifconfig | grep "inet "` or `ip addr`.
    eyJraWQi...
 ```
 
-The token is also saved to `tools/captured_ehg_token.txt`.
+The values are also saved to `tools/captured_oauth_basic_auth.txt` and `tools/captured_ehg_token.txt`.
 
-#### 8. Add the token to Home Assistant
+#### 8. Add both values to Home Assistant
 
 1. Go to **Settings → Devices & Services**
-2. Find **HYMER Connect** and click **Configure**
-3. Paste the token into the **EHG Remote Access Refresh Token** field
-4. Save — the integration reloads automatically and real-time sensor data will start flowing within seconds
+2. Find **HYMER Connect** and click **Configure** (or **Add Integration** for a fresh install)
+3. Paste the contents of `tools/captured_oauth_basic_auth.txt` into the **OAuth client header** field (mandatory)
+4. Paste the contents of `tools/captured_ehg_token.txt` into the **EHG Remote Access Refresh Token** field (recommended)
+5. Save — the integration reloads automatically and real-time sensor data starts flowing within seconds
 
-> **Tip:** You can update the token at any time using the same **Configure** dialog. No need to remove and re-add the integration.
+> **Tip:** You can update either value at any time using the same **Configure** dialog. No need to remove and re-add the integration.
 
 #### 9. Clean up your phone
 
@@ -645,49 +668,24 @@ The token is also saved to `tools/captured_ehg_token.txt`.
 
 ---
 
-## OAuth Client Header (v2.49.0+)
+## OAuth Client Header (mandatory since v2.50.0)
 
-Starting with **v2.49.0**, the integration supports a per-entry **OAuth client header** so the EHG mobile-app's `Basic` credentials no longer have to be redistributed in this repository. The bundled fallback still ships for backward compatibility but is **deprecated** and will be removed in a future release.
+The `POST /oauth/token` calls the integration makes carry an `Authorization: Basic <base64>` header that identifies the EHG **mobile app** (not your account). The same value is embedded in every install of the EHG app worldwide. Earlier versions of this integration bundled that header as a fallback so users could install without capturing it; **v2.50.0 removed the fallback** so the public repository no longer redistributes the EHG app's shared secret.
 
-### Why this exists
+### What this means in practice
 
-The `POST /oauth/token` calls the integration makes carry an `Authorization: Basic <base64>` header that identifies the EHG **mobile app** (not your account). The same value is embedded in every install of the EHG app worldwide. Hard-coding it in this public repo redistributes the app's shared secret, which security scanners (GitGuardian) flag and EHG could plausibly object to. Moving it to a per-install local value cleans up the provenance posture without affecting your account or your refresh token.
+* **Every config entry must carry its own `oauth_basic_auth` value**, captured from your own up-to-date EHG-app traffic.
+* **The capture script grabs it for you** — [`Start-EhgTokenCapture.ps1`](tools/Start-EhgTokenCapture.ps1) (Windows) and [`tools/capture_ehg_token.py`](tools/capture_ehg_token.py) (Linux/macOS) write the header to `tools/captured_oauth_basic_auth.txt` in the **same** mitmproxy session that captures the EHG refresh token.
+* **Future-proof:** if EHG ever rotates the OAuth client secret, your install keeps working as soon as you re-run the capture against an up-to-date EHG app — there is no shared bundled value to chase across releases.
 
-### What you need to do
+### Migrating from v2.49.0
 
-**Existing users (upgrading from ≤ v2.48.0):** *Nothing immediately.* The integration keeps working with the bundled fallback. You will see one warning per startup in the log:
+* **You already pasted a per-entry header in v2.49.0?** Nothing to do — your stored value is reused unchanged.
+* **You never pasted one and were relying on the bundled fallback?** After upgrading to v2.50.0 you will see a Home Assistant *Reconfigure* notification (the integration raises `ConfigEntryAuthFailed`). Open **Settings → Devices & Services → HYMER Connect → Reconfigure**, paste your captured `Basic …` header into the **OAuth client header** field, and save. Run the capture script first if you don't have the value yet (see the previous section).
 
-> `OAuth client header not configured for this entry; falling back to bundled legacy default…`
+### Validation
 
-To silence the warning and prepare for the future removal of the fallback, paste your own header into the new field at your convenience.
-
-**New users:** The field is shown in the initial config flow. Capture the value once (see below) or leave it empty to use the deprecated bundled fallback.
-
-### How to capture the header
-
-The updated [`Start-EhgTokenCapture.ps1`](tools/Start-EhgTokenCapture.ps1) now grabs the OAuth header in the **same mitmproxy session** as the EHG refresh token — no extra steps. After running the capture you'll see a second success banner:
-
-```text
-╔══════════════════════════════════════════════════════════════════╗
-║   ✅  OAUTH BASIC-AUTH HEADER CAPTURED SUCCESSFULLY!             ║
-║   Saved to: tools/captured_oauth_basic_auth.txt                 ║
-╚══════════════════════════════════════════════════════════════════╝
-
-   HEADER:
-   Basic ZWhnLXByb2QtbW9iaWxlLWFwcC10ZWNobmljYWwtdXNlcjpa…
-```
-
-### Where to paste it
-
-1. **Settings → Devices & Services → HYMER Connect → Configure**
-2. Paste the full `Basic …` line into the **OAuth client header** field (alongside the existing tank-capacity and EHG refresh-token fields).
-3. **Save.** The integration reloads and the deprecation warning disappears.
-
-The same field is also shown during the initial config flow and during a re-auth dialog. The value is validated client-side: a paste mistake (wrong scheme, non-base64, missing `:` separator) surfaces as `invalid_basic_auth`.
-
-### Removal timeline
-
-The bundled fallback (`OAUTH2_BASIC_AUTH_LEGACY_DEFAULT` in `const.py`) will be removed in a future minor release. After that, installs without a per-entry value will fail to authenticate. The deprecation warning gives you advance notice; configuring the field once future-proofs your install.
+The value is validated client-side: a paste mistake (wrong scheme, non-base64, missing `:` separator) surfaces as `invalid_basic_auth`. An empty submission surfaces as `oauth_basic_auth_required`. Neither check verifies that the secret is currently accepted by the EHG cloud; that only happens on the first `/oauth/token` call.
 
 ---
 
