@@ -390,7 +390,7 @@ views:
         square: false
         cards:
           - type: tile
-            entity: select.hymer
+            entity: select.hymer_heater_energy_source
             name: Energy Source
             icon: mdi:gas-station
             color: orange
