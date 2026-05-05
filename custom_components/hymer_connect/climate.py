@@ -96,7 +96,7 @@ class HymerHeaterClimate(
         self._bus = heater_def.get("heater_bus", 58)
         self._setpoint_sid = heater_def.get("setpoint_sid", 8)
         self._fuel_type_2_sid = heater_def.get("fuel_type_2_sid", 6)
-        self._temp_sensor = heater_def.get("temp_sensor", "ambient_temp")
+        self._temp_sensor = heater_def.get("temp_sensor", "outside_temperature")
         self._setpoint_sensor = heater_def.get("setpoint_sensor", "heater_setpoint")
         self._fuel_type_sensor = heater_def.get("fuel_type_sensor", "heater_fuel_type")
 

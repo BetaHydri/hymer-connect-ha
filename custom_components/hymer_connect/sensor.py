@@ -1,9 +1,10 @@
 """Sensor platform for HYMER Connect.
 
-Most sensor entity descriptions are generated dynamically from JSON-defined
-entity metadata in ``sensor_maps/*.json`` (loaded via :data:`pia_decoder.ENTITY_DEFS`).
-Only entities with special value logic (computed sensors, cross-referenced
-sources, override behaviour) are kept as static descriptions here.
+GUIDELINE: All new entities MUST be defined in sensor_maps/*.json
+(base.json for universal buses, <brand>.json for brand-specific).
+Only computed/calculated sensors (cross-referenced sources, formulas,
+override logic) may remain as static Python descriptions.
+The static descriptions below are legacy exceptions.
 """
 
 from __future__ import annotations
@@ -140,16 +141,7 @@ STATIC_SIGNALR_SENSORS: tuple[HymerSensorEntityDescription, ...] = (
         value_path="signalr_sensors.charge_phase",
         icon="mdi:battery-charging",
     ),
-    # --- Extended CAN ambient temp (no SENSOR_MAP entry — legacy) ---
-    HymerSensorEntityDescription(
-        key="ambient_temp",
-        translation_key="ambient_temp",
-        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
-        device_class=SensorDeviceClass.TEMPERATURE,
-        state_class=SensorStateClass.MEASUREMENT,
-        value_path="signalr_sensors.ambient_temp",
-        icon="mdi:thermometer",
-    ),
+
 )
 
 # Keys of static descriptions — the dynamic builder skips these.

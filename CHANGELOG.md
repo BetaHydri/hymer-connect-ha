@@ -5,6 +5,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.51.0] - 2026-05-05
+
+### Fixed
+
+- **Missing translations for 26 entities** — 17 sensor entities and 9 binary sensor entities defined in `sensor_maps/*.json` had no matching `translation_key` entry in `strings.json` / `translations/en.json`. Home Assistant rendered them as nameless "HYMER" entities with numeric suffixes (`sensor.hymer_7` … `sensor.hymer_13`), making them unidentifiable and undeletable. Added translations for: `bms_voltage`, `bms_current`, `bms_temperature`, `bms_capacity_remaining`, `bms_state_of_health`, `bms_time_remaining`, `distance_to_service`, `fuel_level`, `outside_temperature`, `gps_utc_time`, `lte_connected`, `paired_bt_devices`, `scu_flag_1`–`scu_flag_5`, `wiping_water_empty`, `motor_oil_warning`, `coolant_warning`, `parking_brake`, `standheizung_available`, `standheizung_state`, `cruise_control_can`, `downhill_assist`, `shoreline_connected`.
+
+### Removed
+
+- **Dead `ambient_temp` static sensor entity** — The hardcoded `ambient_temp` sensor in `sensor.py` read from a key (`signalr_sensors.ambient_temp`) that the PIA decoder never populated — it was always unavailable. The actual ambient temperature comes from bus 1, slot 9 (`outside_temperature`, Mercedes bumper sensor). Removed the static entity and switched the Truma climate entity's `temp_sensor` from `ambient_temp` to `outside_temperature` so the heater card now shows the real outside temperature.
+
+### Migration Notes
+
+- **Non-breaking.** After upgrading, the ghost "HYMER" entities will get their proper names. The `ambient_temp` sensor entity will become orphaned and deletable. To clean up all old ghost entities: remove the integration, restart HA, delete the orphaned entities, re-add the integration.
+
 ## [2.50.0] - 2026-05-05
 
 ### Removed

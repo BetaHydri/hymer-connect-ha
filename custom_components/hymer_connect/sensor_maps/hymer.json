@@ -584,7 +584,7 @@
       "fuel_type_2_sid": 6,
       "boiler_sid": 5,
       "electric_power_sid": 9,
-      "temp_sensor": "ambient_temp",
+      "temp_sensor": "outside_temperature",
       "setpoint_sensor": "heater_setpoint",
       "fuel_type_sensor": "heater_fuel_type",
       "boiler_sensor": "heater_fan_speed",
