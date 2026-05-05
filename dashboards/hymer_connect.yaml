@@ -242,9 +242,6 @@ views:
                   - entity: binary_sensor.hymer_shore_power_connected
                     name: Shore Power
                     icon: mdi:power-plug
-                  - entity: binary_sensor.hymer_shoreline_connected_scu
-                    name: Shore Power (SCU)
-                    icon: mdi:power-plug-outline
                   - entity: sensor.hymer_heater_electric_power
                     name: Heater Electric
                     icon: mdi:radiator
@@ -421,7 +418,7 @@ views:
             icon: mdi:fridge
             color: light-blue
           - type: tile
-            entity: switch.hymer_fridge_eco_leise
+            entity: switch.hymer_fridge_eco
             name: Fridge Quiet
             icon: mdi:volume-off
             color: teal
@@ -816,10 +813,10 @@ views:
           - entity: binary_sensor.hymer_scu_connected
             name: SCU Online
             icon: mdi:access-point
-          - entity: sensor.hymer_lte_connection_quality
+          - entity: sensor.hymer_lte_signal_quality
             name: LTE Signal
             icon: mdi:signal-4g
-          - entity: binary_sensor.hymer_lte_connection_state
+          - entity: binary_sensor.hymer_lte_connected
             name: LTE Connected
             icon: mdi:signal-4g
           - entity: sensor.hymer_scu_internal_time
@@ -852,7 +849,7 @@ views:
           - entity: sensor.hymer_scu_voltage
             name: SCU Voltage
             icon: mdi:flash-triangle-outline
-          - entity: sensor.hymer_lte_connection_quality
+          - entity: sensor.hymer_lte_signal_quality
             name: LTE Signal
             icon: mdi:signal-4g
           - entity: sensor.hymer_paired_bt_devices
@@ -876,13 +873,13 @@ views:
           - entity: binary_sensor.hymer_user_active
             name: User Active
             icon: mdi:account-check
-          - entity: binary_sensor.hymer_d_plus_signal
+          - entity: binary_sensor.hymer_d_alternator_signal
             name: D+ Alternator Signal
             icon: mdi:car-battery
           - entity: binary_sensor.hymer_battery_switch_active
             name: Battery Switch Active
             icon: mdi:battery-check
-          - entity: binary_sensor.hymer_shoreline_connected_scu
+          - entity: binary_sensor.hymer_shore_power_scu
             name: Shore Power (SCU, deprecated)
             icon: mdi:power-plug
           - entity: binary_sensor.hymer_vehicle_movement
