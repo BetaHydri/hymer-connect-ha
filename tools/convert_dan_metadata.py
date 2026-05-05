@@ -35,6 +35,27 @@ Schema posture: the upstream metadata format is reasonably stable but is NOT
 a public API. ALL field-name lookups are funneled through SCHEMA_MAP at the
 top of this file so we can re-tune to a future formal schema in one place.
 
+This converter accepts BOTH:
+
+* **Legacy flat schema** (early Dan-extractor releases):
+      sensor_labels.json   = {"<bus>,<sid>": {"name", "datatype", ...}}
+      component_kinds.json = {"<bus>": {"kind"}}
+      control_catalog.json = {"<bus>,<sid>": {"write_type", ...}}
+      coverage_audit.json  = {"<bus>,<sid>": "known_writable"|...}
+
+* **v1.0.16+ wrapped schema** (current Dan-extractor):
+      sensor_labels.json   = {"_comment", "slots":     {"<bus>:<sid>": {"label", ...}}}
+      component_kinds.json = {"_comment", "components":{"<bus>":      {"kind", ...}}}
+      control_catalog.json = {"_comment", "labels", "slots": {"<bus>:<sid>": {"platform", "options"}}}
+      coverage_audit.json  = {"_comment", "summary", "components", "scenarios",
+                              "slots": {"<bus>:<sid>": {"write_status", "deprecated", ...}}}
+      vehicle_catalog.json = {"_comment", "models": {...}}
+      support_matrix.json  = no longer vehicle-scoped; ignored.
+
+A normalization layer in load_metadata() detects v1.0.16 wrappers and
+translates them into the flat legacy in-memory shape, so the rest of the
+converter stays schema-agnostic.
+
 Use --self-test to run an in-memory round-trip with synthetic fixtures (no
 real APK-derived data is needed or accepted in this repo).
 
@@ -121,7 +142,13 @@ KIND_FRIDGE     = "fridge"
 KIND_HEATER     = "heater"
 KIND_BOILER     = "boiler"
 KIND_AC         = "ac"
-CLIMATE_KINDS   = {KIND_FRIDGE, KIND_HEATER, KIND_BOILER, KIND_AC}
+CLIMATE_KINDS   = {
+    KIND_FRIDGE, KIND_HEATER, KIND_BOILER, KIND_AC,
+    # v1.0.16 vocabulary additions:
+    "truma_heater", "heater_neo", "air_conditioner",
+}
+# Component kinds the converter treats as switch-like (in addition to KIND_SWITCH):
+SWITCH_LIKE_KINDS = {KIND_SWITCH, "switch_pad"}
 
 # Datatype -> HA platform/device_class/state_class heuristics.
 # These are intentionally minimal; brand maintainers can refine post-conversion.
@@ -205,6 +232,8 @@ def load_metadata(meta_dir: Path) -> ExtractionMetadata:
     """Load an upstream extractor's output from a local directory.
 
     Required files raise FileNotFoundError; optional files default to {}.
+    Detects and normalizes Dan-extractor v1.0.16+ wrapped schema into the
+    legacy flat shape used by the rest of this converter.
     """
     if not meta_dir.is_dir():
         raise FileNotFoundError(f"Metadata directory not found: {meta_dir}")
@@ -218,16 +247,205 @@ def load_metadata(meta_dir: Path) -> ExtractionMetadata:
         with path.open("r", encoding="utf-8") as fh:
             return json.load(fh)
 
+    raw_sensor_labels   = _load("sensor_labels.json",   required=True)
+    raw_component_kinds = _load("component_kinds.json", required=True)
+    raw_control_catalog = _load("control_catalog.json", required=True)
+    raw_coverage_audit  = _load("coverage_audit.json",  required=True)
+    raw_support_matrix  = _load("support_matrix.json",  required=False)
+    raw_vehicle_catalog = _load("vehicle_catalog.json", required=False)
+
     md = ExtractionMetadata(
-        sensor_labels   = _load("sensor_labels.json",   required=True),
-        component_kinds = _load("component_kinds.json", required=True),
-        control_catalog = _load("control_catalog.json", required=True),
-        coverage_audit  = _load("coverage_audit.json",  required=True),
-        support_matrix  = _load("support_matrix.json",  required=False),
-        vehicle_catalog = _load("vehicle_catalog.json", required=False),
+        sensor_labels   = _normalize_sensor_labels(raw_sensor_labels),
+        component_kinds = _normalize_component_kinds(raw_component_kinds),
+        control_catalog = _normalize_control_catalog(raw_control_catalog),
+        coverage_audit  = _normalize_coverage_audit(raw_coverage_audit),
+        support_matrix  = _normalize_support_matrix(raw_support_matrix),
+        vehicle_catalog = _normalize_vehicle_catalog(raw_vehicle_catalog),
     )
     _validate_required_fields(md)
     return md
+
+
+# ---------------------------------------------------------------------------
+# Schema normalization (Dan-extractor v1.0.16 -> legacy flat shape)
+# ---------------------------------------------------------------------------
+
+def _is_v1_wrapped(payload: Any, *, content_key: str) -> bool:
+    """True when payload looks like a v1.0.16 wrapper {_comment, <content_key>: {...}}."""
+    return (
+        isinstance(payload, dict)
+        and content_key in payload
+        and isinstance(payload[content_key], dict)
+    )
+
+
+def _flatten_slot_key(key: str) -> str:
+    """Normalize 'bus:sid' (v1.0.16) to 'bus,sid' (legacy)."""
+    if ":" in key and "," not in key:
+        return key.replace(":", ",", 1)
+    return key
+
+
+def _normalize_sensor_labels(raw: Any) -> dict[str, dict[str, Any]]:
+    """Map v1.0.16 {_comment, slots: {'bus:sid': {label, ...}}} to flat legacy shape.
+
+    v1.0.16 uses 'label' (not 'name') and mode codes 'r'/'rw'/'w'.
+    """
+    if _is_v1_wrapped(raw, content_key="slots"):
+        slots = raw["slots"]
+    else:
+        slots = raw if isinstance(raw, dict) else {}
+
+    out: dict[str, dict[str, Any]] = {}
+    for slot_key, entry in slots.items():
+        if slot_key.startswith("_") or not isinstance(entry, dict):
+            continue
+        norm_key = _flatten_slot_key(slot_key)
+        norm_entry = dict(entry)
+        # v1.0.16 uses 'label' instead of 'name'.
+        if "name" not in norm_entry and "label" in norm_entry:
+            norm_entry["name"] = norm_entry["label"]
+        # v1.0.16 mode codes 'r'/'rw'/'w' -> legacy 'read'/'read_write'/'write'.
+        mode = norm_entry.get("mode")
+        if mode in _MODE_CODE_MAP:
+            norm_entry["mode"] = _MODE_CODE_MAP[mode]
+        out[norm_key] = norm_entry
+    return out
+
+
+_MODE_CODE_MAP = {"r": "read", "rw": "read_write", "w": "write"}
+
+
+def _normalize_component_kinds(raw: Any) -> dict[str, dict[str, Any]]:
+    """Map v1.0.16 {_comment, components: {'bus': {kind, ...}}} to flat legacy shape."""
+    if _is_v1_wrapped(raw, content_key="components"):
+        comps = raw["components"]
+    else:
+        comps = raw if isinstance(raw, dict) else {}
+    return {
+        bus: entry for bus, entry in comps.items()
+        if not bus.startswith("_") and isinstance(entry, dict)
+    }
+
+
+def _normalize_control_catalog(raw: Any) -> dict[str, dict[str, Any]]:
+    """Map v1.0.16 control_catalog into the legacy per-slot write-hint shape.
+
+    v1.0.16 carries only {platform, options} per slot -- no write_type/on_value/
+    off_value. We synthesize best-effort hints based on platform:
+
+    * platform=='switch' -> write_type=bool, on_value=True, off_value=False
+    * platform=='select' -> write_type=str, options pass through, marked TODO
+    * platform=='button' -> write_type=str, marked TODO
+    * platform=='text'   -> write_type=str, marked TODO
+
+    All synthesized entries also carry an `_inferred_from_platform` marker so a
+    maintainer can spot them in the diff.
+    """
+    if _is_v1_wrapped(raw, content_key="slots"):
+        slots = raw["slots"]
+    elif isinstance(raw, dict):
+        slots = raw
+    else:
+        slots = {}
+
+    out: dict[str, dict[str, Any]] = {}
+    for slot_key, entry in slots.items():
+        if slot_key.startswith("_") or not isinstance(entry, dict):
+            continue
+        norm_key = _flatten_slot_key(slot_key)
+        if {"write_type", "on_value", "off_value"} & entry.keys():
+            # Looks like legacy shape; pass through.
+            out[norm_key] = dict(entry)
+            continue
+        # v1.0.16 shape -> synthesize.
+        platform = entry.get("platform")
+        synth: dict[str, Any] = {"_inferred_from_platform": platform}
+        if platform == "switch":
+            synth.update({
+                "write_type": "bool",
+                "on_value": True,
+                "off_value": False,
+            })
+        elif platform in ("select", "button", "text"):
+            synth["write_type"] = "str"
+            if entry.get("options"):
+                synth["options"] = entry["options"]
+        # Pass through anything else verbatim so nothing is lost.
+        out[norm_key] = synth
+    return out
+
+
+def _normalize_coverage_audit(raw: Any) -> dict[str, str]:
+    """Map v1.0.16 coverage_audit slot records to legacy leaf-string vocabulary.
+
+    v1.0.16 shape per slot: {write_status, deprecated, support_class,
+                             read_validation_status, write_validation_status, ...}
+
+    Mapping:
+        deprecated == True               -> COV_SUPPRESSED
+        write_status == "supported"      -> COV_KNOWN_RW
+        otherwise                        -> COV_KNOWN_RO
+
+    (read_validation_status is universally 'inferred' in v1.0.16 -- gating on
+    it would skip every read sensor, which is the opposite of what we want.
+    Treat 'not deprecated and not writable' as effectively read-only.)
+    """
+    if isinstance(raw, dict) and "slots" in raw and isinstance(raw["slots"], dict):
+        slots = raw["slots"]
+    elif isinstance(raw, dict):
+        slots = raw
+    else:
+        slots = {}
+
+    out: dict[str, str] = {}
+    for slot_key, entry in slots.items():
+        if slot_key.startswith("_"):
+            continue
+        norm_key = _flatten_slot_key(slot_key)
+        if isinstance(entry, str):
+            # Legacy leaf-string shape.
+            out[norm_key] = entry
+            continue
+        if not isinstance(entry, dict):
+            continue
+        if entry.get("deprecated") is True:
+            out[norm_key] = COV_SUPPRESSED
+        elif entry.get("write_status") == "supported":
+            out[norm_key] = COV_KNOWN_RW
+        else:
+            out[norm_key] = COV_KNOWN_RO
+    return out
+
+
+def _normalize_support_matrix(raw: Any) -> dict[str, dict[str, str]]:
+    """v1.0.16 support_matrix is no longer vehicle-scoped; treat as empty.
+
+    Legacy callers passed --vehicle-id to scope writability. v1.0.16 dropped
+    that scoping in favor of slot-level write_status in coverage_audit. So we
+    accept either shape and only retain the legacy {vehicle_id: {slot: cov}}
+    structure when it matches.
+    """
+    if not isinstance(raw, dict):
+        return {}
+    # Legacy heuristic: top-level keys map to dicts of slot -> coverage string.
+    legacy_like: dict[str, dict[str, str]] = {}
+    for k, v in raw.items():
+        if k.startswith("_") or k in {"summary", "canonical_capabilities",
+                                       "rich_templates", "generic_component_kinds"}:
+            continue
+        if isinstance(v, dict) and v and all(isinstance(x, str) for x in v.values()):
+            legacy_like[k] = {_flatten_slot_key(sk): sv for sk, sv in v.items()}
+    return legacy_like
+
+
+def _normalize_vehicle_catalog(raw: Any) -> dict[str, dict[str, Any]]:
+    """Unwrap v1.0.16 {_comment, models: {...}} to flat legacy shape."""
+    if _is_v1_wrapped(raw, content_key="models"):
+        return {k: v for k, v in raw["models"].items() if isinstance(v, dict)}
+    if isinstance(raw, dict):
+        return {k: v for k, v in raw.items() if not k.startswith("_") and isinstance(v, dict)}
+    return {}
 
 
 def _validate_required_fields(md: ExtractionMetadata) -> None:
@@ -369,7 +587,7 @@ def convert(
         # ---- SWITCHES: only when writable AND in control_catalog ------------
         ctrl = md.control_catalog.get(slot)
         is_writable = mode in ("write", "read_write") and coverage == COV_KNOWN_RW
-        if kind == KIND_SWITCH or (is_writable and ctrl):
+        if kind in SWITCH_LIKE_KINDS or (is_writable and ctrl):
             if not ctrl:
                 # Writable per coverage but no explicit control semantics --
                 # emit as opt-in only.
