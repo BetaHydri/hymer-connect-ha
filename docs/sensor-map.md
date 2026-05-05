@@ -270,29 +270,30 @@ Discovered by `tools/discover_sensors.py`. Same structure as Bus 24 (All Wohnen 
 | (27, 2) | `light_privat_group_brightness` | % | Group brightness (sentinel: 10000 when off) |
 | (27, 3) | `light_privat_group_color_temp` | — | Group color temperature context |
 
-## Bus 30 — ScuSignals (GPS + SCU telemetry)
+## Bus 30 — ScuSignals (SCU telemetry, LTE, BT, GPS)
 
-Slots 1-2 carry GPS coordinates and time. Slots 3-7 carry GPS data on the S600
-(confirmed via live traces 2026-04-19). Whether the S700 reports the same slot
-assignment for slots 3-7 is unconfirmed — Dan's APK metadata shows both GPS
-and LTE/BT labels for this bus. Slots 8-14 are SCU telemetry flags.
+Slot labels verified against EHG app Hermes bundle (APK 2.10.14, decompiled
+2026-05-05). Previous mapping incorrectly labelled slots 3-7 as GPS data —
+they are actually LTE quality, SCU voltage, and Bluetooth device counts.
+GPS position comes only from slot 1; the actual GPS fix/altitude/satellites/
+heading are delivered via the REST API, not PIA.
 
-| Slot | Sensor Name | Unit | Notes |
-|------|------------|------|-------|
-| (30, 1) | `gps_coordinates` | — | Lat,Lng string |
-| (30, 2) | `gps_utc_time` | — | SCU internal time |
-| (30, 3) | `gps_signal_quality` | — | Confirmed "excellent" on S600 |
-| (30, 4) | `gps_fix` | — | Confirmed `true` on S600 |
-| (30, 5) | `gps_altitude` | m | Confirmed 13.1m on S600 |
-| (30, 6) | `gps_satellites` | — | Confirmed 3 on S600 |
-| (30, 7) | `gps_heading` | ° | Confirmed 0° on S600 |
-| (30, 8) | `scu_flag_1` | — | `False` — unknown flag |
-| (30, 9) | `lte_connected` | — | `True` — LTE connection state |
-| (30, 10) | `scu_flag_2` | — | `False` — unknown flag |
-| (30, 11) | `paired_bt_devices` | — | `3` — BT paired device count (confirmed) |
-| (30, 12) | `scu_flag_5` | — | `True` — unknown flag |
-| (30, 13) | `scu_flag_3` | — | `False` — unknown flag |
-| (30, 14) | `scu_flag_4` | — | `False` — unknown flag |
+| Slot | EHG Name | Sensor Name | Unit | Datatype | Mode | Notes |
+|------|----------|-------------|------|----------|------|-------|
+| (30, 1) | `GpsLocation` | `gps_coordinates` | — | string | r | Lat,Lng string |
+| (30, 2) | `ScuInternalTime` | `scu_internal_time` | — | string | r | SCU internal clock (YYYY-MM-DD hh:mm Z) |
+| (30, 3) | `LteConnectionQuality` | `lte_connection_quality` | — | string | r | LTE signal quality (e.g. "excellent"). Previously mislabelled as gps_signal_quality |
+| (30, 4) | `LteConnectionState` | `lte_connection_state` | — | bool | r | LTE modem connected. Previously mislabelled as gps_fix |
+| (30, 5) | `ScuVoltage` | `scu_voltage` | V | float | r | SCU supply voltage (e.g. 13.1V). Previously mislabelled as gps_altitude (13.1m) |
+| (30, 6) | `PairedBTDevices` | `paired_bt_devices` | — | int | r | Number of paired Bluetooth devices. Previously mislabelled as gps_satellites |
+| (30, 7) | `ConnectedBTDevices` | `connected_bt_devices` | — | int | r | Currently connected BT devices. Previously mislabelled as gps_heading |
+| (30, 8) | `BatteryCutoffSwitch` | `battery_cutoff_switch` | — | bool | r | Battery disconnect/cutoff switch state |
+| (30, 9) | `UserActive` | `user_active` | — | bool | rw | User activity flag. Previously mislabelled as lte_connected |
+| (30, 10) | `DPlus` | `d_plus_signal` | — | bool | r | D+ alternator charge signal from chassis |
+| (30, 11) | `WakeUpChassis` | `wake_up_chassis` | — | bool | w | Chassis wake-up trigger (write-only — may not produce readable data) |
+| (30, 12) | `BatterySwitchActive` | `battery_switch_active` | — | bool | r | 12V battery switch active. True = 12V ON |
+| (30, 13) | `ShoreLineConnected` | `shoreline_connected_scu` | — | bool | r | Shore power (deprecated in EHG app; primary source is bus 3 slot 22) |
+| (30, 14) | `VehicleMovement` | `vehicle_movement` | — | bool | r | Vehicle in motion detection |
 
 ## Bus 34 — Thetford N4112A fridge (shared S600/S700)
 

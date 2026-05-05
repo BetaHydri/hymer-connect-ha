@@ -276,82 +276,96 @@
       "icon": "mdi:map-marker"
     },
     "30,2": {
-      "name": "gps_utc_time",
+      "_doc": "EHG: ScuInternalTime — SCU internal clock, not GPS-derived",
+      "name": "scu_internal_time",
       "platform": "sensor",
       "icon": "mdi:clock-outline"
     },
     "30,3": {
-      "name": "gps_signal_quality",
+      "_doc": "EHG: LteConnectionQuality — LTE signal quality string (e.g. 'excellent')",
+      "name": "lte_connection_quality",
       "platform": "sensor",
-      "icon": "mdi:signal"
+      "icon": "mdi:signal-4g"
     },
     "30,4": {
-      "name": "gps_fix",
+      "_doc": "EHG: LteConnectionState — LTE modem connected (bool)",
+      "name": "lte_connection_state",
       "platform": "binary_sensor",
       "device_class": "connectivity",
-      "icon": "mdi:crosshairs-gps"
+      "icon": "mdi:signal-4g"
     },
     "30,5": {
-      "name": "gps_altitude",
-      "unit": "m",
+      "_doc": "EHG: ScuVoltage — SCU supply voltage (float, V)",
+      "name": "scu_voltage",
+      "unit": "V",
       "platform": "sensor",
+      "device_class": "voltage",
       "state_class": "measurement",
-      "icon": "mdi:altimeter"
+      "icon": "mdi:flash-triangle-outline"
     },
     "30,6": {
-      "name": "gps_satellites",
-      "platform": "sensor",
-      "state_class": "measurement",
-      "icon": "mdi:satellite-variant"
-    },
-    "30,7": {
-      "name": "gps_heading",
-      "unit": "°",
-      "platform": "sensor",
-      "state_class": "measurement",
-      "icon": "mdi:compass"
-    },
-    "30,8": {
-      "name": "scu_flag_1",
-      "platform": "sensor",
-      "icon": "mdi:help-circle-outline",
-      "enabled": false
-    },
-    "30,9": {
-      "name": "lte_connected",
-      "platform": "sensor",
-      "icon": "mdi:signal-4g",
-      "enabled": false
-    },
-    "30,10": {
-      "name": "scu_flag_2",
-      "platform": "sensor",
-      "icon": "mdi:help-circle-outline",
-      "enabled": false
-    },
-    "30,11": {
+      "_doc": "EHG: PairedBTDevices — number of paired Bluetooth devices (int)",
       "name": "paired_bt_devices",
       "platform": "sensor",
-      "state_class": "measurement",
       "icon": "mdi:bluetooth-connect",
       "enabled": false
     },
-    "30,12": {
-      "name": "scu_flag_5",
+    "30,7": {
+      "_doc": "EHG: ConnectedBTDevices — number of currently connected BT devices (int)",
+      "name": "connected_bt_devices",
       "platform": "sensor",
-      "icon": "mdi:help-circle-outline",
+      "icon": "mdi:bluetooth-transfer",
+      "enabled": false
+    },
+    "30,8": {
+      "_doc": "EHG: BatteryCutoffSwitch — battery disconnect/cutoff switch state (bool)",
+      "name": "battery_cutoff_switch",
+      "platform": "binary_sensor",
+      "icon": "mdi:battery-off-outline",
+      "enabled": false
+    },
+    "30,9": {
+      "_doc": "EHG: UserActive — user activity flag (bool, rw). Not LTE connected.",
+      "name": "user_active",
+      "platform": "binary_sensor",
+      "icon": "mdi:account-check",
+      "enabled": false
+    },
+    "30,10": {
+      "_doc": "EHG: DPlus — D+ alternator charge signal from chassis (bool)",
+      "name": "d_plus_signal",
+      "platform": "binary_sensor",
+      "icon": "mdi:car-battery",
+      "enabled": false
+    },
+    "30,11": {
+      "_doc": "EHG: WakeUpChassis — chassis wake-up trigger (bool, write-only). May not produce readable data.",
+      "name": "wake_up_chassis",
+      "platform": "binary_sensor",
+      "icon": "mdi:power-sleep",
+      "enabled": false
+    },
+    "30,12": {
+      "_doc": "EHG: BatterySwitchActive — 12V battery switch active (bool). True = 12V ON.",
+      "name": "battery_switch_active",
+      "platform": "binary_sensor",
+      "icon": "mdi:battery-check",
       "enabled": false
     },
     "30,13": {
-      "name": "scu_flag_3",
-      "platform": "sensor",
-      "icon": "mdi:help-circle-outline",
+      "_doc": "EHG: ShoreLineConnected — shore power connected (bool, deprecated in EHG app). See also bus 3 slot 22.",
+      "name": "shoreline_connected_scu",
+      "platform": "binary_sensor",
+      "device_class": "plug",
+      "icon": "mdi:power-plug",
       "enabled": false
     },
     "30,14": {
-      "name": "scu_flag_4",
-      "platform": "sensor",
-      "icon": "mdi:help-circle-outline",
+      "_doc": "EHG: VehicleMovement — vehicle in motion detection (bool)",
+      "name": "vehicle_movement",
+      "platform": "binary_sensor",
+      "device_class": "moving",
+      "icon": "mdi:car-traction-control",
       "enabled": false
     },
     "45,8": {

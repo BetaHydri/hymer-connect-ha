@@ -5,6 +5,34 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.52.0] - 2026-05-05
+
+### Changed
+
+- **Bus 30 (ScuSignals) completely re-mapped from EHG app Hermes bundle** — Decompiled the EHG app APK 2.10.14 and found the authoritative slot definitions for all 14 bus 30 capabilities. Slots 3-7 were previously mislabelled as GPS data — they are actually LTE quality, SCU voltage, and Bluetooth device counts. GPS position comes only from slot 1; actual GPS fix/altitude/satellites/heading are delivered via the REST API, not PIA. Slots 8-14 were unknown flags — now identified as battery cutoff switch, user active, D+ alternator signal, chassis wake-up, battery switch active, shore power (SCU, deprecated), and vehicle movement.
+
+  | Slot | Old name | New name (EHG label) |
+  |------|----------|---------------------|
+  | 30,2 | `gps_utc_time` | `scu_internal_time` (ScuInternalTime) |
+  | 30,3 | `gps_signal_quality` | `lte_connection_quality` (LteConnectionQuality) |
+  | 30,4 | `gps_fix` | `lte_connection_state` (LteConnectionState) |
+  | 30,5 | `gps_altitude` | `scu_voltage` (ScuVoltage, V) |
+  | 30,6 | `gps_satellites` | `paired_bt_devices` (PairedBTDevices) |
+  | 30,7 | `gps_heading` | `connected_bt_devices` (ConnectedBTDevices) |
+  | 30,8 | `scu_flag_1` | `battery_cutoff_switch` (BatteryCutoffSwitch) |
+  | 30,9 | `lte_connected` | `user_active` (UserActive) |
+  | 30,10 | `scu_flag_2` | `d_plus_signal` (DPlus) |
+  | 30,11 | `paired_bt_devices` | `wake_up_chassis` (WakeUpChassis, write-only) |
+  | 30,12 | `scu_flag_5` | `battery_switch_active` (BatterySwitchActive) |
+  | 30,13 | `scu_flag_3` | `shoreline_connected_scu` (ShoreLineConnected, deprecated) |
+  | 30,14 | `scu_flag_4` | `vehicle_movement` (VehicleMovement) |
+
+- **Dashboard updated** — GPS page renamed to "Connectivity" section with LTE/SCU data. System page SCU Diagnostics replaced with SCU Telemetry showing all identified flags.
+
+### Migration Notes
+
+- **Breaking for entity IDs.** Old `gps_signal_quality`, `gps_fix`, `gps_altitude`, `gps_satellites`, `gps_heading`, `lte_connected`, `paired_bt_devices`, `scu_flag_1-5` entities will become orphaned. New entities with correct names are created. Remove integration, restart, delete orphans, re-add — or rename entity IDs manually. For existing installs without automations referencing the old names, a remove/re-add is the cleanest path.
+
 ## [2.51.0] - 2026-05-05
 
 ### Fixed

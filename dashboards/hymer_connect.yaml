@@ -810,18 +810,24 @@ views:
             icon: mdi:crosshairs-gps
 
       - type: entities
-        title: "📡 Signal"
+        title: "📡 Connectivity"
         show_header_toggle: false
         entities:
           - entity: binary_sensor.hymer_scu_connected
             name: SCU Online
             icon: mdi:access-point
-          - entity: sensor.hymer_lte_connected
+          - entity: sensor.hymer_lte_connection_quality
+            name: LTE Signal
+            icon: mdi:signal-4g
+          - entity: binary_sensor.hymer_lte_connection_state
             name: LTE Connected
             icon: mdi:signal-4g
-          - entity: sensor.hymer_gps_utc_time
-            name: GPS UTC Time
+          - entity: sensor.hymer_scu_internal_time
+            name: SCU Time
             icon: mdi:clock-outline
+          - entity: sensor.hymer_scu_voltage
+            name: SCU Voltage
+            icon: mdi:flash-triangle-outline
 
   # ══════════════════════════════════════════════════════════
   # System
@@ -843,36 +849,45 @@ views:
           - entity: sensor.hymer_truma_firmware
             name: Truma Firmware
             icon: mdi:chip
-          - entity: sensor.hymer_lte_connected
-            name: LTE Connected
+          - entity: sensor.hymer_scu_voltage
+            name: SCU Voltage
+            icon: mdi:flash-triangle-outline
+          - entity: sensor.hymer_lte_connection_quality
+            name: LTE Signal
             icon: mdi:signal-4g
           - entity: sensor.hymer_paired_bt_devices
             name: Paired BT Devices
             icon: mdi:bluetooth-connect
+          - entity: sensor.hymer_connected_bt_devices
+            name: Connected BT Devices
+            icon: mdi:bluetooth-transfer
           - entity: update.hymer_connect_update
             name: Integration Update
             icon: mdi:update
 
-      # ── SCU Diagnostics (internal flags — mostly for debugging) ──
+      # ── SCU Telemetry (bus 30 flags from EHG app decompilation) ──
       - type: entities
-        title: "🔍 SCU Diagnostics"
+        title: "🔍 SCU Telemetry"
         show_header_toggle: false
         entities:
-          - entity: sensor.hymer_scu_flag_1
-            name: SCU Flag 1
-            icon: mdi:flag-outline
-          - entity: sensor.hymer_scu_flag_2
-            name: SCU Flag 2
-            icon: mdi:flag-outline
-          - entity: sensor.hymer_scu_flag_3
-            name: SCU Flag 3
-            icon: mdi:flag-outline
-          - entity: sensor.hymer_scu_flag_4
-            name: SCU Flag 4
-            icon: mdi:flag-outline
-          - entity: sensor.hymer_scu_flag_5
-            name: SCU Flag 5
-            icon: mdi:flag-outline
+          - entity: binary_sensor.hymer_battery_cutoff_switch
+            name: Battery Cutoff Switch
+            icon: mdi:battery-off-outline
+          - entity: binary_sensor.hymer_user_active
+            name: User Active
+            icon: mdi:account-check
+          - entity: binary_sensor.hymer_d_plus_signal
+            name: D+ Alternator Signal
+            icon: mdi:car-battery
+          - entity: binary_sensor.hymer_battery_switch_active
+            name: Battery Switch Active
+            icon: mdi:battery-check
+          - entity: binary_sensor.hymer_shoreline_connected_scu
+            name: Shore Power (SCU, deprecated)
+            icon: mdi:power-plug
+          - entity: binary_sensor.hymer_vehicle_movement
+            name: Vehicle Movement
+            icon: mdi:car-traction-control
 
       # ── SCU Restart (with confirmation dialog) ──
       - type: tile
