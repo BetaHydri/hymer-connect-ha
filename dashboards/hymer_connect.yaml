@@ -226,6 +226,9 @@ views:
                   - entity: sensor.hymer_bms_capacity_remaining
                     name: Remaining
                     icon: mdi:battery
+                  - entity: sensor.hymer_bms_time_remaining
+                    name: Time Remaining
+                    icon: mdi:timer-sand
               - type: entities
                 title: "🔌 Power Sources"
                 show_header_toggle: false
@@ -239,6 +242,9 @@ views:
                   - entity: binary_sensor.hymer_stecker
                     name: Shore Power
                     icon: mdi:power-plug
+                  - entity: binary_sensor.hymer_shore_power_connected
+                    name: Shore Power (EBL)
+                    icon: mdi:power-plug-outline
                   - entity: sensor.hymer_heater_electric_power
                     name: Heater Electric
                     icon: mdi:radiator
@@ -557,7 +563,7 @@ views:
           - entity: sensor.hymer_outside_temperature
             name: Outside Temp
             icon: mdi:thermometer
-          - entity: sensor.hymer_distance_to_next_service
+          - entity: sensor.hymer_distance_to_service
             name: Next Service
             icon: mdi:wrench-clock
           - entity: sensor.hymer_fuel_level
@@ -810,6 +816,12 @@ views:
           - entity: binary_sensor.hymer_scu_connected
             name: SCU Online
             icon: mdi:access-point
+          - entity: sensor.hymer_lte_connected
+            name: LTE Connected
+            icon: mdi:signal-4g
+          - entity: sensor.hymer_gps_utc_time
+            name: GPS UTC Time
+            icon: mdi:clock-outline
 
   # ══════════════════════════════════════════════════════════
   # System
@@ -831,9 +843,36 @@ views:
           - entity: sensor.hymer_truma_firmware
             name: Truma Firmware
             icon: mdi:chip
+          - entity: sensor.hymer_lte_connected
+            name: LTE Connected
+            icon: mdi:signal-4g
+          - entity: sensor.hymer_paired_bt_devices
+            name: Paired BT Devices
+            icon: mdi:bluetooth-connect
           - entity: update.hymer_connect_update
             name: Integration Update
             icon: mdi:update
+
+      # ── SCU Diagnostics (internal flags — mostly for debugging) ──
+      - type: entities
+        title: "🔍 SCU Diagnostics"
+        show_header_toggle: false
+        entities:
+          - entity: sensor.hymer_scu_flag_1
+            name: SCU Flag 1
+            icon: mdi:flag-outline
+          - entity: sensor.hymer_scu_flag_2
+            name: SCU Flag 2
+            icon: mdi:flag-outline
+          - entity: sensor.hymer_scu_flag_3
+            name: SCU Flag 3
+            icon: mdi:flag-outline
+          - entity: sensor.hymer_scu_flag_4
+            name: SCU Flag 4
+            icon: mdi:flag-outline
+          - entity: sensor.hymer_scu_flag_5
+            name: SCU Flag 5
+            icon: mdi:flag-outline
 
       # ── SCU Restart (with confirmation dialog) ──
       - type: tile
