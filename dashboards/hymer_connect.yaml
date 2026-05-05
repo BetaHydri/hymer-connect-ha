@@ -239,11 +239,11 @@ views:
                   - entity: sensor.hymer_charge_phase
                     name: Charge Phase
                     icon: mdi:ev-station
-                  - entity: binary_sensor.hymer_stecker
+                  - entity: binary_sensor.hymer_shore_power_connected
                     name: Shore Power
                     icon: mdi:power-plug
-                  - entity: binary_sensor.hymer_shore_power_connected
-                    name: Shore Power (EBL)
+                  - entity: binary_sensor.hymer_shoreline_connected_scu
+                    name: Shore Power (SCU)
                     icon: mdi:power-plug-outline
                   - entity: sensor.hymer_heater_electric_power
                     name: Heater Electric
@@ -323,7 +323,7 @@ views:
           - entity: sensor.hymer_power_source
             name: Power Source
             icon: mdi:power-plug
-          - entity: binary_sensor.hymer_stecker
+          - entity: binary_sensor.hymer_shore_power_connected
             name: Shore Power
             icon: mdi:power-plug
 
