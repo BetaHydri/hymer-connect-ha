@@ -109,6 +109,8 @@
       "heater_operating_mode": { "name": "Heater operating mode" },
       "fridge_mode": { "name": "Fridge mode" },
       "fridge_status": { "name": "Fridge status" },
+      "fridge_warning": { "name": "Fridge warning" },
+      "fridge_dc_voltage": { "name": "Fridge DC voltage" },
       "dometic_fridge_mode": { "name": "Dometic fridge mode" },
       "dometic_fridge_level": { "name": "Dometic fridge level" },
       "dometic_fridge_power_source": { "name": "Dometic fridge power source" },

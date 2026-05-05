@@ -171,24 +171,38 @@
       "name": "fridge_cooling_step"
     },
     "34,4": {
-      "name": "heat_ctrl_4"
+      "_doc": "EHG: FreezerLevel (deprecated in EHG app)",
+      "name": "fridge_freezer_level"
     },
     "34,5": {
-      "name": "heat_ctrl_5"
+      "_doc": "EHG: DoorOpen — fridge door open/closed (bool, read-only)",
+      "name": "fridge_door",
+      "platform": "binary_sensor",
+      "device_class": "door",
+      "icon": "mdi:fridge-outline"
     },
     "34,6": {
-      "name": "heat_ctrl_6"
+      "_doc": "EHG: WarningErrorInformation — fridge warning/error code (int)",
+      "name": "fridge_warning",
+      "platform": "sensor",
+      "icon": "mdi:fridge-alert"
     },
     "34,7": {
-      "name": "heat_setpoint_raw",
-      "transform": "div1000"
+      "_doc": "EHG: DCVoltage — fridge DC supply voltage (int, mV)",
+      "name": "fridge_dc_voltage",
+      "unit": "mV",
+      "platform": "sensor",
+      "state_class": "measurement",
+      "icon": "mdi:flash-triangle-outline"
     },
     "37,1": {
+      "_doc": "EHG: VehicleType — vehicle type enum (int). Note: despite EHG label, PIA data on S600 carries fridge mode readback here.",
       "name": "fridge_mode",
       "platform": "sensor",
       "icon": "mdi:fridge"
     },
     "37,2": {
+      "_doc": "EHG: VehicleBrand — vehicle brand enum (int). Note: despite EHG label, PIA data on S600 carries fridge status readback here.",
       "name": "fridge_status",
       "platform": "sensor",
       "icon": "mdi:fridge-outline"

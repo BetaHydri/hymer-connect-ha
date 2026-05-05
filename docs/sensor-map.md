@@ -297,22 +297,32 @@ heading are delivered via the REST API, not PIA.
 
 ## Bus 34 — Thetford N4112A fridge (shared S600/S700)
 
-| Slot | Sensor Name | Notes |
-|------|------------|-------|
-| (34, 1) | `fridge_power` | Power on/off (bool write). Discovery: `False` |
-| (34, 2) | `fridge_eco` | ECO/quiet mode (bool write). Discovery: `False` |
-| (34, 3) | `fridge_cooling_step` | Cooling step 1–5 (uint write). Discovery: `2` |
-| (34, 4) | `heat_ctrl_4` | Heater control value. Discovery: `0` (int) |
-| (34, 5) | `heat_ctrl_5` | Heater control flag. Discovery: `False` (bool) |
-| (34, 6) | `heat_ctrl_6` | Heater control value. Discovery: `0` (int) |
-| (34, 7) | `heat_setpoint_raw` | Fridge setpoint raw (div1000). Discovery: `13.0` |
+Slot labels verified against EHG app Hermes bundle (APK 2.10.14, decompiled
+2026-05-05).
 
-## Bus 37 — Fridge status
+| Slot | EHG Name | Sensor Name | Notes |
+|------|----------|------------|-------|
+| (34, 1) | `FridgeOn` | `fridge_power` | Power on/off (bool write). Discovery: `False` |
+| (34, 2) | `NightMode` | `fridge_eco` | ECO/quiet mode (bool write). Discovery: `False` |
+| (34, 3) | `FridgeLevel` | `fridge_cooling_step` | Cooling step 1–5 (uint write). Discovery: `2` |
+| (34, 4) | `FreezerLevel` | `fridge_freezer_level` | Freezer level (deprecated in EHG app). Discovery: `0` (int) |
+| (34, 5) | **`DoorOpen`** | `fridge_door` | **Fridge door open/closed** (bool, read-only). Binary sensor. Previously unmapped — fridge_door entity was incorrectly reading from bus 37 slot 2 (VehicleBrand). Fixed in v2.53.0. |
+| (34, 6) | `WarningErrorInformation` | `fridge_warning` | Fridge warning/error code (int). Discovery: `0` |
+| (34, 7) | `DCVoltage` | `fridge_dc_voltage` | Fridge DC supply voltage (int, mV). Discovery: `13000` |
 
-| Slot | Sensor Name | Notes |
-|------|------------|-------|
-| (37, 1) | `fridge_mode` | Fridge operating mode. Discovery: `Off` (string) |
-| (37, 2) | `fridge_status` | Fridge door state. SCU reports int 0=Open, 1=Closed. Exposed as `binary_sensor.hymer_fridge_door` (v2.32.0). Real-time push updates arrive at protobuf depth 4 — fixed in v2.36.6. **Requires 12V ON** — the SCU does not push passive sensor changes in standby (the EHG app sees them via BLE, but HA only has the cloud/SignalR path). |
+## Bus 37 — VehicleInformation (EHG) / Fridge status readback (PIA)
+
+> **Note:** The EHG app metadata labels this bus as `VehicleInformation` with
+> slots `VehicleType` and `VehicleBrand`. However, on the S600, the PIA protobuf
+> data on bus 37 carries **fridge mode and status readback**, not vehicle
+> identification. The fridge select entity reads `fridge_mode` from here and it
+> works correctly. This discrepancy may be a SCU firmware routing difference vs
+> the EHG app's component registry.
+
+| Slot | EHG Name | Sensor Name | Notes |
+|------|----------|------------|-------|
+| (37, 1) | `VehicleType` | `fridge_mode` | Fridge operating mode on S600 PIA. Discovery: `Off` (string) |
+| (37, 2) | `VehicleBrand` | `fridge_status` | Fridge status on S600 PIA. **Not** the fridge door — door is on bus 34 slot 5. |
 
 ## Bus 43 — Seating overhead light
 

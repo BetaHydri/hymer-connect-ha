@@ -64,15 +64,6 @@ STATIC_BINARY_SENSORS: tuple[HymerBinarySensorEntityDescription, ...] = (
         value_path="signalr_sensors.light_nightlight",
         icon="mdi:water-pump",
     ),
-    # Fridge door reads from fridge_status (cross-ref)
-    HymerBinarySensorEntityDescription(
-        key="fridge_door",
-        translation_key="fridge_door",
-        device_class=BinarySensorDeviceClass.DOOR,
-        value_path="signalr_sensors.fridge_status",
-        on_value="Open",
-        icon="mdi:fridge-outline",
-    ),
 )
 
 # Keys of static descriptions — the dynamic builder skips these.

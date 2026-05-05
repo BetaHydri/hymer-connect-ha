@@ -5,6 +5,22 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.53.0] - 2026-05-05
+
+### Fixed
+
+- **Fridge door sensor was reading from wrong bus** — `binary_sensor.hymer_fridge_door` was reading from bus 37 slot 2 (`fridge_status`), which the EHG app Hermes decompilation reveals is actually `VehicleBrand`. The real fridge door sensor is **bus 34, slot 5** (`DoorOpen`, bool, read-only). Fridge door entity now reads from the correct source and should update in real-time when 12V is ON.
+
+### Changed
+
+- **Bus 34 (ThetfordT2000) slots 4–7 renamed from EHG decompilation** — `heat_ctrl_4` → `fridge_freezer_level` (FreezerLevel, deprecated), `heat_ctrl_5` → `fridge_door` (DoorOpen), `heat_ctrl_6` → `fridge_warning` (WarningErrorInformation), `heat_setpoint_raw` → `fridge_dc_voltage` (DCVoltage, mV). New sensor entities for fridge_warning and fridge_dc_voltage.
+- **Bus 37 documented as VehicleInformation** — EHG app labels bus 37 as VehicleType/VehicleBrand, but PIA data on S600 carries fridge mode/status readback. Existing fridge_mode/fridge_status entities kept (they work correctly), but doc notes the discrepancy.
+- **Fridge door moved from static Python to JSON-driven** — Follows the JSON-first entity guideline.
+
+### Migration Notes
+
+- **Non-breaking.** HACS update + restart is sufficient. No remove/re-add needed. The fridge door entity keeps the same unique_id — it just reads from the correct source now.
+
 ## [2.52.0] - 2026-05-05
 
 ### Changed
