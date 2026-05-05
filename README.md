@@ -434,6 +434,135 @@ When you turn the heater on, the integration sends setpoint (sid 8) + fuel_type_
 
 **For other brands:** If your vehicle has a different heater (e.g. Truma Combi E on bus 6, or Alde on another bus), add the `"climate"` section to your brand JSON with the correct bus/slot IDs. The write commands use the same PIA protocol — only the addresses differ. If no `"climate"` section exists, the climate and select entities are simply not created.
 
+#### Step-by-step: From converted JSON to a working brand overlay (non-S600/S700)
+
+This is the end-to-end recipe if your vehicle is **not** a HYMER Grand Canyon S 600/S 700 and `hymer.json` does not match. It walks you from the raw output of `tools/convert_dan_metadata.py` (or an empty brand file) to a curated overlay you can submit as a PR — and tells you exactly when to stop and open an issue instead.
+
+##### 0. Prerequisites
+
+- Integration installed and running against your vehicle.
+- (Recommended) A converter-generated `sensor_maps/<brand>.json` from the [Bootstrap subsection](#-bootstrap-a-brand-overlay-with-toolsconvert_dan_metadatapy-v2490). If you don't have one, start from an empty `{ "sensors": {}, "lights": {}, "switches": {}, "climate": {} }`.
+- Debug logging enabled for the PIA decoder:
+  ```yaml
+  logger:
+    logs:
+      custom_components.hymer_connect.pia_decoder: debug
+  ```
+- Vehicle 12V on (so passive sensors push data over SignalR).
+
+##### 1. Triage the converter output
+
+Open your `<brand>.json` next to [`hymer.json`](custom_components/hymer_connect/sensor_maps/hymer.json) and check three things:
+
+1. **Headers** — remove `_generated_by` / `_source_vehicle_id`; keep `_comment`, `_doc`, `_vehicles`.
+2. **`_climate_templates_required` marker** — the converter writes this instead of guessing climate/fridge/heater/boiler. You will fill it in by hand in steps 5–6.
+3. **Auto-emitted sensors** — these are conservatively typed read-only entries. Most are correct; some need renaming to canonical conventions (see step 3).
+
+##### 2. Identify your fridge bus
+
+Run the EHG app, then in HA's **Settings → Devices → HYMER Connect → "+N entities not shown"** look at the **Discovered slot** diagnostic entities (or grep the HA log for `Discovered unmapped slot`).
+
+| Action in the EHG app | Slot that changes value | Field it maps to |
+|---|---|---|
+| Toggle fridge **on/off** | bool, flips 0↔1 | `power_sid` |
+| Change cooling step **1 → 5** | uint, follows the step | `cooling_step_sid` |
+| Toggle ECO | bool | (becomes a `switches` entry, not climate) |
+| Just observe — operating mode/status | enum string ("Off"/"On"/"ECO" …) | `mode_sensor` source slot |
+
+The bus that hosts these slots is your `control_bus`. On S600 it is `34` (Thetford T2000); on Eriba 602 it is `60` (Dometic). If your three control slots all sit on a bus you don't recognize, write that bus number down — you will need it for step 7.
+
+##### 3. Name the slots in `"sensors"`
+
+For every slot you identified, add or rename the entry in `"sensors"` so the names match what the climate/select code expects to read back:
+
+```json
+"sensors": {
+  "<bus>,<power_sid>":        {"name": "fridge_power"},
+  "<bus>,<cooling_step_sid>": {"name": "fridge_cooling_step"},
+  "<bus>,<mode_slot>":        {"name": "fridge_mode", "platform": "sensor", "icon": "mdi:fridge"}
+}
+```
+
+The `name:` strings (`fridge_power`, `fridge_cooling_step`, `fridge_mode`) are the canonical readback keys consumed by the `"climate"` block in step 5 — keep them exactly as written.
+
+##### 4. (Optional) Add the ECO switch
+
+If your fridge has an ECO toggle on the same bus, add it to `"switches"` (this is independent of the climate block):
+
+```json
+"switches": {
+  "<bus>,<eco_sid>": {
+    "name": "fridge_eco_ctrl",
+    "icon": "mdi:leaf",
+    "write_type": "bool",
+    "on_value": true,
+    "read_path": "signalr_sensors.fridge_eco"
+  }
+}
+```
+
+Make sure `"sensors"."<bus>,<eco_sid>"` has `"name": "fridge_eco"` so `read_path` resolves.
+
+##### 5. Wire up the `"climate"` block
+
+For a **Thetford-style absorber** (most HYMER/Bürstner/Carado/Dethleffs caravans) the S600 logic in `select.py` works as-is — only the addresses change:
+
+```json
+"climate": {
+  "fridge": {
+    "type": "thetford_t2000",
+    "control_bus": <bus from step 2>,
+    "power_sid": <slot from step 2>,
+    "cooling_step_sid": <slot from step 2>,
+    "power_sensor": "fridge_power",
+    "cooling_step_sensor": "fridge_cooling_step",
+    "mode_sensor": "fridge_mode"
+  }
+}
+```
+
+For the heater, repeat the same pattern with `"truma_heater"` and the five slot fields documented in the [Climate fields reference](#step-by-step-adding-climateheaterfridge-controls-for-your-vehicle-v2450) table above. Verify by toggling things in the EHG app and watching that the same slots respond.
+
+##### 6. Restart HA and verify
+
+Restart Home Assistant and check **Developer Tools → States** for:
+
+- `select.<brand>_fridge_mode_ctrl` — should show the live mode and let you change it.
+- `climate.<brand>_truma_heater` — should show ambient + setpoint and accept HEAT/OFF.
+- `select.<brand>_boiler_mode_ctrl` and `select.<brand>_heater_energy_ctrl` — should be present if you populated `boiler_sid` / `electric_power_sid`.
+
+If an entity is **missing**, the most common cause is a typo in a `*_sensor` name — it must match a `name:` value in `"sensors"`. If an entity **appears but does nothing**, jump to step 7.
+
+##### 7. When to stop curating and open an issue/PR
+
+JSON is **enough** when:
+
+- Your fridge is a **Thetford T2000-family absorber** (3-way, sid 1 = power bool, sid 3 = cooling step uint).
+- Your heater is a **Truma Combi D6E / E** (paired-write semantics on bus 58 or bus 6 — same shape, different bus).
+- Your lights follow the EHG convention (sid 1 = on/off, sid 2 = brightness, sid 3 = color_temp).
+
+You **need a code change** (open an issue or draft PR — don't fight the JSON) when:
+
+| Symptom | Likely reason | Where the fix lives |
+|---|---|---|
+| Fridge is a **Dometic compressor** (e.g. bus 60 on Eriba 602) — HA `select` writes go through but the SCU ignores them | Different write protocol; `"type": "thetford_t2000"` does not apply | New `type:` branch in [`custom_components/hymer_connect/select.py`](custom_components/hymer_connect/select.py) |
+| Heater is **Alde / Webasto / non-Truma** | Different paired-write sequence | New climate driver in [`custom_components/hymer_connect/climate.py`](custom_components/hymer_connect/climate.py) |
+| Setpoint requires a non-float encoding (e.g. uint × 10, °F) | Transform missing on the read side, encoding missing on the write side | `pia_decoder.py` (read) + `climate.py` (write) |
+| You have a **brand-new appliance class** (AC, inverter command channel, awning, …) that has no equivalent in `hymer.json` | No platform handler exists yet | New section in `base.json` schema + a new platform module |
+| A computed/derived value is needed (e.g. solar W = V×A, fuel liters from raw, charge-phase override) | Listed under "What stays hardcoded (by design)" below | `coordinator.py` / `sensor.py` |
+
+Open an issue with: your `<brand>.json`, a `pia_decoder: debug` excerpt of the SCU's response when you press the failing control, and a one-line description of what the EHG app does that HA cannot.
+
+##### 8. Submit the overlay
+
+Before opening the PR:
+
+- Strip `_generated_by` / `_source_vehicle_id` headers.
+- Remove the `_climate_templates_required` marker once you have replaced it.
+- Add `_vehicles` listing the model(s) you tested on, plus a one-line `_doc` summary.
+- Add translations for any new entity names in [`translations/en.json`](custom_components/hymer_connect/translations/en.json) (and `de.json` if you can).
+- Test on a real vehicle. Mention SCU firmware version in the PR description.
+
 #### What stays hardcoded (by design)
 
 - **Button entities** (SCU restart) — single universal entity, specific coordinator method.
