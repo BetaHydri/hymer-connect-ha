@@ -91,6 +91,7 @@ views:
           - entity: sensor.hymer_outside_temperature
             name: Outside Temp
             icon: mdi:thermometer
+            secondary_info: last-changed
 
       # ── Heater ──
       - type: thermostat
@@ -381,6 +382,7 @@ views:
           - entity: sensor.hymer_outside_temperature
             name: Outside Temp
             icon: mdi:thermometer
+            secondary_info: last-changed
 
       # ── Heater Control ──
       - type: markdown
@@ -560,6 +562,7 @@ views:
           - entity: sensor.hymer_outside_temperature
             name: Outside Temp
             icon: mdi:thermometer
+            secondary_info: last-changed
           - entity: sensor.hymer_distance_to_service
             name: Next Service
             icon: mdi:wrench-clock

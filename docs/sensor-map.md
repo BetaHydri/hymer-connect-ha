@@ -122,6 +122,11 @@ Entries **without** a `platform` field are decode-only — they appear in `coord
 
 ## Bus 1 — VehicleSignal (Mercedes Sprinter chassis CAN)
 
+> **⚠️ Ignition dependency:** Bus 1 data comes from the Mercedes chassis CAN, which is
+> only active when the ignition is in ACC or ON position. With ignition OFF, the SCU
+> has no new CAN frames to relay — sensors on this bus (outside temp, fuel, odometer,
+> doors, etc.) will show stale/cached values even if the 12V habitation main is on.
+
 | Slot | Sensor Name | Unit | Transform | Notes |
 |------|------------|------|-----------|-------|
 | (1, 1) | `odometer` | km | div1000 | Lifetime odometer |
