@@ -126,6 +126,15 @@ Entries **without** a `platform` field are decode-only — they appear in `coord
 > only active when the ignition is in ACC or ON position. With ignition OFF, the SCU
 > has no new CAN frames to relay — sensors on this bus (outside temp, fuel, odometer,
 > doors, etc.) will show stale/cached values even if the 12V habitation main is on.
+>
+> **Theory (2026-05-07, unverified):** The SCU appears to cache the last-known CAN
+> values and re-sends them on SignalR reconnect / subscription refresh. HA records
+> this as a state change (`last-changed` updates), but the value itself may be days
+> old. Example: `outside_temperature` showed 25.5 °C with `last-changed` = 15 h ago,
+> but actual weather in Munich at that time was far below 25 °C. The 25.5 °C
+> was likely cached from a warm afternoon days earlier.
+> **Planned verification:** Weekend camping trip — drive with ignition on,
+> confirm live temperature, fuel consumption, and estimated range updates.
 
 | Slot | Sensor Name | Unit | Transform | Notes |
 |------|------------|------|-----------|-------|
