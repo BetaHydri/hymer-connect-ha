@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.54.0] - 2026-05-07
+
+### Fixed
+
+- **Switch command retry after dead SignalR send channel** — When a switch command (e.g. 12V OFF) was sent on a silently-dead SignalR send channel, `_verify_send` correctly detected the mismatch after the holdoff period and forced a reconnect, but the original command was lost — the SCU never executed it. Now, after forcing the reconnect, the switch waits up to 90 seconds for SignalR to come back, then automatically re-sends the failed command once. If the retry also fails, the UI shows the real SCU readback so the user can act.
+
+### Migration Notes
+
+- **Non-breaking.** HACS update + restart is sufficient.
+
 ## [2.53.1] - 2026-05-05
 
 ### Fixed
