@@ -463,9 +463,9 @@ views:
           - entity: binary_sensor.hymer_heater_shoreline_connected
             name: Shoreline (230 V)
             icon: mdi:power-plug
-          - entity: binary_sensor.hymer_heater_window_contact
-            name: Dinette Window (Diesel Safety)
-            icon: mdi:window-open-variant
+          - entity: binary_sensor.hymer_heater_diesel_safety
+            name: Heater Diesel Safety
+            icon: mdi:shield-check
             secondary_info: last-changed
           - entity: binary_sensor.hymer_truma_connected
             name: Truma Connected
