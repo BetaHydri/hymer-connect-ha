@@ -5,6 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.55.0] - 2026-05-08
+
+### Fixed
+
+- **Heater diesel safety sensor was misidentified as a window contact** — Bus 58 sid 14 (`heater_window_switch_closed`) is the Truma Combi D6E diesel safety interlock flag, not a physical window contact. With `device_class: window`, HA showed "Geöffnet" (Open) when the heater was running and "Geschlossen" (Closed) when off — completely misleading. Renamed to `heater_diesel_safety`, removed `device_class`, icon changed to `mdi:shield-check`. Now shows plain On/Off. Verified via live SignalR capture.
+- **Commands failed silently after 12V OFF transition** — When the SCU entered standby (`scu_connected: true → false`), the Azure SignalR hub routing table became stale for the send direction. Commands (heater, fridge, lights, 12V switch) were sent but silently dropped, requiring a manual integration reload to restore. Now, UpdateTokens + resubscribe are refreshed on **both** `true→false` and `false→true` transitions, keeping the command channel alive through standby.
+
+### Migration Notes
+
+- **Entity rename:** `binary_sensor.hymer_heater_window_switch_closed` → `binary_sensor.hymer_heater_diesel_safety`. After update, delete the old unavailable entity and update any dashboard cards referencing it.
+- HACS update + restart is sufficient. No remove/re-add needed.
+
 ## [2.54.0] - 2026-05-07
 
 ### Fixed

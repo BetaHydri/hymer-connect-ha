@@ -518,13 +518,20 @@ class HymerSignalRClient:
                     list(sensor_data.keys())[:20],
                 )
 
-                # Detect SCU reconnect (scu_connected false→true).
-                # After 12V OFF→ON the SCU wakes from standby and gets a new
-                # session at the Azure SignalR hub.  Our old UpdateTokens
-                # routing becomes stale → remote-access commands (lights,
+                # Detect SCU state transitions.
+                #
+                # When the SCU transitions between connected↔standby it
+                # registers a new session at the Azure SignalR hub.  Our
+                # old UpdateTokens routing becomes stale → commands (lights,
                 # heater, fridge) are silently rejected.  Re-sending
-                # UpdateTokens + resubscribe restores command delivery
-                # immediately.
+                # UpdateTokens + resubscribe restores command delivery.
+                #
+                # This applies to BOTH directions:
+                #   false→true: 12V OFF→ON, SCU wakes from standby
+                #   true→false: 12V ON→OFF, SCU enters standby
+                #
+                # The EHG app avoids this by creating a fresh connection
+                # every time it opens.  We refresh in-place instead.
                 if "scu_connected" in sensor_data:
                     scu_now = sensor_data["scu_connected"]
                     if scu_now is True and self._scu_was_disconnected:
@@ -534,8 +541,14 @@ class HymerSignalRClient:
                         )
                         self._scu_was_disconnected = False
                         asyncio.ensure_future(self._refresh_tokens_and_resubscribe())
-                    elif scu_now is False:
+                    elif scu_now is False and not self._scu_was_disconnected:
                         self._scu_was_disconnected = True
+                        _LOGGER.info(
+                            "SCU entered standby (scu_connected true→false) — "
+                            "re-sending UpdateTokens to refresh routing"
+                        )
+                        asyncio.ensure_future(self._refresh_tokens_and_resubscribe())
+                    elif scu_now is False:
                         _LOGGER.info("SCU disconnected (scu_connected=false)")
 
                 if self._on_sensor_update:
