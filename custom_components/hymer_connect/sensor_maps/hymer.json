@@ -307,10 +307,9 @@
       "icon": "mdi:power-plug"
     },
     "58,14": {
-      "name": "heater_window_switch_closed",
+      "name": "heater_diesel_safety",
       "platform": "binary_sensor",
-      "device_class": "window",
-      "icon": "mdi:window-closed-variant"
+      "icon": "mdi:shield-check"
     },
     "99,1": {
       "name": "bms_voltage",

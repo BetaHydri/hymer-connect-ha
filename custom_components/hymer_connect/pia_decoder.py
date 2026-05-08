@@ -669,7 +669,7 @@ def _extract_sensors_recursive(
         # Exception: known SENSOR_MAP entries at depth 4 are accepted.
         # The SCU nests real-time push updates one level deeper than the
         # initial subscription response.  Without this, sensors like
-        # fridge_status (37,2) and heater_window_switch_closed (58,14)
+        # fridge_status (37,2) and heater_diesel_safety (58,14)
         # silently stop updating after the initial state is received.
         sid_val = next((v for fn, wt, v in fields if fn == 1 and wt == 0), 0)
         bus_val = next((v for fn, wt, v in fields if fn == 2 and wt == 0), 0)
@@ -716,7 +716,7 @@ def _extract_sensors_recursive(
                         )
                         # Log door/window state changes at INFO so they
                         # are visible without enabling DEBUG logging.
-                        if name in ("fridge_status", "heater_window_switch_closed", "main_switch", "scu_connected"):
+                        if name in ("fridge_status", "heater_diesel_safety", "main_switch", "scu_connected"):
                             _LOGGER.info(
                                 "State change (%d,%d) %s: %r → %r (depth=%d)",
                                 entry["bus_id"], entry["sensor_id"],
