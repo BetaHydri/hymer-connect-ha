@@ -386,7 +386,7 @@ misnomer kept for backwards-compatibility with existing dashboards/history.
 | (58, 11) | `heater_operating_mode` (EHG: `heater_air_mode`) | — | Heater air mode string (`OFF` / `Normal` / `Automatic`). Read-only in practice — SCU silently rolls back writes. `rw` per metadata |
 | (58, 12) | `heater_response_error` (EHG: `response_error`) | — | Response error flag (bool). `r` |
 | (58, 13) | `heater_shoreline_connected` (EHG: `shoreline_connected`) | — | Shoreline connected flag (bool). `r` |
-| (58, 14) | `heater_window_switch_closed` (EHG: `window_switch_closed`) | — | Window contact closed (diesel safety interlock, bool). `r` |
+| (58, 14) | `heater_diesel_safety` (EHG: `window_switch_closed`) | — | Diesel safety interlock flag (bool). `True` = safety OK / heater can run, `False` = interlock inactive. Not a physical window contact. `r` |
 
 ## Bus 60 — Dometic Compressor Fridge (DometicCompressorFridge)
 

@@ -301,7 +301,7 @@ The integration auto-reconnects after the reboot.
 
 **Fixed in v2.36.6.** The PIA protobuf decoder's depth filter (`depth <= 3`)
 silently dropped real-time push updates for some sensors (e.g. `fridge_status`,
-`heater_window_switch_closed`) because the SCU nests state-change pushes at
+`heater_diesel_safety`) because the SCU nests state-change pushes at
 protobuf depth 4 — one level deeper than the initial subscription response.
 The initial value was received correctly but subsequent open/close events were
 discarded. If you still see this on older versions, upgrade to v2.36.6+.
