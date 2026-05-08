@@ -1,4 +1,4 @@
-# HYMER Connect Dashboard
+# HYMER Connect S600 / S700 Dashboard
 
 A ready-to-use, mobile-friendly Lovelace dashboard is shipped with this integration as [`hymer_connect.yaml`](./hymer_connect.yaml). It uses **only stock Home Assistant tile cards** — no HACS frontend cards required.
 
