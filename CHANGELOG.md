@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.55.1] - 2026-05-08
+
+### Fixed
+
+- **12V main switch reverted to ON after turning OFF** — When the 12V switch was turned off via HA, the SCU correctly processed the command (confirmed by EHG app showing OFF), but the resubscribe triggered by the standby transition caused the SCU to echo back stale cached state (`main_switch: Off → On`), reverting the HA UI. Two fixes: (1) On `scu_connected true→false`, only refresh UpdateTokens — skip the resubscribe that echoes stale state. (2) When a main switch OFF command is followed by SCU going offline, treat that as confirmation instead of reverting to stale readback.
+
+### Migration Notes
+
+- **Non-breaking.** HACS update + restart is sufficient.
+
 ## [2.55.0] - 2026-05-08
 
 ### Fixed

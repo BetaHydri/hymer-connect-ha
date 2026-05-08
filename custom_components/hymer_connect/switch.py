@@ -172,6 +172,18 @@ class HymerConnectSwitch(
             if client:
                 scu_online = client._sensor_data.get("scu_connected") is True
             if not scu_online:
+                # Special case: main switch OFF + SCU offline = command worked.
+                # The SCU goes to standby immediately after processing the 12V
+                # OFF command, so it never gets a chance to echo the new state.
+                # The SCU being offline IS the confirmation.
+                if self.entity_description.is_main_switch and not expected_on:
+                    _LOGGER.info(
+                        "Switch %s: 12V OFF confirmed — SCU went to standby "
+                        "(scu_connected=false) as expected",
+                        self.entity_description.key,
+                    )
+                    # Keep optimistic OFF state — don't revert to stale "On"
+                    return
                 _LOGGER.warning(
                     "Switch %s: command (%s) not confirmed after %ds "
                     "— SCU is offline, command queued until SCU wakes up",

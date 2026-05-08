@@ -303,14 +303,14 @@ class HymerSignalRClient:
         refresh = build_refresh_command()
         await self.send_pia_request(refresh)
 
-    async def _refresh_tokens_and_resubscribe(self) -> None:
-        """Re-send UpdateTokens + resubscribe after SCU reconnect.
+    async def _refresh_tokens_and_resubscribe(self, resubscribe: bool = True) -> None:
+        """Re-send UpdateTokens (+ optionally resubscribe) after SCU transition.
 
-        Called when scu_connected transitions false→true (12V OFF→ON).
-        The SCU wakes from standby and registers a new session at the Azure
-        SignalR hub. Without re-sending UpdateTokens, the hub's routing table
-        is stale and remote-access commands (lights, heater, fridge) are
-        silently rejected — while the 12V system command keeps working.
+        Called on scu_connected transitions:
+          false→true (wake): full refresh + resubscribe to get fresh sensor data
+          true→false (standby): UpdateTokens only — do NOT resubscribe because
+            the standby SCU echoes stale cached state that would overwrite the
+            real values we just received (e.g. main_switch 'Off' → 'On' revert)
         """
         if not self._ws or self._ws.closed or not self._connected:
             return
@@ -339,14 +339,19 @@ class HymerSignalRClient:
         # margin without noticeably delaying first sensor data.
         await asyncio.sleep(0.75)
 
-        # Re-subscribe to get fresh sensor data from the woken SCU
-        try:
-            await self._send_subscription()
-            _LOGGER.info("Resubscribed after SCU reconnect")
-        except Exception:
-            _LOGGER.warning(
-                "Resubscribe after SCU reconnect failed", exc_info=True
-            )
+        # Re-subscribe to get fresh sensor data from the woken SCU.
+        # Skip resubscribe on standby entry (true→false) — the SCU echoes
+        # stale cached state that overwrites real values.
+        if resubscribe:
+            try:
+                await self._send_subscription()
+                _LOGGER.info("Resubscribed after SCU reconnect")
+            except Exception:
+                _LOGGER.warning(
+                    "Resubscribe after SCU reconnect failed", exc_info=True
+                )
+        else:
+            _LOGGER.info("UpdateTokens refreshed (skipping resubscribe for standby entry)")
 
     async def _send_update_tokens(self, wait_response: bool = True) -> None:
         """Send UpdateTokens invocation to authenticate the SignalR connection.
@@ -540,14 +545,14 @@ class HymerSignalRClient:
                             "re-sending UpdateTokens + resubscribe"
                         )
                         self._scu_was_disconnected = False
-                        asyncio.ensure_future(self._refresh_tokens_and_resubscribe())
+                        asyncio.ensure_future(self._refresh_tokens_and_resubscribe(resubscribe=True))
                     elif scu_now is False and not self._scu_was_disconnected:
                         self._scu_was_disconnected = True
                         _LOGGER.info(
                             "SCU entered standby (scu_connected true→false) — "
-                            "re-sending UpdateTokens to refresh routing"
+                            "refreshing UpdateTokens only (no resubscribe)"
                         )
-                        asyncio.ensure_future(self._refresh_tokens_and_resubscribe())
+                        asyncio.ensure_future(self._refresh_tokens_and_resubscribe(resubscribe=False))
                     elif scu_now is False:
                         _LOGGER.info("SCU disconnected (scu_connected=false)")
 
