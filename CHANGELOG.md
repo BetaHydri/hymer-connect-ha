@@ -5,6 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.55.2] - 2026-05-09
+
+### Fixed
+
+- **12V switch OFF took up to 5 minutes to recover after dead send channel** — When `_verify_send` detected a command mismatch (SCU readback still "On" after 60s holdoff), it set the SignalR connection flag to disconnected but did not trigger an immediate coordinator refresh. If the coordinator poll had just run, the next reconnect opportunity was 60–120s later — far too late for `_retry_after_reconnect` (90s timeout). Now mirrors `_on_signalr_connection_lost()`: resets backoff, zeroes `_last_reconnect_attempt`, and calls `async_request_refresh()` so the coordinator reconnects within seconds.
+- **`_on_signalr_connection_lost` permanently suppressed after age-based reconnect** — `stop_signalr()` sets `_shutting_down = True` to suppress reconnect callbacks during HA shutdown, but the flag was never reset after a successful reconnect in `start_signalr()`. After the first 50-minute age-based reconnect cycle, all subsequent unexpected disconnects bypassed the fast recovery path. Now `_shutting_down` is reset to `False` on successful connection.
+
+### Migration Notes
+
+- **Non-breaking.** HACS update + restart is sufficient.
+
 ## [2.55.1] - 2026-05-08
 
 ### Fixed

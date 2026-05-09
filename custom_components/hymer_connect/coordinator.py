@@ -223,9 +223,13 @@ class HymerConnectCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             try:
                 await self._signalr.start()
                 _LOGGER.info("SignalR connected for %s", self._vehicle_urn)
-                # Reset backoff and failure counter on successful connection
+                # Reset backoff, failure counter, and shutdown flag on success.
+                # _shutting_down MUST be reset here — stop_signalr() sets it
+                # to True, but after a successful reconnect the connection-lost
+                # callback must be re-enabled for fast recovery.  See issue #47.
                 self._reconnect_backoff = _INITIAL_BACKOFF
                 self._consecutive_failures = 0
+                self._shutting_down = False
             except HymerConnectApiError as err:
                 self._consecutive_failures += 1
                 _LOGGER.warning(

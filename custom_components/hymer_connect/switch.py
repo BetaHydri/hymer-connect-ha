@@ -201,7 +201,17 @@ class HymerConnectSwitch(
                 )
                 if client:
                     client._connected = False
-                    _LOGGER.info("Marked SignalR as disconnected — will reconnect on next poll")
+                # Trigger immediate reconnect — reset backoff and schedule
+                # a coordinator refresh so _async_update_data runs within
+                # seconds instead of waiting for the next 60s poll.  This
+                # mirrors _on_signalr_connection_lost().  See issue #47.
+                coord = self.coordinator
+                coord._reconnect_backoff = 60  # _INITIAL_BACKOFF
+                coord._last_reconnect_attempt = 0.0
+                _LOGGER.info(
+                    "Marked SignalR as disconnected — triggering immediate reconnect"
+                )
+                self.hass.async_create_task(coord.async_request_refresh())
                 # Retry the command after reconnect settles
                 self._retry_task = asyncio.ensure_future(
                     self._retry_after_reconnect(expected_on)
