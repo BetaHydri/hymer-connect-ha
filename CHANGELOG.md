@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.55.5] - 2026-05-13
+
+### Fixed
+
+- **Infinite re-auth + reconnect loop when SCU is unresponsive** — The retry counter reset inside `async_turn_on/off` was triggered by both user commands AND internal retries from `_retry_after_reconnect`, so the counter never reached the cap. The integration would loop indefinitely: re-auth → reconnect → retry → re-auth... Now, `_retry_count` is only reset on user-initiated commands, not on automatic retries. After 1 failed retry, the integration gives up and clears optimistic state.
+
+### Migration Notes
+
+- **Non-breaking.** HACS update + restart is sufficient.
+
 ## [2.55.4] - 2026-05-12
 
 ### Fixed

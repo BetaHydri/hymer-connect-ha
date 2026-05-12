@@ -136,6 +136,7 @@ class HymerConnectSwitch(
         self._verify_task: asyncio.Task | None = None
         self._retry_task: asyncio.Task | None = None
         self._retry_count: int = 0  # cap reconnect+retry loops
+        self._is_retry: bool = False  # True when called from _retry_after_reconnect
 
     async def _verify_send(self, expected_on: bool) -> None:
         """Verify the SCU acknowledged the command after a delay.
@@ -264,10 +265,14 @@ class HymerConnectSwitch(
             self.entity_description.key,
             "ON" if expected_on else "OFF",
         )
-        if expected_on:
-            await self.async_turn_on()
-        else:
-            await self.async_turn_off()
+        self._is_retry = True
+        try:
+            if expected_on:
+                await self.async_turn_on()
+            else:
+                await self.async_turn_off()
+        finally:
+            self._is_retry = False
 
     @property
     def available(self) -> bool:
@@ -316,7 +321,8 @@ class HymerConnectSwitch(
             )
         self._optimistic_on = True
         self._optimistic_set_at = time.monotonic()
-        self._retry_count = 0  # reset on new explicit command
+        if not self._is_retry:
+            self._retry_count = 0  # reset on new explicit command only
         # NOTE: Do NOT write back into client._sensor_data here.  Doing so
         # poisons _verify_send (which reads the same path back) and the
         # is_standby check in needs_reconnect (main_switch=='Off' bypasses
@@ -349,7 +355,8 @@ class HymerConnectSwitch(
             )
         self._optimistic_on = False
         self._optimistic_set_at = time.monotonic()
-        self._retry_count = 0  # reset on new explicit command
+        if not self._is_retry:
+            self._retry_count = 0  # reset on new explicit command only
         # NOTE: Do NOT write back into client._sensor_data here.  See the
         # matching comment in async_turn_on — poisoning _sensor_data breaks
         # _verify_send and the standby reconnect heuristic.
