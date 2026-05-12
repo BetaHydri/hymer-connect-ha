@@ -5,6 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.55.4] - 2026-05-12
+
+### Fixed
+
+- **Commands silently dropped after stale OAuth2 session** — When the OAuth2 session degraded over time (hours/days), a simple SignalR reconnect (negotiate-only) reused the stale session and created connections that looked healthy but couldn't deliver commands to the SCU. Only an integration reload (which does a full password-grant re-authentication) restored command delivery. Now, when `_verify_send` detects a command mismatch, the integration automatically performs a full OAuth2 re-authentication before reconnecting SignalR — matching what integration reload does. This eliminates the need for manual reload to recover from stale sessions.
+- **Infinite reconnect loop on persistent command failure** — When the command channel was truly broken, `_verify_send` would endlessly cycle through reconnect → retry → verify → reconnect. Now capped at 1 retry; if it still fails, optimistic state is cleared and a warning logged.
+
+### Migration Notes
+
+- **Non-breaking.** HACS update + restart is sufficient.
+
 ## [2.55.3] - 2026-05-12
 
 ### Fixed

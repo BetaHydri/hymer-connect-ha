@@ -23,6 +23,8 @@ from .api import HymerConnectApi, HymerConnectApiError, HymerConnectAuthError
 from .const import CONF_TANK_CAPACITY, DEFAULT_SCAN_INTERVAL, DEFAULT_TANK_CAPACITY_LITERS, DOMAIN
 from .signalr_client import HymerSignalRClient
 
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+
 _LOGGER = logging.getLogger(__name__)
 
 # Reconnection backoff constants
@@ -266,6 +268,42 @@ class HymerConnectCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         if self._signalr:
             await self._signalr.stop()
             self._signalr = None
+
+    async def force_reauth_and_reconnect(self) -> None:
+        """Force a full OAuth2 re-authentication and SignalR reconnect.
+
+        This mirrors what happens during an integration reload: a fresh
+        password-grant authentication creates a new server-side session
+        with clean hub→SCU routing.  A simple SignalR negotiate reuses
+        the existing OAuth2 session which may have stale routing.
+
+        Called by switch._verify_send when a command fails after the
+        normal reconnect+retry cycle.
+        """
+        _LOGGER.info(
+            "Forcing full OAuth2 re-authentication before SignalR reconnect"
+        )
+
+        # Stop the existing dead connection first
+        if self._signalr:
+            await self.stop_signalr()
+
+        try:
+            username = self.config_entry.data.get(CONF_USERNAME, "")
+            password = self.config_entry.data.get(CONF_PASSWORD, "")
+            if username and password:
+                await self.api.authenticate(username, password)
+                _LOGGER.info("OAuth2 re-authentication successful")
+            else:
+                # Fallback: at least refresh the token
+                await self.api._refresh_access_token()
+                _LOGGER.info("OAuth2 token refresh successful (no stored credentials)")
+        except Exception:
+            _LOGGER.warning("OAuth2 re-authentication failed", exc_info=True)
+
+        # Now reconnect SignalR with the fresh session
+        self._shutting_down = False  # re-enable connection-lost callbacks
+        await self.start_signalr()
 
     async def async_ensure_signalr_healthy(self) -> None:
         """Ensure SignalR is connected and healthy, reconnecting if needed.

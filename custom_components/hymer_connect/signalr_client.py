@@ -247,6 +247,34 @@ class HymerSignalRClient:
         except Exception:
             _LOGGER.warning("PiaRequest subscription failed", exc_info=True)
 
+    async def verify_data_flowing(self, timeout: float = 10.0) -> bool:
+        """Wait for PiaResponse subscription data to arrive after connect.
+
+        Returns True if at least one PiaResponse was received within
+        *timeout* seconds (indicating the hub→SCU link is alive).
+        Returns False if no data arrived (hub→SCU routing is broken).
+
+        Must be called AFTER connect() and with the listen loop already
+        running in a background task.
+        """
+        if not self._connected:
+            return False
+        deadline = time.monotonic() + timeout
+        while time.monotonic() < deadline:
+            if self._last_data_received > self._connected_at:
+                _LOGGER.info(
+                    "Data flowing confirmed %.1fs after connect",
+                    self._last_data_received - self._connected_at,
+                )
+                return True
+            await asyncio.sleep(0.5)
+        _LOGGER.warning(
+            "No PiaResponse data received within %.0fs after connect — "
+            "hub→SCU command channel likely broken",
+            timeout,
+        )
+        return False
+
     async def _send_subscription(self) -> None:
         """Send PiaRequest messages to subscribe to all sensor data from the SCU."""
         if not self._ws or self._ws.closed:
