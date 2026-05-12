@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.55.3] - 2026-05-12
+
+### Fixed
+
+- **12V switch ON failed after extended SCU standby (hours/days)** — After the SCU had been in standby for more than ~10 minutes, the existing WebSocket's send channel degraded: subscription responses still arrived but outbound commands were silently dropped. The in-place UpdateTokens + resubscribe only refreshed tokens on the stale connection. Now, when the SCU reconnects after extended standby (>10 min), the integration forces a full WebSocket reconnect with a fresh send channel — matching what the EHG app does. Short standby cycles (<10 min) still use the fast in-place refresh. The existing `_verify_send` + retry mechanism handles re-sending pending switch commands on the new connection.
+
+### Migration Notes
+
+- **Non-breaking.** HACS update + restart is sufficient.
+
 ## [2.55.2] - 2026-05-09
 
 ### Fixed

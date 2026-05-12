@@ -38,6 +38,13 @@ STANDBY_MAX_SILENCE = 30 * 60  # 30 min — even in standby, reconnect after thi
 # every time it opens.  We refresh UpdateTokens proactively instead.
 UPDATE_TOKENS_INTERVAL = 15 * 60  # 15 min — refresh well before 30 min expiry
 
+# Extended standby — after this duration, force a full WebSocket reconnect
+# instead of in-place token refresh.  After long standby (hours/days) the
+# existing WebSocket's send channel can degrade: subscriptions still arrive
+# (receive works) but outbound commands are silently dropped.  A fresh
+# WebSocket is the only reliable fix — matching what the EHG app does.
+EXTENDED_STANDBY_THRESHOLD = 10 * 60  # 10 min
+
 # WebSocket keepalive — detect dead connections faster than STALE_DATA_TIMEOUT
 KEEPALIVE_INTERVAL = 30  # seconds between client-side pings
 KEEPALIVE_TIMEOUT = 90   # seconds with zero WebSocket activity = connection dead
@@ -75,6 +82,7 @@ class HymerSignalRClient:
         self._last_send_failed: bool = False
         self._last_update_tokens: float = 0.0  # monotonic timestamp of last UpdateTokens
         self._scu_was_disconnected: bool = False  # tracks scu_connected false→true transitions
+        self._scu_disconnected_at: float = 0.0  # monotonic time when SCU entered standby
 
     @property
     def connected(self) -> bool:
@@ -230,6 +238,7 @@ class HymerSignalRClient:
         self._last_data_received = time.monotonic()
         self._last_update_tokens = time.monotonic()
         self._scu_was_disconnected = False
+        self._scu_disconnected_at = 0.0
         _LOGGER.info("SignalR connected to datahub for %s", self._vehicle_urn)
 
         # Step 6: Send PiaRequest subscription to start receiving sensor data
@@ -540,14 +549,38 @@ class HymerSignalRClient:
                 if "scu_connected" in sensor_data:
                     scu_now = sensor_data["scu_connected"]
                     if scu_now is True and self._scu_was_disconnected:
-                        _LOGGER.info(
-                            "SCU reconnected (scu_connected false→true) — "
-                            "re-sending UpdateTokens + resubscribe"
+                        standby_secs = (
+                            time.monotonic() - self._scu_disconnected_at
+                            if self._scu_disconnected_at > 0
+                            else 0
                         )
                         self._scu_was_disconnected = False
-                        asyncio.ensure_future(self._refresh_tokens_and_resubscribe(resubscribe=True))
+                        self._scu_disconnected_at = 0.0
+                        if standby_secs > EXTENDED_STANDBY_THRESHOLD:
+                            _LOGGER.info(
+                                "SCU reconnected after extended standby "
+                                "(%.0fs > %ds) — forcing full WebSocket "
+                                "reconnect for clean send channel",
+                                standby_secs,
+                                EXTENDED_STANDBY_THRESHOLD,
+                            )
+                            # Stop the listen loop — coordinator will
+                            # create a fresh WebSocket with a healthy
+                            # send channel.  Pending switch commands
+                            # will be retried by _verify_send.
+                            self._running = False
+                        else:
+                            _LOGGER.info(
+                                "SCU reconnected (standby %.0fs) — "
+                                "re-sending UpdateTokens + resubscribe",
+                                standby_secs,
+                            )
+                            asyncio.ensure_future(
+                                self._refresh_tokens_and_resubscribe(resubscribe=True)
+                            )
                     elif scu_now is False and not self._scu_was_disconnected:
                         self._scu_was_disconnected = True
+                        self._scu_disconnected_at = time.monotonic()
                         _LOGGER.info(
                             "SCU entered standby (scu_connected true→false) — "
                             "refreshing UpdateTokens only (no resubscribe)"
