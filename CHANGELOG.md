@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.56.0] - 2026-05-14
+
+### Fixed
+
+- **12V ON command silently dropped during extended standby (#58)** — After hours of standby (12V off), `_verify_send` took the "SCU is offline, command queued until SCU wakes" path and gave up — never triggering `force_reauth_and_reconnect()`. The OAuth2 session routing is stale after extended standby, so "queued" commands are silently dropped by the server. Now, when the SCU has been offline for >10 minutes (extended standby), the switch triggers a full OAuth2 re-authentication + SignalR reconnect + command retry — the same recovery path used when the SCU is online but readback mismatches.
+
+### Migration Notes
+
+- **Non-breaking.** HACS update + restart is sufficient.
+
 ## [2.55.5] - 2026-05-13
 
 ### Fixed
