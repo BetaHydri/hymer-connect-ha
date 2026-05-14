@@ -28,6 +28,7 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from .const import DOMAIN, MANUFACTURER
 from .coordinator import HymerConnectCoordinator
 from .sensor import _resolve_path
+from .signalr_client import EXTENDED_STANDBY_THRESHOLD
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -186,14 +187,58 @@ class HymerConnectSwitch(
                     )
                     # Keep optimistic OFF state — don't revert to stale "On"
                     return
-                _LOGGER.warning(
-                    "Switch %s: command (%s) not confirmed after %ds "
-                    "— SCU is offline, command queued until SCU wakes up",
-                    self.entity_description.key, expected_on, delay,
-                )
-                # Clear optimistic state so UI shows real readback
-                self._optimistic_on = None
-                self.async_write_ha_state()
+
+                # Check how long SCU has been in standby.  After extended
+                # standby (hours/days) the OAuth2 session routing is stale
+                # — commands sent through this session are silently dropped
+                # by the server, not actually "queued".  Force a full
+                # re-auth + reconnect + retry instead of giving up.
+                standby_secs = 0.0
+                if client and client._scu_disconnected_at > 0:
+                    standby_secs = time.monotonic() - client._scu_disconnected_at
+
+                if standby_secs > EXTENDED_STANDBY_THRESHOLD:
+                    self._retry_count += 1
+                    if self._retry_count > 1:
+                        _LOGGER.warning(
+                            "Switch %s: command (%s) still not confirmed "
+                            "after re-auth + retry during extended standby "
+                            "(%.0fs) — giving up",
+                            self.entity_description.key, expected_on,
+                            standby_secs,
+                        )
+                        self._optimistic_on = None
+                        self._retry_count = 0
+                        self.async_write_ha_state()
+                        return
+                    _LOGGER.warning(
+                        "Switch %s: command (%s) not confirmed after %ds "
+                        "— SCU offline for %.0fs (extended standby), "
+                        "session likely stale — forcing full re-auth + "
+                        "reconnect (attempt %d)",
+                        self.entity_description.key, expected_on, delay,
+                        standby_secs, self._retry_count,
+                    )
+                    coord = self.coordinator
+                    coord._reconnect_backoff = 60
+                    coord._last_reconnect_attempt = 0.0
+                    self.hass.async_create_task(
+                        coord.force_reauth_and_reconnect()
+                    )
+                    self._retry_task = asyncio.ensure_future(
+                        self._retry_after_reconnect(expected_on)
+                    )
+                else:
+                    _LOGGER.warning(
+                        "Switch %s: command (%s) not confirmed after %ds "
+                        "— SCU is offline (standby %.0fs), command queued "
+                        "until SCU wakes up",
+                        self.entity_description.key, expected_on, delay,
+                        standby_secs,
+                    )
+                    # Short standby — server queue is likely valid
+                    self._optimistic_on = None
+                    self.async_write_ha_state()
             else:
                 self._retry_count += 1
                 if self._retry_count > 1:
