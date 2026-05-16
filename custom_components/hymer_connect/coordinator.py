@@ -310,11 +310,41 @@ class HymerConnectCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
         Checks both the WebSocket connection state and whether the connection
         is stale (needs_reconnect).  If unhealthy, attempts to reconnect.
+
+        Also detects extended SCU standby (>10 min) and proactively forces
+        a full re-auth + reconnect BEFORE sending the command.  After
+        extended standby the server-side hub→SCU routing is stale —
+        commands sent through the existing WebSocket are silently dropped.
+        Waiting for _verify_send (60s) to detect the failure is too slow;
+        the user sees an unresponsive switch and has to reload.  See #48.
+
         Raises HomeAssistantError if reconnection fails.
         """
+        from .signalr_client import EXTENDED_STANDBY_THRESHOLD
+
         client = self._signalr
+
+        # Proactive extended-standby recovery: if the SCU has been in
+        # standby longer than EXTENDED_STANDBY_THRESHOLD, the existing
+        # WebSocket's send channel is stale.  Force a full re-auth +
+        # reconnect to establish clean hub→SCU routing BEFORE sending.
         if client and client.connected and not client.needs_reconnect:
+            standby = client.scu_standby_seconds
+            if standby > EXTENDED_STANDBY_THRESHOLD:
+                _LOGGER.info(
+                    "SCU in extended standby (%.0fs > %ds) — forcing "
+                    "full re-auth + reconnect before sending command",
+                    standby, EXTENDED_STANDBY_THRESHOLD,
+                )
+                await self.force_reauth_and_reconnect()
+                if not self._signalr or not self._signalr.connected:
+                    raise HomeAssistantError(
+                        "Cannot send command — SignalR reconnect after "
+                        "extended standby failed. Try reloading the integration."
+                    )
+                return
             return
+
         reason = "stale" if (client and client.connected) else "disconnected"
         _LOGGER.info("SignalR %s — reconnecting before command", reason)
         await self.start_signalr()

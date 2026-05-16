@@ -92,6 +92,13 @@ class HymerSignalRClient:
         return True
 
     @property
+    def scu_standby_seconds(self) -> float:
+        """Return how long the SCU has been in standby (0 if online)."""
+        if not self._scu_was_disconnected or self._scu_disconnected_at <= 0:
+            return 0.0
+        return time.monotonic() - self._scu_disconnected_at
+
+    @property
     def needs_reconnect(self) -> bool:
         """Return True if the connection should be proactively recycled."""
         if not self._connected:

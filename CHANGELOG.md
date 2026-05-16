@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.56.1] - 2026-05-16
+
+### Fixed
+
+- **Proactive re-auth before commands during extended standby (#48)** — After >10 min of SCU standby (12V off), the server-side SignalR hub→SCU routing becomes stale, causing commands (main switch, lights, fridge) to be silently dropped. Previously, the integration sent the command through the stale channel and relied on `_verify_send` (60s timeout) to detect the failure and trigger a reactive re-auth + retry — too slow for the user, who had to reload the integration manually. Now, `async_ensure_signalr_healthy()` proactively detects extended standby and forces a full OAuth2 re-auth + SignalR reconnect BEFORE sending the command, establishing clean hub→SCU routing instantly.
+
+### Migration Notes
+
+- **Non-breaking.** HACS update + restart is sufficient.
+
 ## [2.56.0] - 2026-05-14
 
 ### Fixed
