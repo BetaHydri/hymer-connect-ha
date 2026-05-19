@@ -563,10 +563,10 @@ Before opening the PR:
 - Add translations for any new entity names in [`translations/en.json`](custom_components/hymer_connect/translations/en.json) (and `de.json` if you can).
 - Test on a real vehicle. Mention SCU firmware version in the PR description.
 
-#### What stays hardcoded (by design)
+#### What stays hardcoded (universal, not brand-specific)
 
-- **Button entities** (SCU restart) — single universal entity, specific coordinator method.
-- **Computed sensors** (solar power = V×A, fuel liters, charge phase idle override) — need Python arithmetic logic.
+- **Button entities** (SCU restart) — identical across all EHG vehicles. Uses a fixed PIA protocol command path (`Request.command.restart`), not a bus/sid-keyed entity, so there is nothing to override per brand. Stays in code because the entity needs a custom `async_press` → coordinator method binding that the generic sensor-map loader doesn't handle.
+- **Computed sensors** (solar power = V×A, fuel liters, charge phase idle override) — need Python arithmetic logic that cannot be expressed in JSON.
 
 #### Tips for slot discovery
 
