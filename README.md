@@ -2,7 +2,22 @@
   <img src="https://raw.githubusercontent.com/BetaHydri/hymer-connect-ha/master/images/logo@2x.png" alt="HYMER Connect" width="200">
 </p>
 
-# HYMER Connect for Home Assistant
+# ⚠️ This repository is deprecated
+
+**This cloud-only integration has been superseded by [HYMER Connect BLE](https://github.com/BetaHydri/hymer-connect-ha-ble)**, which supports both **BLE direct connection** and **cloud (SignalR)** — including pure cloud-only operation without any BLE hardware.
+
+**What you should do:**
+1. Install [hymer-connect-ha-ble](https://github.com/BetaHydri/hymer-connect-ha-ble) via HACS (custom repository) or manually
+2. Remove this integration (`hymer-connect-ha`) from HACS
+3. Re-add the integration in HA — your credentials and entities will be recreated
+
+**Cloud-only users:** The BLE repo works without Bluetooth hardware. Just disable BLE in the config flow — see the [Cloud-Only Quick Start](https://github.com/BetaHydri/hymer-connect-ha-ble#cloud-only-quick-start-no-ble-hardware-needed).
+
+**This repository will no longer receive updates.** All development continues in [hymer-connect-ha-ble](https://github.com/BetaHydri/hymer-connect-ha-ble).
+
+---
+
+# HYMER Connect for Home Assistant (legacy — cloud-only)
 
 [![hacs_badge](https://img.shields.io/badge/HACS-Custom-41BDF5.svg)](https://github.com/hacs/integration)
 
