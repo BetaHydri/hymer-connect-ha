@@ -1,9 +1,9 @@
 """mitmproxy addon — capture & decode Hymer Connect SignalR WebSocket traffic.
 
 Usage:
-    mitmweb -s mitm_hymer_ws.py --listen-port 8080
+    mitmweb -s tools/mitm_hymer_ws.py --listen-port 8080
 
-Output files (timestamped in logs/):
+Output files (timestamped in custom_components/logs/):
     ws_capture_<timestamp>.jsonl   — one JSON object per WS message
     ws_sensors_<timestamp>.json    — accumulated decoded sensor state
 
@@ -33,7 +33,7 @@ SIGNALR_HOSTS = {
     "ehg-prod-signalr.service.signalr.net",
     "scc-appcomm.smartrv.erwinhymergroup.com",
 }
-LOG_DIR = Path(__file__).parent / "logs"
+LOG_DIR = Path(__file__).resolve().parent.parent / "custom_components" / "logs"
 _TS = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
 JSONL_PATH = LOG_DIR / f"ws_capture_{_TS}.jsonl"
 SENSOR_PATH = LOG_DIR / f"ws_sensors_{_TS}.json"
