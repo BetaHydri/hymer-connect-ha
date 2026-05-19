@@ -5,6 +5,21 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.57.0] - 2026-05-19
+
+### Fixed
+
+- **Corrected stale bus labels in diagnostic capture tool** — `mitm_hymer_ws.py` still had the original wrong labels: `(1,2)` was "speed" (correct: `fuel_level`), `(1,5)` was "rpm" (correct: `distance_to_service`), `(1,9)` was "coolant_temp" (correct: `outside_temperature`). Bus 99 labels updated from legacy names (adblue_temp, engine_torque, fuel_range, etc.) to the verified BOS LUX BMS names (bms_voltage, bms_current, bms_temperature, etc.).
+- **Corrected inner README compatibility table** — The `custom_components/hymer_connect/README.md` CAN bus row still claimed "(1,2) as speed" and listed "speed, RPM" in the category header. Synced with the main README's corrected version: "(1,2) as fuel level", "fuel, doors, locks, ignition".
+
+### Removed
+
+- **Orphaned translation keys** — Removed `speed`, `rpm`, and `engine_torque` from `strings.json` and `translations/en.json`. No sensor map entry creates entities with these names — they were leftovers from the original incorrect bus 1/99 labels corrected in v2.36.0 (#37).
+
+### Migration Notes
+
+- **Non-breaking.** HACS update + restart is sufficient. No entities are affected — these translation keys were unused.
+
 ## [2.56.1] - 2026-05-16
 
 ### Fixed

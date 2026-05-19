@@ -434,7 +434,7 @@ The integration should work on **any EHG vehicle with an SCU**, but with some li
 | **REST API** (model, VIN, year) | ✅ Yes | These endpoints are brand-agnostic |
 | **GPS** (bus 30) | ✅ Likely | Slots (30,1) and (30,2) carry GPS coordinates on both S600 and S700. Other slots on bus 30 are LTE/SCU/BT telemetry, not GPS |
 | **Habitation sensors** (bus 3 — water, power source, charge phase) | ✅ Likely | LIN bus sensors on bus 3 (lin1) are part of the standard SCU wiring |
-| **CAN bus sensors** (bus 1 — speed, RPM, doors, locks) | ⚠️ Partial | Bus 1 sensor **slots differ between models**. The S600 maps (1,2) as speed; the S700 maps it as fuel level. A mitmproxy capture on your vehicle is needed to verify |
+| **CAN bus sensors** (bus 1 — fuel, doors, locks, ignition) | ⚠️ Partial | Bus 1 sensor **slots differ between models**. The S600 maps (1,2) as fuel level. Slot semantics for VW Crafter or Fiat Ducato may differ — brand overlays can override individual slots |
 | **Lights** | ⚠️ Partial | Light definitions are now **JSON-driven** (brand-specific). HYMER has 12 lights, Eriba has 2. Your vehicle may have different lights on different buses — edit your brand's JSON to add them |
 | **Truma heater** (bus 58) | ⚠️ Depends | Only if your vehicle has a Truma heater connected via the SCU. Vehicles with Alde or other heating systems may use different bus IDs |
 | **Fridge** (bus 34) | ⚠️ Depends | Only if your vehicle has a Dometic/Thetford fridge connected via the SCU |

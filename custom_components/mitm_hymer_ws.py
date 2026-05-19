@@ -41,9 +41,9 @@ SENSOR_PATH = LOG_DIR / f"ws_sensors_{_TS}.json"
 # Sensor map (subset — enough for decoding; full map in pia_decoder.py)
 _SENSOR_MAP: dict[tuple[int, int], str] = {
     # can0
-    (1, 1): "odometer", (1, 2): "speed", (1, 3): "lock_status",
-    (1, 4): "handbrake", (1, 5): "rpm", (1, 6): "adblue_level",
-    (1, 7): "engine_hours", (1, 8): "vin_text", (1, 9): "coolant_temp",
+    (1, 1): "odometer", (1, 2): "fuel_level", (1, 3): "lock_status",
+    (1, 4): "handbrake", (1, 5): "distance_to_service", (1, 6): "adblue_level",
+    (1, 7): "engine_hours", (1, 8): "vin_text", (1, 9): "outside_temperature",
     (1, 10): "engine_running", (1, 11): "door_driver", (1, 12): "door_passenger",
     (1, 13): "door_sliding", (1, 14): "door_rear", (1, 15): "ignition_state",
     (1, 16): "seatbelt_warning", (1, 17): "turn_signal", (1, 18): "headlamp",
@@ -113,11 +113,11 @@ _SENSOR_MAP: dict[tuple[int, int], str] = {
     (58, 8): "heater_setpoint", (58, 9): "heater_electric_power",
     (58, 10): "heater_10", (58, 11): "heater_operating_mode",
     (58, 12): "heater_12", (58, 13): "heater_13", (58, 14): "heater_14",
-    # can2
-    (99, 1): "adblue_temp", (99, 2): "engine_torque", (99, 3): "ambient_temp",
-    (99, 4): "lithium_soc", (99, 5): "fuel_range", (99, 6): "current_gear",
-    (99, 7): "total_fuel_used", (99, 8): "lithium_soc_2", (99, 9): "cruise_control",
-    (99, 10): "dpf_status",
+    # BMS (BOS LUX LiFePO4)
+    (99, 1): "bms_voltage", (99, 2): "bms_current", (99, 3): "bms_temperature",
+    (99, 4): "lithium_soc", (99, 5): "bms_time_remaining", (99, 6): "bms_state_of_health",
+    (99, 7): "bms_capacity_remaining", (99, 8): "lithium_soc_2", (99, 9): "bms_charge_detected",
+    (99, 10): "bms_device_failure",
 }
 
 # Bus id → name
